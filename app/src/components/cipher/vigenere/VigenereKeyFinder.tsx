@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { InfoIcon } from "@/components/ui/info-icon";
+import { InfoIcon } from "@/components/info-icon";
 
 interface VigenereKeyFinderProps {
   ciphertext: string;
