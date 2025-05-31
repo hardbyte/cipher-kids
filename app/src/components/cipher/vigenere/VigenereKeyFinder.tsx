@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { InfoIcon } from "@/components/ui/info-icon";
 
 interface VigenereKeyFinderProps {
   ciphertext: string;
@@ -129,7 +130,20 @@ export const VigenereKeyFinder: React.FC<VigenereKeyFinderProps> = ({
 
   return (
     <div className="bg-muted/5 rounded-lg p-4 border border-muted">
-      <h3 className="text-lg font-medium text-primary mb-3">Key Length Analysis</h3>
+      <div className="flex items-center gap-2 mb-3">
+        <h3 className="text-lg font-medium text-primary">Key Length Analysis</h3>
+        <InfoIcon
+          content={
+            <div className="space-y-2">
+              <p className="font-medium">Index of Coincidence (IoC)</p>
+              <p>IoC measures how often letters repeat in text. English text has an IoC of ~0.067.</p>
+              <p>When we split a Vigenère cipher by the correct key length, each column should look like English (high IoC).</p>
+              <p>Wrong key lengths create random-looking text (low IoC).</p>
+            </div>
+          }
+          size="md"
+        />
+      </div>
       
       <div className="mb-4">
         <p className="text-sm text-muted-fg">
@@ -163,7 +177,18 @@ export const VigenereKeyFinder: React.FC<VigenereKeyFinderProps> = ({
       {results.length > 0 && !isAnalyzing && (
         <>
           <div className="mb-4">
-            <h4 className="text-sm font-medium text-fg mb-2">Key Length Rankings</h4>
+            <div className="flex items-center gap-2 mb-2">
+              <h4 className="text-sm font-medium text-fg">Key Length Rankings</h4>
+              <InfoIcon
+                content={
+                  <div className="space-y-1">
+                    <p>Higher IoC values (closer to 0.067) suggest the correct key length.</p>
+                    <p>The percentage shows how close each result is to typical English text patterns.</p>
+                  </div>
+                }
+                size="sm"
+              />
+            </div>
             <div className="space-y-2 max-h-64 overflow-y-auto">
               {results.map((result) => {
                 const quality = getQualityIndicator(result.normalized);

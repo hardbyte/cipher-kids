@@ -8,6 +8,8 @@ interface VigenereTableProps {
   plaintextChar?: string;
   keywordChar?: string;
   mode: "encrypt" | "decrypt" | "crack";
+  currentAnimationStep?: number;
+  animationMessage?: string;
 }
 
 export const VigenereTable: React.FC<VigenereTableProps> = ({
@@ -15,12 +17,16 @@ export const VigenereTable: React.FC<VigenereTableProps> = ({
   plaintextChar,
   keywordChar,
   mode,
+  currentAnimationStep = -1,
+  animationMessage = "",
 }) => {
   const [highlightedRow, setHighlightedRow] = useState<number | null>(null);
   const [highlightedCol, setHighlightedCol] = useState<number | null>(null);
   const [highlightedCell, setHighlightedCell] = useState<{row: number, col: number} | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [showKeywordRows, setShowKeywordRows] = useState(true);
+  const [selectedKeyRow, setSelectedKeyRow] = useState<number | null>(null);
+  const [interactionMode, setInteractionMode] = useState<"waiting_for_key" | "waiting_for_cipher" | "complete">("waiting_for_key");
 
   // Clean up keyword for display
   const cleanKeyword = keyword.toUpperCase().replace(/[^A-Z]/g, "");
@@ -38,18 +44,61 @@ export const VigenereTable: React.FC<VigenereTableProps> = ({
         .filter(idx => idx >= 0)
     : [];
 
-  // Avoid flickering by using a stable handler
-  const highlightCell = useCallback((row: number, col: number) => {
+  // Enhanced interaction handler for decrypt mode
+  const handleCellInteraction = useCallback((row: number, col: number, isKeyColumn: boolean = false) => {
     if (row >= 0 && col >= 0 && row < 26 && col < 26) {
-      setHighlightedRow(row);
-      setHighlightedCol(col);
-      setHighlightedCell({ row, col });
+      if (mode === "decrypt") {
+        if (isKeyColumn && interactionMode === "waiting_for_key") {
+          // User clicked a key letter - highlight the row and wait for cipher letter
+          setSelectedKeyRow(row);
+          setHighlightedRow(row);
+          setHighlightedCol(null);
+          setHighlightedCell(null);
+          setInteractionMode("waiting_for_cipher");
+        } else if (!isKeyColumn && interactionMode === "waiting_for_cipher" && selectedKeyRow !== null) {
+          // User clicked a cipher letter in the highlighted row - complete the lookup
+          setHighlightedCol(col);
+          setHighlightedCell({ row: selectedKeyRow, col });
+          setInteractionMode("complete");
+        } else if (interactionMode === "complete") {
+          // Reset interaction
+          setSelectedKeyRow(null);
+          setHighlightedRow(null);
+          setHighlightedCol(null);
+          setHighlightedCell(null);
+          setInteractionMode("waiting_for_key");
+        }
+      } else {
+        // Original behavior for encrypt mode
+        setHighlightedRow(row);
+        setHighlightedCol(col);
+        setHighlightedCell({ row, col });
+      }
     }
-  }, []);
+  }, [mode, interactionMode, selectedKeyRow]);
 
-  // Effect to animate highlighting when plaintext and keyword characters are provided
+  // Effect to sync with StepByStepAnimation or handle direct character highlighting
   useEffect(() => {
-    if (plaintextChar && keywordChar && !isAnimating) {
+    if (currentAnimationStep >= 0 && animationMessage) {
+      // Sync with StepByStepAnimation
+      const cleanMessage = animationMessage.toUpperCase().replace(/[^A-Z]/g, "");
+      const cleanKeyword = keyword.toUpperCase().replace(/[^A-Z]/g, "");
+      
+      if (currentAnimationStep < cleanMessage.length && cleanKeyword) {
+        const messageChar = cleanMessage[currentAnimationStep];
+        const keyChar = cleanKeyword[currentAnimationStep % cleanKeyword.length];
+        
+        const plainIdx = ALPHABET.indexOf(messageChar);
+        const keyIdx = ALPHABET.indexOf(keyChar);
+        
+        if (plainIdx >= 0 && keyIdx >= 0) {
+          setHighlightedRow(keyIdx);
+          setHighlightedCol(plainIdx);
+          setHighlightedCell({ row: keyIdx, col: plainIdx });
+        }
+      }
+    } else if (plaintextChar && keywordChar && !isAnimating) {
+      // Original behavior for direct character highlighting
       const plainIdx = ALPHABET.indexOf(plaintextChar.toUpperCase());
       const keyIdx = ALPHABET.indexOf(keywordChar.toUpperCase());
 
@@ -83,7 +132,7 @@ export const VigenereTable: React.FC<VigenereTableProps> = ({
         return () => timeouts.forEach(t => window.clearTimeout(t));
       }
     }
-  }, [plaintextChar, keywordChar, isAnimating]);
+  }, [plaintextChar, keywordChar, isAnimating, currentAnimationStep, animationMessage, keyword]);
 
   return (
     <div className="flex flex-col items-center p-2">
@@ -96,6 +145,12 @@ export const VigenereTable: React.FC<VigenereTableProps> = ({
         <p className="text-xs text-muted-fg mt-1 max-w-md">
           {mode === "encrypt"
             ? "Find your plaintext letter along the top row, find your keyword letter on the left column, then find where they intersect!"
+            : mode === "decrypt" && interactionMode === "waiting_for_key"
+            ? "Step 1: Click a keyword letter on the left to highlight its row"
+            : mode === "decrypt" && interactionMode === "waiting_for_cipher"
+            ? "Step 2: Click a ciphertext letter in the highlighted row to find the plaintext"
+            : mode === "decrypt" && interactionMode === "complete"
+            ? "✨ Found the plaintext letter! Click anywhere to try again."
             : "Find your keyword letter on the left column, find your ciphertext letter in that row, then look up to find the plaintext letter!"}
         </p>
         
@@ -167,11 +222,13 @@ export const VigenereTable: React.FC<VigenereTableProps> = ({
                   scale: highlightedRow === idx ? 1.1 : isKeywordRow ? 1.05 : 1,
                   backgroundColor: highlightedRow === idx 
                     ? "rgb(var(--color-warning))" 
+                    : selectedKeyRow === idx
+                    ? "rgba(var(--color-warning), 0.5)"
                     : isKeywordRow 
                     ? "rgba(var(--color-warning), 0.3)" 
                     : "rgba(var(--color-primary), 0.1)"
                 }}
-                onClick={() => setHighlightedRow(idx)}
+                onClick={() => handleCellInteraction(idx, 0, true)}
                 whileHover={{ scale: 1.05, backgroundColor: "rgba(var(--color-warning), 0.2)" }}
                 transition={{ duration: 0.2 }}
               >
@@ -213,7 +270,7 @@ export const VigenereTable: React.FC<VigenereTableProps> = ({
                       : "rgb(var(--color-bg))"
                   }}
                   transition={{ duration: 0.2 }}
-                  onClick={() => highlightCell(rowIdx, colIdx)}
+                  onClick={() => handleCellInteraction(rowIdx, colIdx, false)}
                   whileHover={{ 
                     scale: 1.05, 
                     backgroundColor: "rgba(var(--color-accent), 0.1)"
@@ -252,15 +309,33 @@ export const VigenereTable: React.FC<VigenereTableProps> = ({
       )}
 
       <div className="mt-4 w-full">
-        <div className="text-sm font-medium mb-1 text-muted-fg">Try it yourself:</div>
+        <div className="text-sm font-medium mb-1 text-muted-fg">
+          {mode === "decrypt" ? "Decrypt Instructions:" : "Try it yourself:"}
+        </div>
         <div className="bg-muted/20 p-3 rounded-lg text-sm">
-          <p className="mb-2"><strong>How to use this table:</strong></p>
-          <ol className="list-decimal list-inside space-y-1">
-            <li>Click a letter in the <span className="text-success font-medium">top row</span> (your plaintext)</li>
-            <li>Click a letter in the <span className="text-warning font-medium">left column</span> (your key letter)</li>
-            <li>See where they intersect - that's your <span className="text-accent font-medium">encrypted letter</span>!</li>
-          </ol>
-          <p className="mt-2 text-xs text-muted-fg italic">This is the core of the Vigenère cipher - each letter has its own Caesar shift!</p>
+          {mode === "decrypt" ? (
+            <>
+              <p className="mb-2"><strong>How to decrypt using this table:</strong></p>
+              <ol className="list-decimal list-inside space-y-1">
+                <li>Click a <span className="text-warning font-medium">keyword letter</span> on the left to highlight its row</li>
+                <li>Click a <span className="text-accent font-medium">ciphertext letter</span> in that row</li>
+                <li>Look up to the <span className="text-success font-medium">top header</span> - that's your plaintext letter!</li>
+              </ol>
+              <p className="mt-2 text-xs text-muted-fg italic">
+                This reverse lookup is how you decrypt each letter of a Vigenère cipher.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="mb-2"><strong>How to use this table:</strong></p>
+              <ol className="list-decimal list-inside space-y-1">
+                <li>Click a letter in the <span className="text-success font-medium">top row</span> (your plaintext)</li>
+                <li>Click a letter in the <span className="text-warning font-medium">left column</span> (your key letter)</li>
+                <li>See where they intersect - that's your <span className="text-accent font-medium">encrypted letter</span>!</li>
+              </ol>
+              <p className="mt-2 text-xs text-muted-fg italic">This is the core of the Vigenère cipher - each letter has its own Caesar shift!</p>
+            </>
+          )}
         </div>
       </div>
       

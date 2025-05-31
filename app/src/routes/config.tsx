@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { useUser, UserInitial } from "@/context/user-context";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 
 export const Route = createFileRoute("/config")({
   component: ConfigPage,
@@ -195,6 +196,24 @@ function ConfigPage() {
             </button>
           </div>
           {agentError && <p className="text-red-400 text-sm">{agentError}</p>}
+        </div>
+      </section>
+
+      {/* Theme Configuration Section */}
+      <section className="space-y-6">
+        <h2 className="text-2xl font-bold text-white">Theme & Appearance</h2>
+        
+        <div className="bg-gray-800 rounded-lg p-6 space-y-4">
+          <h3 className="text-lg font-semibold text-white">Theme Preference</h3>
+          <p className="text-gray-400 text-sm">Choose your preferred theme for the application</p>
+          
+          <div className="flex items-center justify-between p-4 bg-gray-700 rounded-md">
+            <div>
+              <h4 className="text-white font-medium">Application Theme</h4>
+              <p className="text-gray-400 text-sm">Select light, dark, or system theme</p>
+            </div>
+            <ThemeSwitcher appearance="outline" showDropdown={true} />
+          </div>
         </div>
       </section>
 

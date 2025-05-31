@@ -2,6 +2,11 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 
 // Define the available users
 export type UserInitial = string;
+export type Theme = "light" | "dark" | "system";
+
+interface UserConfig {
+  theme: Theme;
+}
 
 interface UserContextType {
   currentUser: UserInitial | null;
@@ -9,6 +14,8 @@ interface UserContextType {
   isAuthenticated: boolean;
   getEnabledCiphers: () => string[];
   hasAgents: () => boolean;
+  getUserConfig: () => UserConfig;
+  updateUserConfig: (config: Partial<UserConfig>) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -58,8 +65,32 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     return defaultUsers.length > 0;
   };
 
+  const getUserConfig = (): UserConfig => {
+    if (!currentUser) {
+      return { theme: 'dark' };
+    }
+    
+    const saved = localStorage.getItem(`cipher-app-user-config-${currentUser}`);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return { theme: 'dark' };
+      }
+    }
+    return { theme: 'dark' };
+  };
+
+  const updateUserConfig = (config: Partial<UserConfig>) => {
+    if (!currentUser) return;
+    
+    const currentConfig = getUserConfig();
+    const newConfig = { ...currentConfig, ...config };
+    localStorage.setItem(`cipher-app-user-config-${currentUser}`, JSON.stringify(newConfig));
+  };
+
   return (
-    <UserContext.Provider value={{ currentUser, setCurrentUser, isAuthenticated, getEnabledCiphers, hasAgents }}>
+    <UserContext.Provider value={{ currentUser, setCurrentUser, isAuthenticated, getEnabledCiphers, hasAgents, getUserConfig, updateUserConfig }}>
       {children}
     </UserContext.Provider>
   );

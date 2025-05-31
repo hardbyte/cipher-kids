@@ -12,6 +12,7 @@ import { AppContext } from "@/app.tsx";
 import { UserProvider, useUser } from "@/context/user-context";
 import { LoginScreen } from "@/components/login-screen";
 import { UserProfile } from "@/components/user-profile";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 
 declare module "react-aria-components" {
   interface RouterConfig {
@@ -47,7 +48,10 @@ function AuthenticatedRoute() {
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-900 to-black text-white">
       <header className="border-b border-gray-800 p-4 px-6 flex justify-between items-center bg-black bg-opacity-80">
         <div className="text-2xl font-bold text-red-600">Cipher Kids</div>
-        {isAuthenticated && <UserProfile />}
+        <div className="flex items-center gap-3">
+          <ThemeSwitcher appearance="outline" showDropdown={true} />
+          {isAuthenticated && <UserProfile />}
+        </div>
       </header>
       <main className="flex-1">
         <Outlet />

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ALPHABET } from "@/utils/ciphers";
 
@@ -8,6 +8,7 @@ interface StepByStepAnimationProps {
   mode: "encrypt" | "decrypt";
   isPlaying: boolean;
   onComplete: () => void;
+  onStepChange?: (stepIndex: number) => void;
   speed?: number; // milliseconds between steps
   initialStep?: number;
 }
@@ -26,6 +27,7 @@ export const StepByStepAnimation: React.FC<StepByStepAnimationProps> = ({
   mode,
   isPlaying,
   onComplete,
+  onStepChange,
   speed = 2500,
   initialStep = -1,
 }) => {
@@ -34,7 +36,9 @@ export const StepByStepAnimation: React.FC<StepByStepAnimationProps> = ({
   const [isComplete, setIsComplete] = useState(false);
   const [isManualControl, setIsManualControl] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [animationInterval, setAnimationInterval] = useState<number | null>(null);
+  const animationInterval = useRef<number | null>(null);
+  const onStepChangeRef = useRef(onStepChange);
+  const onCompleteRef = useRef(onComplete);
 
   // Generate animation steps
   useEffect(() => {
@@ -77,36 +81,70 @@ export const StepByStepAnimation: React.FC<StepByStepAnimationProps> = ({
     setSteps(newSteps);
   }, [message, keyword, mode]);
 
+  // Update callback refs when they change
+  useEffect(() => {
+    onStepChangeRef.current = onStepChange;
+  }, [onStepChange]);
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
+
   // Animation control
   useEffect(() => {
+    // Clear any existing interval first
+    if (animationInterval.current) {
+      clearInterval(animationInterval.current);
+      animationInterval.current = null;
+    }
+
     if (!isPlaying || steps.length === 0 || isManualControl || isPaused) {
       return;
     }
 
+    // Reset state for new animation
     setCurrentStep(-1);
     setIsComplete(false);
     setIsPaused(false);
 
-    const interval = setInterval(() => {
-      setCurrentStep((prev) => {
-        if (prev < steps.length - 1) {
-          return prev + 1;
-        } else {
-          setIsComplete(true);
-          clearInterval(interval);
-          setAnimationInterval(null);
-          setTimeout(onComplete, 500);
-          return prev;
-        }
-      });
-    }, speed);
+    // Small delay to ensure state is updated
+    const startTimeout = setTimeout(() => {
+      const interval = setInterval(() => {
+        setCurrentStep((prev) => {
+          if (prev < steps.length - 1) {
+            const nextStep = prev + 1;
+            if (onStepChangeRef.current) {
+              onStepChangeRef.current(nextStep);
+            }
+            return nextStep;
+          } else {
+            // Animation complete
+            setIsComplete(true);
+            if (animationInterval.current) {
+              clearInterval(animationInterval.current);
+              animationInterval.current = null;
+            }
+            setTimeout(() => {
+              if (onCompleteRef.current) {
+                onCompleteRef.current();
+              }
+            }, 500);
+            return prev;
+          }
+        });
+      }, speed);
 
-    setAnimationInterval(interval);
+      animationInterval.current = interval;
+    }, 100);
+
     return () => {
-      clearInterval(interval);
-      setAnimationInterval(null);
+      clearTimeout(startTimeout);
+      if (animationInterval.current) {
+        clearInterval(animationInterval.current);
+        animationInterval.current = null;
+      }
     };
-  }, [isPlaying, steps, speed, onComplete, isManualControl, isPaused]);
+  }, [isPlaying, steps.length, speed, isManualControl, isPaused]);
 
   // Functions for manual navigation
   const goToNextStep = () => {
@@ -133,9 +171,9 @@ export const StepByStepAnimation: React.FC<StepByStepAnimationProps> = ({
   };
 
   const pauseAnimation = () => {
-    if (animationInterval) {
-      clearInterval(animationInterval);
-      setAnimationInterval(null);
+    if (animationInterval.current) {
+      clearInterval(animationInterval.current);
+      animationInterval.current = null;
       setIsPaused(true);
     }
   };
@@ -147,18 +185,24 @@ export const StepByStepAnimation: React.FC<StepByStepAnimationProps> = ({
       const interval = setInterval(() => {
         setCurrentStep((prev) => {
           if (prev < steps.length - 1) {
-            return prev + 1;
+            const nextStep = prev + 1;
+            if (onStepChangeRef.current) {
+              onStepChangeRef.current(nextStep);
+            }
+            return nextStep;
           } else {
             setIsComplete(true);
-            clearInterval(interval);
-            setAnimationInterval(null);
+            if (animationInterval.current) {
+              clearInterval(animationInterval.current);
+              animationInterval.current = null;
+            }
             setTimeout(onComplete, 500);
             return prev;
           }
         });
       }, speed);
       
-      setAnimationInterval(interval);
+      animationInterval.current = interval;
     }
   };
 
@@ -174,14 +218,16 @@ export const StepByStepAnimation: React.FC<StepByStepAnimationProps> = ({
           return prev + 1;
         } else {
           setIsComplete(true);
-          clearInterval(interval);
-          setAnimationInterval(null);
+          if (animationInterval.current) {
+            clearInterval(animationInterval.current);
+            animationInterval.current = null;
+          }
           return prev;
         }
       });
     }, speed);
     
-    setAnimationInterval(interval);
+    animationInterval.current = interval;
   };
 
   if (steps.length === 0) {
@@ -400,8 +446,10 @@ export const StepByStepAnimation: React.FC<StepByStepAnimationProps> = ({
         <button
           onClick={() => {
             if (animationInterval) {
-              clearInterval(animationInterval);
-              setAnimationInterval(null);
+              if (animationInterval.current) {
+                clearInterval(animationInterval.current);
+                animationInterval.current = null;
+              }
             }
             setCurrentStep(-1);
             setIsComplete(false);

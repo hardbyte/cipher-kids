@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AnimatedMapping } from "@/components/cipher/AnimatedMapping";
 import { CipherNav } from "@/components/cipher/CipherNav";
 import { CipherInputs } from "@/components/cipher/CipherInputs";
@@ -6,6 +6,8 @@ import { Slider } from "@/components/ui/slider"; // Assuming shadcn/ui structure
 import { CipherModeToggle } from "@/components/cipher/CipherModeToggle";
 import { CipherResult } from "@/components/cipher/results/CipherResult";
 import { AllCaesarShifts } from "@/components/cipher/results/AllCaesarShifts";
+import { GeneralStepByStepAnimation, AnimationStep } from "@/components/cipher/shared/GeneralStepByStepAnimation";
+import { Button } from "@/components/ui/button";
 import { caesarCipher, ALPHABET } from "@/utils/ciphers";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -22,6 +24,9 @@ function CaesarCipherPage() {
   const [currentCharToHighlight, setCurrentCharToHighlight] = useState<
     string | undefined
   >(undefined);
+  const [showStepByStep, setShowStepByStep] = useState(false);
+  const [animationSteps, setAnimationSteps] = useState<AnimationStep[]>([]);
+  const [isStepAnimationPlaying, setIsStepAnimationPlaying] = useState(false);
   
   // Sample messages for kids to try decoding in crack mode
   const sampleMessages = [
@@ -32,12 +37,50 @@ function CaesarCipherPage() {
     "WKH TXLFN EURZQ IRA", // "THE QUICK BROWN FOX" with shift 3
   ];
 
+  // Generate animation steps for the GeneralStepByStepAnimation
+  const generateAnimationSteps = useCallback(() => {
+    if (!message) {
+      setAnimationSteps([]);
+      return;
+    }
+
+    const steps: AnimationStep[] = [];
+    const cleanMessage = message.toUpperCase();
+
+    for (let i = 0; i < cleanMessage.length; i++) {
+      const char = cleanMessage[i];
+      
+      if (ALPHABET.includes(char)) {
+        const charIndex = ALPHABET.indexOf(char);
+        let newIndex;
+        if (mode === "decrypt") {
+          newIndex = (charIndex - shift + 26) % 26;
+        } else {
+          newIndex = (charIndex + shift) % 26;
+        }
+        const transformedChar = ALPHABET[newIndex];
+
+        steps.push({
+          originalChar: char,
+          transformedChar,
+          position: i,
+          shift,
+          explanation: `${char} ${mode === "encrypt" ? "+" : "-"} ${shift} = ${transformedChar}`,
+        });
+      }
+    }
+
+    setAnimationSteps(steps);
+  }, [message, mode, shift]);
+
   // Reset animation states if mode, message or shift changes
   useEffect(() => {
     setOutput("");
     setCurrentCharToHighlight(undefined);
+    setShowStepByStep(false);
+    generateAnimationSteps();
     // setIsAnimating(false); // Might be too aggressive, could stop an ongoing animation
-  }, [mode, message, shift]);
+  }, [mode, message, shift, generateAnimationSteps]);
 
   const handleAction = async () => {
     if (isAnimating) return;
@@ -176,6 +219,40 @@ function CaesarCipherPage() {
               }
             />
           )}
+
+        {/* Step-by-Step Animation Section */}
+        {mode !== "crack" && (
+          <div className="border-t pt-4 border-muted/30">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-primary">Step-by-Step Animation</h3>
+              <Button 
+                intent="secondary" 
+                size="small"
+                onPress={() => {
+                  setShowStepByStep(!showStepByStep);
+                  if (!showStepByStep && message) {
+                    setIsStepAnimationPlaying(true);
+                  }
+                }}
+                isDisabled={!message}
+              >
+                {showStepByStep ? "Hide" : "Show"} Animation
+              </Button>
+            </div>
+            
+            {showStepByStep && (
+              <GeneralStepByStepAnimation
+                steps={animationSteps}
+                isPlaying={isStepAnimationPlaying}
+                onComplete={() => setIsStepAnimationPlaying(false)}
+                mode={mode}
+                cipherType="caesar"
+                title={`Caesar Cipher - Shift ${shift}`}
+                speed={1000}
+              />
+            )}
+          </div>
+        )}
 
         <div className="pt-4 border-t mt-4 space-y-4">
           <h3 className="text-lg font-semibold mb-3 text-gray-800 flex items-center">

@@ -1,4 +1,4 @@
-import { useState, useEffect, ChangeEvent } from "react";
+import { useState, useEffect, ChangeEvent, useCallback } from "react";
 import { AnimatedMapping } from "@/components/cipher/AnimatedMapping";
 import { CipherNav } from "@/components/cipher/CipherNav";
 import { CipherInputs } from "@/components/cipher/CipherInputs";
@@ -33,6 +33,16 @@ function VigenereCipherPage() {
   const [isStepAnimationPlaying, setIsStepAnimationPlaying] = useState(false);
   const [showFrequencyAnalysis, setShowFrequencyAnalysis] = useState(false);
   const [keyLength, setKeyLength] = useState(3); // Default key length for analysis
+  const [currentStepIndex, setCurrentStepIndex] = useState(-1);
+
+  // Stable callback functions for animation
+  const handleAnimationComplete = useCallback(() => {
+    setIsStepAnimationPlaying(false);
+  }, []);
+
+  const handleStepChange = useCallback((stepIndex: number) => {
+    setCurrentStepIndex(stepIndex);
+  }, []);
 
   const handleAction = () => {
     if (!message.trim() || !keyword.trim()) {
@@ -84,7 +94,13 @@ function VigenereCipherPage() {
       <div className="rounded-lg border p-4 space-y-4">
         <CipherModeToggle 
           mode={mode} 
-          setMode={setMode} 
+          setMode={(newMode) => {
+            setMode(newMode);
+            // Clear keyword when switching to crack mode, but preserve message
+            if (newMode === "crack") {
+              setKeyword("");
+            }
+          }} 
         />
 
         {mode === "crack" ? (
@@ -212,6 +228,8 @@ function VigenereCipherPage() {
                     plaintextChar={currentPlaintextChar}
                     keywordChar={currentKeyChar}
                     mode={mode}
+                    currentAnimationStep={showStepByStep ? currentStepIndex : -1}
+                    animationMessage={showStepByStep ? message : ""}
                   />
                 </div>
               ) : (
@@ -253,7 +271,8 @@ function VigenereCipherPage() {
                   keyword={cleanKeyword}
                   mode={mode}
                   isPlaying={isStepAnimationPlaying}
-                  onComplete={() => setIsStepAnimationPlaying(false)}
+                  onComplete={handleAnimationComplete}
+                  onStepChange={handleStepChange}
                   speed={1200}
                 />
               )}
