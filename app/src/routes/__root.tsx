@@ -3,6 +3,7 @@ import {
   Link,
   Outlet,
   useRouter,
+  useLocation,
 } from "@tanstack/react-router";
 import { RouterProvider as AriaRouterProvider } from "react-aria-components";
 import type { NavigateOptions, ToOptions } from "@tanstack/react-router";
@@ -33,8 +34,12 @@ export const Route = createRootRouteWithContext<AppContext>()({
 
 function AuthenticatedRoute() {
   const { isAuthenticated } = useUser();
+  const location = useLocation();
   
-  if (!isAuthenticated) {
+  // Allow unauthenticated access to config page for initial setup
+  const isConfigPage = location.pathname === '/config';
+  
+  if (!isAuthenticated && !isConfigPage) {
     return <LoginScreen />;
   }
   
@@ -42,7 +47,7 @@ function AuthenticatedRoute() {
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-900 to-black text-white">
       <header className="border-b border-gray-800 p-4 px-6 flex justify-between items-center bg-black bg-opacity-80">
         <div className="text-2xl font-bold text-red-600">Cipher Kids</div>
-        <UserProfile />
+        {isAuthenticated && <UserProfile />}
       </header>
       <main className="flex-1">
         <Outlet />

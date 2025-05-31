@@ -11,12 +11,19 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as ConfigImport } from './routes/config'
 import { Route as IndexImport } from './routes/index'
 import { Route as CiphersVigenereImport } from './routes/ciphers/vigenere'
 import { Route as CiphersKeywordImport } from './routes/ciphers/keyword'
 import { Route as CiphersCaesarImport } from './routes/ciphers/caesar'
 
 // Create/Update Routes
+
+const ConfigRoute = ConfigImport.update({
+  id: '/config',
+  path: '/config',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const IndexRoute = IndexImport.update({
   id: '/',
@@ -53,6 +60,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
+    '/config': {
+      id: '/config'
+      path: '/config'
+      fullPath: '/config'
+      preLoaderRoute: typeof ConfigImport
+      parentRoute: typeof rootRoute
+    }
     '/ciphers/caesar': {
       id: '/ciphers/caesar'
       path: '/ciphers/caesar'
@@ -81,6 +95,7 @@ declare module '@tanstack/react-router' {
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/config': typeof ConfigRoute
   '/ciphers/caesar': typeof CiphersCaesarRoute
   '/ciphers/keyword': typeof CiphersKeywordRoute
   '/ciphers/vigenere': typeof CiphersVigenereRoute
@@ -88,6 +103,7 @@ export interface FileRoutesByFullPath {
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/config': typeof ConfigRoute
   '/ciphers/caesar': typeof CiphersCaesarRoute
   '/ciphers/keyword': typeof CiphersKeywordRoute
   '/ciphers/vigenere': typeof CiphersVigenereRoute
@@ -96,6 +112,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
+  '/config': typeof ConfigRoute
   '/ciphers/caesar': typeof CiphersCaesarRoute
   '/ciphers/keyword': typeof CiphersKeywordRoute
   '/ciphers/vigenere': typeof CiphersVigenereRoute
@@ -103,12 +120,23 @@ export interface FileRoutesById {
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/ciphers/caesar' | '/ciphers/keyword' | '/ciphers/vigenere'
+  fullPaths:
+    | '/'
+    | '/config'
+    | '/ciphers/caesar'
+    | '/ciphers/keyword'
+    | '/ciphers/vigenere'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/ciphers/caesar' | '/ciphers/keyword' | '/ciphers/vigenere'
+  to:
+    | '/'
+    | '/config'
+    | '/ciphers/caesar'
+    | '/ciphers/keyword'
+    | '/ciphers/vigenere'
   id:
     | '__root__'
     | '/'
+    | '/config'
     | '/ciphers/caesar'
     | '/ciphers/keyword'
     | '/ciphers/vigenere'
@@ -117,6 +145,7 @@ export interface FileRouteTypes {
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ConfigRoute: typeof ConfigRoute
   CiphersCaesarRoute: typeof CiphersCaesarRoute
   CiphersKeywordRoute: typeof CiphersKeywordRoute
   CiphersVigenereRoute: typeof CiphersVigenereRoute
@@ -124,6 +153,7 @@ export interface RootRouteChildren {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ConfigRoute: ConfigRoute,
   CiphersCaesarRoute: CiphersCaesarRoute,
   CiphersKeywordRoute: CiphersKeywordRoute,
   CiphersVigenereRoute: CiphersVigenereRoute,
@@ -140,6 +170,7 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
+        "/config",
         "/ciphers/caesar",
         "/ciphers/keyword",
         "/ciphers/vigenere"
@@ -147,6 +178,9 @@ export const routeTree = rootRoute
     },
     "/": {
       "filePath": "index.tsx"
+    },
+    "/config": {
+      "filePath": "config.tsx"
     },
     "/ciphers/caesar": {
       "filePath": "ciphers/caesar.tsx"

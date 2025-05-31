@@ -1,12 +1,14 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 // Define the available users
-export type UserInitial = 'A' | 'L' | 'I' | 'J' | 'F';
+export type UserInitial = string;
 
 interface UserContextType {
   currentUser: UserInitial | null;
   setCurrentUser: (user: UserInitial | null) => void;
   isAuthenticated: boolean;
+  getEnabledCiphers: () => string[];
+  hasAgents: () => boolean;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -29,8 +31,35 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [currentUser]);
 
+  const getEnabledCiphers = (): string[] => {
+    const saved = localStorage.getItem('cipher-app-enabled-ciphers');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return ['caesar', 'keyword', 'vigenere'];
+      }
+    }
+    return ['caesar', 'keyword', 'vigenere'];
+  };
+
+  const hasAgents = (): boolean => {
+    const saved = localStorage.getItem('cipher-app-agents');
+    const defaultUsers = ['A', 'L', 'I', 'J', 'F'];
+    
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return Array.isArray(parsed) && parsed.length > 0;
+      } catch {
+        return false;
+      }
+    }
+    return defaultUsers.length > 0;
+  };
+
   return (
-    <UserContext.Provider value={{ currentUser, setCurrentUser, isAuthenticated }}>
+    <UserContext.Provider value={{ currentUser, setCurrentUser, isAuthenticated, getEnabledCiphers, hasAgents }}>
       {children}
     </UserContext.Provider>
   );

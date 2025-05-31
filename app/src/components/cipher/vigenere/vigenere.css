@@ -1,0 +1,77 @@
+/* Vigenère Table Styles */
+.vigenere-table-container {
+  width: 100%;
+  overflow-x: auto;
+  padding: 0.5rem;
+}
+
+.vigenere-table {
+  grid-template-rows: repeat(27, minmax(1.5rem, auto));
+  grid-template-columns: repeat(27, minmax(1.5rem, auto));
+}
+
+@media (max-width: 640px) {
+  .vigenere-table {
+    font-size: 0.65rem;
+  }
+}
+
+/* Grid template rows for the table */
+.grid-rows-27 {
+  grid-template-rows: repeat(27, minmax(0, 1fr));
+}
+
+.grid-cols-27 {
+  grid-template-columns: repeat(27, minmax(0, 1fr));
+}
+
+/* Animation utilities */
+@keyframes highlight-cell {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.cell-highlight {
+  animation: highlight-cell 0.6s ease;
+}
+
+/* KeywordRepetition Component Styles */
+.keyword-letter, .message-letter, .combined-letter {
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.25rem;
+}
+
+.letter-animation {
+  transition: all 0.3s ease;
+}
+
+.letter-container {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding: 0.25rem;
+}
+
+/* Custom scrollbar for tables */
+.vigenere-table-container::-webkit-scrollbar {
+  height: 6px;
+}
+
+.vigenere-table-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+}
+
+.vigenere-table-container::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.vigenere-table-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}

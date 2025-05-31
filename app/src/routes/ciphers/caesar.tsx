@@ -25,10 +25,11 @@ function CaesarCipherPage() {
   
   // Sample messages for kids to try decoding in crack mode
   const sampleMessages = [
-    "KHOOR ZRUOG", // "HELLO WORLD" with shift 3
+    "KHOOR ZRUOG", // "HELLO WORLD" with shift 3 (Caesar's actual shift!)
     "FDHVDU FLSKHU LV IXQ", // "CAESAR CIPHER IS FUN" with shift 3
-    "FRGH FUDFNHUV UXOH", // "CODE CRACKERS RULE" with shift 3
-    "VHFUHW PHVVDJH" // "SECRET MESSAGE" with shift 3
+    "L FDPH, L VDZ, L FRQTXHUHG", // "I CAME, I SAW, I CONQUERED" - Caesar's famous quote with shift 3
+    "VHFXULWB EB REVFXULWB", // "SECURITY BY OBSCURITY" with shift 3
+    "WKH TXLFN EURZQ IRA", // "THE QUICK BROWN FOX" with shift 3
   ];
 
   // Reset animation states if mode, message or shift changes
@@ -143,6 +144,9 @@ function CaesarCipherPage() {
               {!message && (
                 <div className="mb-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
                   <div className="font-medium mb-2">Try to decode these secret messages:</div>
+                  <div className="text-xs text-gray-600 mb-2">
+                    <span className="bg-yellow-100 px-1 py-0.5 rounded">Fun fact:</span> Julius Caesar used shift 3 for his own secret messages!
+                  </div>
                   <div className="grid gap-2">
                     {sampleMessages.map((sample, index) => (
                       <div 
@@ -151,6 +155,7 @@ function CaesarCipherPage() {
                         onClick={() => setMessage(sample)}
                       >
                         <code className="font-mono text-purple-700">{sample}</code>
+                        {index === 2 && <div className="text-xs text-gray-500 mt-1">🏛️ Caesar's famous quote</div>}
                       </div>
                     ))}
                   </div>
@@ -163,9 +168,10 @@ function CaesarCipherPage() {
               output={output}
               visualizer={
                 <AnimatedMapping
-                  from={ALPHABET.split("")}
-                  to={shiftedAlphabet}
+                  from={mode === "encrypt" ? ALPHABET.split("") : shiftedAlphabet}
+                  to={mode === "encrypt" ? shiftedAlphabet : ALPHABET.split("")}
                   highlightChar={currentCharToHighlight}
+                  direction={mode === "encrypt" ? "down" : "up"}
                 />
               }
             />
@@ -186,46 +192,87 @@ function CaesarCipherPage() {
 
             <div className="bg-bg p-3 rounded mb-3 border-2 border-dashed border-primary/30">
               <div className="text-center">
-                <div className="text-xs text-muted-fg mb-1">
-                  🔤 Normal Alphabet
+                  {mode === "encrypt" ? (
+                    <>
+                      <div className="text-xs text-muted-fg mb-1">
+                        🔤 Normal Alphabet
+                      </div>
+                      <div className="font-mono text-sm tracking-wider bg-muted p-2 rounded">
+                        A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+                      </div>
+                      <div className="my-2 text-primary">
+                        ↓ Slide by {shift} positions ↓
+                      </div>
+                      <div className="text-xs text-muted-fg mb-1">
+                        🔐 Secret Alphabet
+                      </div>
+                      <div className="font-mono text-sm tracking-wider bg-primary/10 p-2 rounded text-primary">
+                        {shiftedAlphabet.join(" ")}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-xs text-muted-fg mb-1">
+                        🔐 Secret Alphabet
+                      </div>
+                      <div className="font-mono text-sm tracking-wider bg-primary/10 p-2 rounded text-primary">
+                        {shiftedAlphabet.join(" ")}
+                      </div>
+                      <div className="my-2 text-primary">
+                        ↑ Slide back by {shift} positions ↑
+                      </div>
+                      <div className="text-xs text-muted-fg mb-1">
+                        🔤 Normal Alphabet
+                      </div>
+                      <div className="font-mono text-sm tracking-wider bg-muted p-2 rounded">
+                        A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+                      </div>
+                    </>
+                  )}
                 </div>
-                <div className="font-mono text-sm tracking-wider bg-muted p-2 rounded">
-                  A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
-                </div>
-                <div className="my-2 text-primary">
-                  ↓ Slide by {shift} positions ↓
-                </div>
-                <div className="text-xs text-muted-fg mb-1">
-                  🔐 Secret Alphabet
-                </div>
-                <div className="font-mono text-sm tracking-wider bg-primary/10 p-2 rounded text-primary">
-                  {shiftedAlphabet.join(" ")}
-                </div>
-              </div>
             </div>
           </div>
 
           <div className="bg-success/10 p-4 rounded-lg border-l-4 border-success">
             <h4 className="font-semibold text-success mb-2 flex items-center">
-              🎯 How to Encode a Message
+              🎯 {mode === "encrypt" ? "How to Encode a Message" : "How to Decode a Message"}
             </h4>
             <div className="space-y-2">
               <p className="text-sm text-muted-fg">
                 <span className="font-semibold">Step 1:</span> Pick your secret
                 shift number (like {shift})
               </p>
-              <p className="text-sm text-muted-fg">
-                <span className="font-semibold">Step 2:</span> For each letter
-                in your message, find it in the normal alphabet
-              </p>
-              <p className="text-sm text-muted-fg">
-                <span className="font-semibold">Step 3:</span> Look directly
-                below it in the secret alphabet
-              </p>
-              <p className="text-sm text-muted-fg">
-                <span className="font-semibold">Step 4:</span> Replace your
-                letter with the secret one!
-              </p>
+              {mode === "encrypt" ? (
+                <>
+                  <p className="text-sm text-muted-fg">
+                    <span className="font-semibold">Step 2:</span> For each letter
+                    in your message, find it in the normal alphabet
+                  </p>
+                  <p className="text-sm text-muted-fg">
+                    <span className="font-semibold">Step 3:</span> Look directly
+                    below it in the secret alphabet
+                  </p>
+                  <p className="text-sm text-muted-fg">
+                    <span className="font-semibold">Step 4:</span> Replace your
+                    letter with the secret one!
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-muted-fg">
+                    <span className="font-semibold">Step 2:</span> For each letter
+                    in your secret message, find it in the secret alphabet
+                  </p>
+                  <p className="text-sm text-muted-fg">
+                    <span className="font-semibold">Step 3:</span> Look directly
+                    above it to find the normal alphabet letter
+                  </p>
+                  <p className="text-sm text-muted-fg">
+                    <span className="font-semibold">Step 4:</span> Replace the
+                    secret letter with the normal one!
+                  </p>
+                </>
+              )}
             </div>
 
             <div className="mt-3 p-3 bg-bg rounded border-2 border-dashed border-success/30">
@@ -234,35 +281,69 @@ function CaesarCipherPage() {
                   🧩 Example with shift {shift}:
                 </div>
                 <div className="font-mono text-lg">
-                  <span className="bg-warning/20 px-2 py-1 rounded mr-2">
-                    HELLO
-                  </span>
-                  <span className="text-success">→</span>
-                  <span className="bg-success/20 px-2 py-1 rounded ml-2">
-                    {caesarCipher("HELLO", shift, false)}
-                  </span>
+                  {mode === "encrypt" ? (
+                    <>
+                      <span className="bg-warning/20 px-2 py-1 rounded mr-2">
+                        HELLO
+                      </span>
+                      <span className="text-success">→</span>
+                      <span className="bg-success/20 px-2 py-1 rounded ml-2">
+                        {caesarCipher("HELLO", shift, false)}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="bg-warning/20 px-2 py-1 rounded mr-2">
+                        {caesarCipher("HELLO", shift, false)}
+                      </span>
+                      <span className="text-success">→</span>
+                      <span className="bg-success/20 px-2 py-1 rounded ml-2">
+                        HELLO
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-accent/10 p-4 rounded-lg border-l-4 border-accent">
-            <h4 className="font-semibold text-accent mb-2 flex items-center">
-              🔄 To Decode (Decrypt)
-            </h4>
-            <p className="text-sm text-muted-fg mb-2">
-              Just do the opposite! Slide the alphabet strip back by the same
-              number of steps. If you encoded with shift {shift}, decode with
-              shift -{shift}.
-            </p>
-            <div className="text-center">
-              <div className="inline-block bg-bg p-2 rounded border-2 border-dashed border-accent/30">
-                <span className="text-accent font-mono">
-                  🔑 Same key, reverse direction!
-                </span>
+          {mode === "encrypt" ? (
+            <div className="bg-accent/10 p-4 rounded-lg border-l-4 border-accent">
+              <h4 className="font-semibold text-accent mb-2 flex items-center">
+                🔄 To Decode (Decrypt)
+              </h4>
+              <p className="text-sm text-muted-fg mb-2">
+                Just do the opposite! Slide the alphabet strip back by the same
+                number of steps. If you encoded with shift {shift}, decode with
+                shift {shift}.
+              </p>
+              <div className="text-center">
+                <div className="inline-block bg-bg p-2 rounded border-2 border-dashed border-accent/30">
+                  <span className="text-accent font-mono">
+                    🔑 Same key, reverse direction!
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="bg-accent/10 p-4 rounded-lg border-l-4 border-accent">
+              <h4 className="font-semibold text-accent mb-2 flex items-center">
+                🔄 To Encode (Encrypt)
+              </h4>
+              <p className="text-sm text-muted-fg mb-2">
+                Just do the opposite! Slide the alphabet strip forward by the same
+                number of steps. If you decoded with shift {shift}, encode with
+                shift {shift}.
+              </p>
+              <div className="text-center">
+                <div className="inline-block bg-bg p-2 rounded border-2 border-dashed border-accent/30">
+                  <span className="text-accent font-mono">
+                    🔑 Same key, opposite direction!
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="bg-warning/10 p-4 rounded-lg border-l-4 border-warning">
             <h4 className="font-semibold text-warning mb-2 flex items-center">
@@ -270,7 +351,7 @@ function CaesarCipherPage() {
             </h4>
             <p className="text-sm text-muted-fg">
               Use the slider above to change your shift number and watch the
-              secret alphabet change! Then type a message and click "
+              {mode === "encrypt" ? " secret" : " cipher"} alphabet change! Then type a message and click "
               {mode === "encrypt" ? "Encrypt" : "Decrypt"}" to see the
               step-by-step animation.
             </p>

@@ -12,7 +12,7 @@ export const Route = createFileRoute("/ciphers/keyword")({
 });
 
 function KeywordCipherPage() {
-  const [mode, setMode] = useState<"encrypt" | "decrypt">("encrypt");
+  const [mode, setMode] = useState<"encrypt" | "decrypt" | "crack">("encrypt");
   const [message, setMessage] = useState<string>("");
   const [keyword, setKeyword] = useState<string>("");
   const [output, setOutput] = useState<string>("");
@@ -55,8 +55,9 @@ function KeywordCipherPage() {
           output={output}
           visualizer={keyword && (
             <AnimatedMapping 
-              from={ALPHABET.split("")} 
-              to={cipherAlphabet.split("")} 
+              from={mode === "encrypt" ? ALPHABET.split("") : cipherAlphabet.split("")} 
+              to={mode === "encrypt" ? cipherAlphabet.split("") : ALPHABET.split("")}
+              direction={mode === "encrypt" ? "down" : "up"}
             />
           )}
         />
@@ -84,33 +85,62 @@ function KeywordCipherPage() {
                 <div className="font-mono text-sm tracking-wider bg-primary/10 p-2 rounded text-primary">
                   SECRT + ABDFGHIJKLMNOPQUVWXYZ
                 </div>
+                <div className="mt-3 text-xs text-muted-fg mb-1">
+                  {mode === "encrypt" ? "🔐 Encryption Direction ↓" : "🔓 Decryption Direction ↑"}
+                </div>
               </div>
             </div>
           </div>
 
           <div className="bg-success/10 p-4 rounded-lg border-l-4 border-success">
             <h4 className="font-semibold text-success mb-2 flex items-center">
-              🎯 How to Use Your Keyword Alphabet
+              {mode === "encrypt" ? "🎯 How to Encrypt with Your Keyword" : "🎯 How to Decrypt with Your Keyword"}
             </h4>
             <div className="space-y-2">
-              <p className="text-sm text-muted-fg">
-                <span className="font-semibold">Step 1:</span> Find your letter in the normal alphabet (top row)
-              </p>
-              <p className="text-sm text-muted-fg">
-                <span className="font-semibold">Step 2:</span> Look directly below it in your keyword alphabet (bottom row)
-              </p>
-              <p className="text-sm text-muted-fg">
-                <span className="font-semibold">Step 3:</span> Replace it with the keyword alphabet letter!
-              </p>
+              {mode === "encrypt" ? (
+                <>
+                  <p className="text-sm text-muted-fg">
+                    <span className="font-semibold">Step 1:</span> Find your letter in the normal alphabet (top row)
+                  </p>
+                  <p className="text-sm text-muted-fg">
+                    <span className="font-semibold">Step 2:</span> Look directly below it in your keyword alphabet (bottom row)
+                  </p>
+                  <p className="text-sm text-muted-fg">
+                    <span className="font-semibold">Step 3:</span> Replace it with the keyword alphabet letter!
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-muted-fg">
+                    <span className="font-semibold">Step 1:</span> Find your letter in the keyword alphabet (bottom row)
+                  </p>
+                  <p className="text-sm text-muted-fg">
+                    <span className="font-semibold">Step 2:</span> Look directly above it to find the normal alphabet letter (top row)
+                  </p>
+                  <p className="text-sm text-muted-fg">
+                    <span className="font-semibold">Step 3:</span> Replace it with the normal alphabet letter!
+                  </p>
+                </>
+              )}
             </div>
             
             <div className="mt-3 p-3 bg-bg rounded border-2 border-dashed border-success/30">
               <div className="text-center">
                 <div className="text-sm font-semibold text-success mb-2">🧩 Example with keyword "SECRET":</div>
                 <div className="font-mono text-lg">
-                  <span className="bg-warning/20 px-2 py-1 rounded mr-2">HELLO</span>
-                  <span className="text-success">→</span>
-                  <span className="bg-success/20 px-2 py-1 rounded ml-2">JDMMS</span>
+                  {mode === "encrypt" ? (
+                    <>
+                      <span className="bg-warning/20 px-2 py-1 rounded mr-2">HELLO</span>
+                      <span className="text-success">→</span>
+                      <span className="bg-success/20 px-2 py-1 rounded ml-2">JDMMS</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="bg-warning/20 px-2 py-1 rounded mr-2">JDMMS</span>
+                      <span className="text-success">→</span>
+                      <span className="bg-success/20 px-2 py-1 rounded ml-2">HELLO</span>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -118,14 +148,16 @@ function KeywordCipherPage() {
 
           <div className="bg-accent/10 p-4 rounded-lg border-l-4 border-accent">
             <h4 className="font-semibold text-accent mb-2 flex items-center">
-              🔄 To Decode (Decrypt)
+              {mode === "encrypt" ? "🔄 To Decode (Decrypt)" : "🔄 To Encode (Encrypt)"}
             </h4>
             <p className="text-sm text-muted-fg mb-2">
-              Do the reverse! Find the coded letter in your keyword alphabet (bottom row) and see what the original letter is in the normal alphabet (top row).
+              {mode === "encrypt" 
+                ? "Do the reverse! Find the coded letter in your keyword alphabet (bottom row) and see what the original letter is in the normal alphabet (top row)."
+                : "Do the reverse! Find your letter in the normal alphabet (top row) and see what the cipher letter is in the keyword alphabet (bottom row)."}
             </p>
             <div className="text-center">
               <div className="inline-block bg-bg p-2 rounded border-2 border-dashed border-accent/30">
-                <span className="text-accent font-mono">🔑 Same keyword, reverse lookup!</span>
+                <span className="text-accent font-mono">🔑 Same keyword, {mode === "encrypt" ? "reverse" : "forward"} lookup!</span>
               </div>
             </div>
           </div>
@@ -135,7 +167,7 @@ function KeywordCipherPage() {
               🎮 Try It Yourself!
             </h4>
             <p className="text-sm text-muted-fg">
-              Type in your own keyword above and watch the alphabet mapping change! The animation shows you exactly how each letter maps to its secret code.
+              Type in your own keyword above and watch the alphabet mapping change! The animation shows you exactly how each letter maps in {mode === "encrypt" ? "encryption" : "decryption"} mode.
             </p>
           </div>
         </div>

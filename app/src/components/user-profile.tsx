@@ -50,7 +50,7 @@ export function UserProfile() {
           </div>
           <Button 
             variant="ghost" 
-            size="sm" 
+            size="small"
             className="text-white hover:bg-gray-800 w-full justify-start"
             onClick={handleLogout}
           >
