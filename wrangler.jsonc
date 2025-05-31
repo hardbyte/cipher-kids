@@ -1,7 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "cipher-kids",
-  "main": "./.output/server/index.mjs",
   "compatibility_date": "2025-04-01",
   "assets": {
     "directory": "./app/dist/",
