@@ -2,12 +2,10 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "cipher-kids",
   "main": "./.output/server/index.mjs",
-  "compatibility_date": "2025-04-14",
-  "observability": {
-    "enabled": true
-  },
+  "compatibility_date": "2025-04-01",
   "assets": {
-    "directory": "./.output/public/"
+    "directory": "./app/dist/",
+    "not_found_handling": "single-page-application"
   },
   "compatibility_flags": ["nodejs_compat"]
 }
