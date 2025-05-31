@@ -1,10 +1,5 @@
 {
   "name": "cipher-kids",
-  "compatibility_date": "2023-12-01",
-  "assets": {
-    "directory": "./dist"
-  },
-  "routes": [
-    { "pattern": "*", "script": "./functions/_routes.js" }
-  ]
+  "compatibility_date": "2024-12-01",
+  "pages_build_output_dir": "./dist"
 }

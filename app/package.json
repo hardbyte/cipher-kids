@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "start": "vite",
     "test": "playwright test",
-    "deploy": "npm run build && npx wrangler deploy"
+    "deploy": "npm run build && npx wrangler pages deploy ./dist"
   },
   "dependencies": {
     "@intentui/icons": "1.10.34",
