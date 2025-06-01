@@ -1,8 +1,7 @@
 import { useState, useEffect, ChangeEvent, useCallback } from "react";
 import { AnimatedMapping } from "@/components/cipher/AnimatedMapping";
 import { CipherNav } from "@/components/cipher/CipherNav";
-import { Label } from "@/components/ui/label"; // Assuming Label component path
-import { Input } from "@/components/ui/input"; // Assuming Input component path
+import { Label, Input } from "@/components/ui/field";
 import { CipherInputs } from "@/components/cipher/CipherInputs";
 import { CipherModeToggle } from "@/components/cipher/CipherModeToggle";
 import { CipherResult } from "@/components/cipher/results/CipherResult";
