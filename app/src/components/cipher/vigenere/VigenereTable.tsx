@@ -1,9 +1,14 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ALPHABET } from "@/utils/ciphers";
+import {
+  DEFAULT_ALPHABET,
+  mapCharToNumber,
+  mapNumberToChar,
+} from "@/utils/ciphers";
 import "./vigenere.css";
 
 interface VigenereTableProps {
+  alphabet?: string;
   keyword: string;
   plaintextChar?: string;
   keywordChar?: string;
@@ -13,6 +18,7 @@ interface VigenereTableProps {
 }
 
 export const VigenereTable: React.FC<VigenereTableProps> = ({
+  alphabet = DEFAULT_ALPHABET,
   keyword,
   plaintextChar,
   keywordChar,
@@ -29,24 +35,31 @@ export const VigenereTable: React.FC<VigenereTableProps> = ({
   const [interactionMode, setInteractionMode] = useState<"waiting_for_key" | "waiting_for_cipher" | "complete">("waiting_for_key");
 
   // Clean up keyword for display
-  const cleanKeyword = keyword.toUpperCase().replace(/[^A-Z]/g, "");
+  const cleanKeyword = keyword
+    .toUpperCase()
+    .split("")
+    .filter((char) => alphabet.includes(char))
+    .join("");
   
-  // Generate Vigenère table (26×26 grid)
-  const table = Array.from({ length: 26 }, (_, rowIdx) => {
-    return Array.from({ length: 26 }, (_, colIdx) => {
-      return ALPHABET[(rowIdx + colIdx) % 26];
+  // Generate Vigenère table (alphabet.length × alphabet.length grid)
+  const table = Array.from({ length: alphabet.length }, (_, rowIdx) => {
+    return Array.from({ length: alphabet.length }, (_, colIdx) => {
+      return mapNumberToChar(
+        (rowIdx + colIdx) % alphabet.length,
+        alphabet
+      );
     });
   });
 
   // Get indices for keyword characters
   const keywordIndices = showKeywordRows && cleanKeyword
-    ? [...new Set(cleanKeyword.split('').map(char => ALPHABET.indexOf(char)))]
-        .filter(idx => idx >= 0)
+    ? [...new Set(cleanKeyword.split('').map(char => mapCharToNumber(char, alphabet)))]
+        .filter(idx => idx >= 0) // mapCharToNumber throws error, so this filter might be redundant but safe
     : [];
 
   // Enhanced interaction handler for decrypt mode
   const handleCellInteraction = useCallback((row: number, col: number, isKeyColumn: boolean = false) => {
-    if (row >= 0 && col >= 0 && row < 26 && col < 26) {
+    if (row >= 0 && col >= 0 && row < alphabet.length && col < alphabet.length) {
       if (mode === "decrypt") {
         if (isKeyColumn && interactionMode === "waiting_for_key") {
           // User clicked a key letter - highlight the row and wait for cipher letter
@@ -75,34 +88,45 @@ export const VigenereTable: React.FC<VigenereTableProps> = ({
         setHighlightedCell({ row, col });
       }
     }
-  }, [mode, interactionMode, selectedKeyRow]);
+  }, [mode, interactionMode, selectedKeyRow, alphabet]);
 
   // Effect to sync with StepByStepAnimation or handle direct character highlighting
   useEffect(() => {
     if (currentAnimationStep >= 0 && animationMessage) {
       // Sync with StepByStepAnimation
-      const cleanMessage = animationMessage.toUpperCase().replace(/[^A-Z]/g, "");
-      const cleanKeyword = keyword.toUpperCase().replace(/[^A-Z]/g, "");
+      const cleanMessage = animationMessage
+        .toUpperCase()
+        .split("")
+        .filter((char) => alphabet.includes(char))
+        .join("");
+      const cleanKeywordEffect = keyword // Already cleaned based on alphabet at the top
+        .toUpperCase()
+        .split("")
+        .filter((char) => alphabet.includes(char))
+        .join("");
       
       if (currentAnimationStep < cleanMessage.length && cleanKeyword) {
         const messageChar = cleanMessage[currentAnimationStep];
         const keyChar = cleanKeyword[currentAnimationStep % cleanKeyword.length];
         
-        const plainIdx = ALPHABET.indexOf(messageChar);
-        const keyIdx = ALPHABET.indexOf(keyChar);
+        try {
+          const plainIdx = mapCharToNumber(messageChar, alphabet);
+          const keyIdx = mapCharToNumber(keyChar, alphabet);
         
-        if (plainIdx >= 0 && keyIdx >= 0) {
           setHighlightedRow(keyIdx);
           setHighlightedCol(plainIdx);
           setHighlightedCell({ row: keyIdx, col: plainIdx });
+        } catch (e) {
+          // char not in alphabet, ignore
+          console.error("Error in animation effect:", e);
         }
       }
     } else if (plaintextChar && keywordChar && !isAnimating) {
       // Original behavior for direct character highlighting
-      const plainIdx = ALPHABET.indexOf(plaintextChar.toUpperCase());
-      const keyIdx = ALPHABET.indexOf(keywordChar.toUpperCase());
+      try {
+        const plainIdx = mapCharToNumber(plaintextChar.toUpperCase(), alphabet);
+        const keyIdx = mapCharToNumber(keywordChar.toUpperCase(), alphabet);
 
-      if (plainIdx >= 0 && keyIdx >= 0) {
         setIsAnimating(true);
         
         // Clear previous highlights immediately
@@ -130,9 +154,12 @@ export const VigenereTable: React.FC<VigenereTableProps> = ({
         });
 
         return () => timeouts.forEach(t => window.clearTimeout(t));
+      } catch (e) {
+         // char not in alphabet, ignore
+         console.error("Error in direct highlighting effect:", e);
       }
     }
-  }, [plaintextChar, keywordChar, isAnimating, currentAnimationStep, animationMessage, keyword]);
+  }, [plaintextChar, keywordChar, isAnimating, currentAnimationStep, animationMessage, keyword, alphabet]);
 
   return (
     <div className="flex flex-col items-center p-2">
@@ -184,14 +211,20 @@ export const VigenereTable: React.FC<VigenereTableProps> = ({
       </div>
 
       <div className="vigenere-table-container overflow-auto max-w-full">
-        <div className="vigenere-table inline-grid grid-rows-27 grid-cols-27 gap-0.5 bg-muted/20 p-0.5 rounded-lg font-mono text-xs">
+        <div
+          className="vigenere-table inline-grid gap-0.5 bg-muted/20 p-0.5 rounded-lg font-mono text-xs"
+          style={{
+            gridTemplateRows: `repeat(${alphabet.length + 1}, minmax(0, 1fr))`,
+            gridTemplateColumns: `repeat(${alphabet.length + 1}, minmax(0, 1fr))`,
+          }}
+        >
           {/* Empty corner cell */}
           <div className="flex items-center justify-center w-6 h-6 bg-primary/20 font-bold rounded-tl-md">
             +
           </div>
 
           {/* Top row header (plaintext letters) */}
-          {ALPHABET.split("").map((letter, idx) => (
+          {alphabet.split("").map((letter, idx) => (
             <motion.div
               key={`header-${letter}`}
               className={`flex items-center justify-center w-6 h-6 rounded-sm font-bold
@@ -210,7 +243,7 @@ export const VigenereTable: React.FC<VigenereTableProps> = ({
           ))}
 
           {/* Left column header (keyword letters) */}
-          {ALPHABET.split("").map((letter, idx) => {
+          {alphabet.split("").map((letter, idx) => {
             const isKeywordRow = keywordIndices.includes(idx);
             return (
               <motion.div
@@ -289,19 +322,19 @@ export const VigenereTable: React.FC<VigenereTableProps> = ({
           <div className="font-medium">
             {mode === "encrypt" ? (
               <>
-                <span className="text-success">{ALPHABET[highlightedCell.col]}</span>
+                <span className="text-success">{mapNumberToChar(highlightedCell.col, alphabet)}</span>
                 <span className="mx-1">+</span>
-                <span className="text-warning">{ALPHABET[highlightedCell.row]}</span>
+                <span className="text-warning">{mapNumberToChar(highlightedCell.row, alphabet)}</span>
                 <span className="mx-1">=</span>
                 <span className="text-accent font-bold">{table[highlightedCell.row][highlightedCell.col]}</span>
               </>
             ) : (
               <>
-                <span className="text-warning">{ALPHABET[highlightedCell.row]}</span>
+                <span className="text-warning">{mapNumberToChar(highlightedCell.row, alphabet)}</span>
                 <span className="mx-1">+</span>
                 <span className="text-accent font-bold">{table[highlightedCell.row][highlightedCell.col]}</span>
                 <span className="mx-1">=</span>
-                <span className="text-success">{ALPHABET[highlightedCell.col]}</span>
+                <span className="text-success">{mapNumberToChar(highlightedCell.col, alphabet)}</span>
               </>
             )}
           </div>

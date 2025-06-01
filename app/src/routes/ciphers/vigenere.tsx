@@ -1,10 +1,12 @@
 import { useState, useEffect, ChangeEvent, useCallback } from "react";
 import { AnimatedMapping } from "@/components/cipher/AnimatedMapping";
 import { CipherNav } from "@/components/cipher/CipherNav";
+import { Label } from "@/components/ui/label"; // Assuming Label component path
+import { Input } from "@/components/ui/input"; // Assuming Input component path
 import { CipherInputs } from "@/components/cipher/CipherInputs";
 import { CipherModeToggle } from "@/components/cipher/CipherModeToggle";
 import { CipherResult } from "@/components/cipher/results/CipherResult";
-import { vigenereCipher, ALPHABET } from "@/utils/ciphers";
+import { vigenereCipher, DEFAULT_ALPHABET, mapCharToNumber } from "@/utils/ciphers";
 import { createFileRoute } from "@tanstack/react-router";
 import { VigenereTable } from "@/components/cipher/vigenere/VigenereTable";
 import { KeywordRepetition } from "@/components/cipher/vigenere/KeywordRepetition";
@@ -24,6 +26,7 @@ function VigenereCipherPage() {
   const [mode, setMode] = useState<"encrypt" | "decrypt" | "crack">("encrypt");
   const [message, setMessage] = useState<string>("");
   const [keyword, setKeyword] = useState<string>("");
+  const [customAlphabet, setCustomAlphabet] = useState<string>(DEFAULT_ALPHABET);
   const [output, setOutput] = useState<string>("");
   const [showFullTable, setShowFullTable] = useState(false);
   const [animateKeywordRepetition, setAnimateKeywordRepetition] = useState(false);
@@ -34,6 +37,9 @@ function VigenereCipherPage() {
   const [showFrequencyAnalysis, setShowFrequencyAnalysis] = useState(false);
   const [keyLength, setKeyLength] = useState(3); // Default key length for analysis
   const [currentStepIndex, setCurrentStepIndex] = useState(-1);
+
+  const uniqueChars = Array.from(new Set(customAlphabet.trim().toUpperCase().split(""))).join("");
+  const activeAlphabet = uniqueChars || DEFAULT_ALPHABET;
 
   // Stable callback functions for animation
   const handleAnimationComplete = useCallback(() => {
@@ -50,7 +56,7 @@ function VigenereCipherPage() {
       return;
     }
     
-    const result = vigenereCipher(message, keyword, mode === "decrypt");
+    const result = vigenereCipher(message, keyword, mode === "decrypt", activeAlphabet);
     setOutput(result);
     
     // Trigger animation for keyword repetition (only if not already animating)
@@ -72,7 +78,7 @@ function VigenereCipherPage() {
   };
 
   // Clean keyword for visualization
-  const cleanKeyword = keyword.toUpperCase().replace(/[^A-Z]/g, "");
+  const cleanKeyword = keyword.toUpperCase().split("").filter(char => activeAlphabet.includes(char)).join("");
 
   // Effect to demonstrate a single character when the full table isn't shown
   useEffect(() => {
@@ -80,12 +86,15 @@ function VigenereCipherPage() {
       const plainChar = message[0]?.toUpperCase();
       const keyChar = cleanKeyword[0]?.toUpperCase();
       
-      if (plainChar && keyChar && /[A-Z]/.test(plainChar) && /[A-Z]/.test(keyChar)) {
+      if (plainChar && keyChar && activeAlphabet.includes(plainChar) && activeAlphabet.includes(keyChar)) {
         setCurrentPlaintextChar(plainChar);
         setCurrentKeyChar(keyChar);
+      } else {
+        setCurrentPlaintextChar(undefined);
+        setCurrentKeyChar(undefined);
       }
     }
-  }, [message, cleanKeyword, showFullTable]);
+  }, [message, cleanKeyword, showFullTable, activeAlphabet]);
 
   return (
     <div className="p-6 max-w-2xl mx-auto space-y-4">
@@ -106,10 +115,11 @@ function VigenereCipherPage() {
         {mode === "crack" ? (
           <div className="space-y-3">
             <div>
-              <label className="block text-sm font-medium mb-1">
+              <Label htmlFor="crackMessageInput" className="block text-sm font-medium mb-1">
                 Enter Encrypted Message
-              </label>
+              </Label>
               <textarea
+                id="crackMessageInput"
                 value={message}
                 onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setMessage(e.target.value)}
                 placeholder="Enter the message you want to crack"
@@ -128,6 +138,20 @@ function VigenereCipherPage() {
               paramPlaceholder="Enter keyword"
               handleAction={handleAction}
             />
+            <div className="space-y-1">
+              <Label htmlFor="customAlphabetInput">Custom Alphabet (optional)</Label>
+              <Input
+                id="customAlphabetInput"
+                type="text"
+                value={customAlphabet}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setCustomAlphabet(e.target.value.toUpperCase())}
+                placeholder="e.g., ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                className="w-full"
+              />
+              <p className="text-xs text-muted-fg">
+                Only unique characters from your input will be used. If empty, defaults to A-Z. Current: {activeAlphabet.length} chars.
+              </p>
+            </div>
               
             {message && keyword && (
               <div className="bg-primary/10 p-3 rounded-lg border border-primary/30 text-center">
@@ -153,20 +177,20 @@ function VigenereCipherPage() {
             <div className="bg-accent/10 p-4 rounded-lg border border-accent/30 mb-4">
               <h4 className="font-semibold text-accent-fg mb-2">Sample Encrypted Messages</h4>
               <p className="text-sm text-muted-fg mb-3">
-                Try cracking these messages as practice (both encrypted with the keyword "SPY"):
+                Try cracking these messages as practice (both encrypted with the keyword "SPY" using default A-Z alphabet):
               </p>
               <div className="space-y-2 font-mono text-sm">
                 <div 
                   className="bg-bg p-2 rounded cursor-pointer hover:bg-muted/20 border border-muted/30" 
-                  onClick={() => setMessage("LZIJQM HEWSDCF")}
+                  onClick={() => {setMessage("LZIJQM HEWSDCF"); setCustomAlphabet(DEFAULT_ALPHABET);}}
                 >
-                  LZIJQM HEWSDCF
+                  LZIJQM HEWSDCF (Key: SPY)
                 </div>
                 <div 
                   className="bg-bg p-2 rounded cursor-pointer hover:bg-muted/20 border border-muted/30"
-                  onClick={() => setMessage("BGPXVR CSRBVLY CYJPHMN")}
+                  onClick={() => {setMessage("BGPXVR CSRBVLY CYJPHMN"); setCustomAlphabet(DEFAULT_ALPHABET);}}
                 >
-                  BGPXVR CSRBVLY CYJPHMN
+                  BGPXVR CSRBVLY CYJPHMN (Key: SPY)
                 </div>
               </div>
             </div>
@@ -204,6 +228,7 @@ function VigenereCipherPage() {
                 ciphertext={message}
                 keyLength={keyLength}
                 showAnalysis={showFrequencyAnalysis}
+                alphabet={activeAlphabet}
               />
             </div>
           </div>
@@ -224,6 +249,7 @@ function VigenereCipherPage() {
               {showFullTable ? (
                 <div className="bg-muted/10 rounded-lg p-2 border border-muted overflow-auto">
                   <VigenereTable
+                    alphabet={activeAlphabet}
                     keyword={cleanKeyword}
                     plaintextChar={currentPlaintextChar}
                     keywordChar={currentKeyChar}
@@ -267,6 +293,7 @@ function VigenereCipherPage() {
               
               {showStepByStep && (
                 <StepByStepAnimation
+                  alphabet={activeAlphabet}
                   message={message}
                   keyword={cleanKeyword}
                   mode={mode}
@@ -284,6 +311,7 @@ function VigenereCipherPage() {
                 keyword={cleanKeyword} 
                 message={message}
                 isAnimating={animateKeywordRepetition}
+                alphabet={activeAlphabet}
               />
             </div>
 
@@ -319,17 +347,17 @@ function VigenereCipherPage() {
 
             <CipherResult 
               output={output}
-              visualizer={cleanKeyword && (
+              visualizer={cleanKeyword && activeAlphabet && (
                 <div className="space-y-6">
                   <div className="bg-info/10 p-3 rounded-lg mb-4">
                     <h4 className="font-medium text-info-fg mb-2">Alphabet Mapping Explained</h4>
                     <p className="text-sm mb-2">
-                      Below you'll see a separate Caesar cipher shift for <strong>each letter</strong> in your keyword "{cleanKeyword}".
+                      Below you'll see a separate Caesar cipher shift for <strong>each letter</strong> in your keyword "{cleanKeyword}" using alphabet "{activeAlphabet}".
                     </p>
                     <div className="flex flex-wrap gap-2 mb-2">
                       {cleanKeyword.split("").map((char, idx) => (
                         <div key={`badge-${idx}`} className="px-2 py-1 bg-warning/20 text-warning-fg rounded-md text-sm">
-                          {char} = shift {ALPHABET.indexOf(char)}
+                          {char} = shift {mapCharToNumber(char, activeAlphabet)}
                         </div>
                       ))}
                     </div>
@@ -341,32 +369,34 @@ function VigenereCipherPage() {
                   </div>
                   
                   {cleanKeyword.split("").map((char, idx) => {
-                    const shift = ALPHABET.indexOf(char);
-                    const shiftedAlphabet = ALPHABET.split("").map(
-                      (_, i) => ALPHABET[(i + shift) % 26]
-                    );
-                    return (
-                      <div key={idx} className="mb-4 bg-muted/10 p-3 rounded-lg border border-muted/20">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="bg-primary/20 text-primary-fg px-2 py-1 rounded font-mono font-bold">
-                            {char}
+                    try {
+                      const shift = mapCharToNumber(char, activeAlphabet);
+                      const shiftedAlphabet = activeAlphabet.split("").map(
+                        (_, i) => activeAlphabet[(i + shift) % activeAlphabet.length]
+                      );
+                      return (
+                        <div key={idx} className="mb-4 bg-muted/10 p-3 rounded-lg border border-muted/20">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="bg-primary/20 text-primary-fg px-2 py-1 rounded font-mono font-bold">
+                              {char}
+                            </div>
+                            <div className="text-sm">
+                              <span className="font-medium">Shift {shift}:</span>
+                              <span className="text-muted-fg ml-2">
+                                {mode === "encrypt" ?
+                                  `${activeAlphabet[0]} → ${activeAlphabet[shift]}, ${activeAlphabet[1]} → ${activeAlphabet[(1 + shift) % activeAlphabet.length]}, etc.` :
+                                  `${activeAlphabet[shift]} → ${activeAlphabet[0]}, ${activeAlphabet[(1 + shift) % activeAlphabet.length]} → ${activeAlphabet[1]}, etc.`}
+                              </span>
+                            </div>
                           </div>
-                          <div className="text-sm">
-                            <span className="font-medium">Shift {shift}:</span>
-                            <span className="text-muted-fg ml-2">
-                              {mode === "encrypt" ? 
-                                `A → ${ALPHABET[shift]}, B → ${ALPHABET[(1 + shift) % 26]}, etc.` : 
-                                `${ALPHABET[shift]} → A, ${ALPHABET[(1 + shift) % 26]} → B, etc.`}
-                            </span>
-                          </div>
+                          <AnimatedMapping
+                            from={mode === "encrypt" ? activeAlphabet.split("") : shiftedAlphabet}
+                            to={mode === "encrypt" ? shiftedAlphabet : activeAlphabet.split("")}
+                            direction={mode === "encrypt" ? "down" : "up"}
+                          />
                         </div>
-                        <AnimatedMapping
-                          from={mode === "encrypt" ? ALPHABET.split("") : shiftedAlphabet}
-                          to={mode === "encrypt" ? shiftedAlphabet : ALPHABET.split("")}
-                          direction={mode === "encrypt" ? "down" : "up"}
-                        />
-                      </div>
-                    );
+                      );
+                    } catch (e) { return null; } // In case char is somehow not in activeAlphabet
                   })}
                   
                   <div className="text-xs italic text-muted-fg text-center mt-2">

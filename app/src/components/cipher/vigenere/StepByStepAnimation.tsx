@@ -1,8 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ALPHABET } from "@/utils/ciphers";
+import {
+  DEFAULT_ALPHABET,
+  mapCharToNumber,
+  mapNumberToChar,
+} from "@/utils/ciphers";
 
 interface StepByStepAnimationProps {
+  alphabet?: string;
   message: string;
   keyword: string;
   mode: "encrypt" | "decrypt";
@@ -22,6 +27,7 @@ interface AnimationStep {
 }
 
 export const StepByStepAnimation: React.FC<StepByStepAnimationProps> = ({
+  alphabet = DEFAULT_ALPHABET,
   message,
   keyword,
   mode,
@@ -42,8 +48,16 @@ export const StepByStepAnimation: React.FC<StepByStepAnimationProps> = ({
 
   // Generate animation steps
   useEffect(() => {
-    const cleanMessage = message.toUpperCase().replace(/[^A-Z]/g, "");
-    const cleanKeyword = keyword.toUpperCase().replace(/[^A-Z]/g, "");
+    const cleanMessage = message
+      .toUpperCase()
+      .split("")
+      .filter((char) => alphabet.includes(char))
+      .join("");
+    const cleanKeyword = keyword
+      .toUpperCase()
+      .split("")
+      .filter((char) => alphabet.includes(char))
+      .join("");
     
     if (!cleanMessage || !cleanKeyword) {
       setSteps([]);
@@ -54,32 +68,43 @@ export const StepByStepAnimation: React.FC<StepByStepAnimationProps> = ({
     let keyIndex = 0;
 
     for (let i = 0; i < cleanMessage.length; i++) {
-      const messageChar = cleanMessage[i];
-      const keyChar = cleanKeyword[keyIndex % cleanKeyword.length];
-      const shift = ALPHABET.indexOf(keyChar);
-      
-      let resultChar: string;
-      if (mode === "encrypt") {
-        const messageIndex = ALPHABET.indexOf(messageChar);
-        resultChar = ALPHABET[(messageIndex + shift) % 26];
-      } else {
-        const messageIndex = ALPHABET.indexOf(messageChar);
-        resultChar = ALPHABET[(messageIndex - shift + 26) % 26];
+      try {
+        const messageChar = cleanMessage[i];
+        const keyChar = cleanKeyword[keyIndex % cleanKeyword.length];
+
+        const shift = mapCharToNumber(keyChar, alphabet);
+        const messageIndex = mapCharToNumber(messageChar, alphabet);
+
+        let resultChar: string;
+        if (mode === "encrypt") {
+          resultChar = mapNumberToChar(
+            (messageIndex + shift) % alphabet.length,
+            alphabet
+          );
+        } else {
+          resultChar = mapNumberToChar(
+            (messageIndex - shift + alphabet.length) % alphabet.length,
+            alphabet
+          );
+        }
+
+        newSteps.push({
+          messageChar,
+          keyChar,
+          shift,
+          resultChar,
+          position: i,
+        });
+
+        keyIndex++;
+      } catch (error) {
+        console.error("Error generating animation step:", error);
+        // Skip this character if it's not in the alphabet or causes an error
       }
-
-      newSteps.push({
-        messageChar,
-        keyChar,
-        shift,
-        resultChar,
-        position: i,
-      });
-
-      keyIndex++;
     }
 
     setSteps(newSteps);
-  }, [message, keyword, mode]);
+  }, [message, keyword, mode, alphabet]);
 
   // Update callback refs when they change
   useEffect(() => {
@@ -196,7 +221,7 @@ export const StepByStepAnimation: React.FC<StepByStepAnimationProps> = ({
               clearInterval(animationInterval.current);
               animationInterval.current = null;
             }
-            setTimeout(onComplete, 500);
+            setTimeout(onComplete, 500); // Prop onComplete used here
             return prev;
           }
         });
@@ -207,7 +232,7 @@ export const StepByStepAnimation: React.FC<StepByStepAnimationProps> = ({
   };
 
   const startAnimation = () => {
-    setIsManualControl(true);
+    setIsManualControl(true); // Should this be false when auto-starting?
     setCurrentStep(-1);
     setIsComplete(false);
     setIsPaused(false);
@@ -215,6 +240,9 @@ export const StepByStepAnimation: React.FC<StepByStepAnimationProps> = ({
     const interval = setInterval(() => {
       setCurrentStep((prev) => {
         if (prev < steps.length - 1) {
+          if (onStepChangeRef.current) { // Call onStepChange during manual start as well
+            onStepChangeRef.current(prev + 1);
+          }
           return prev + 1;
         } else {
           setIsComplete(true);
@@ -222,6 +250,7 @@ export const StepByStepAnimation: React.FC<StepByStepAnimationProps> = ({
             clearInterval(animationInterval.current);
             animationInterval.current = null;
           }
+          setTimeout(onCompleteRef.current, 500); // Use ref for onComplete
           return prev;
         }
       });
@@ -233,7 +262,7 @@ export const StepByStepAnimation: React.FC<StepByStepAnimationProps> = ({
   if (steps.length === 0) {
     return (
       <div className="text-center text-muted-fg p-8">
-        <p>Enter a message and keyword to see the step-by-step animation</p>
+        <p>Enter a message and keyword (using the current alphabet) to see the step-by-step animation</p>
       </div>
     );
   }
@@ -310,7 +339,7 @@ export const StepByStepAnimation: React.FC<StepByStepAnimationProps> = ({
                     {steps[currentStep].messageChar}
                   </motion.div>
                   <div className="text-xs text-muted-fg">
-                    Position: {ALPHABET.indexOf(steps[currentStep].messageChar) + 1}
+                    Position: {mapCharToNumber(steps[currentStep].messageChar, alphabet) + 1}
                   </div>
                 </div>
 
@@ -326,7 +355,7 @@ export const StepByStepAnimation: React.FC<StepByStepAnimationProps> = ({
                     {steps[currentStep].keyChar}
                   </motion.div>
                   <div className="text-xs text-muted-fg">
-                    Shift: {mode === "encrypt" ? "+" : "-"}{steps[currentStep].shift}
+                    Shift value: {steps[currentStep].shift} (from '{steps[currentStep].keyChar}')
                   </div>
                 </div>
 
@@ -344,7 +373,7 @@ export const StepByStepAnimation: React.FC<StepByStepAnimationProps> = ({
                     {steps[currentStep].resultChar}
                   </motion.div>
                   <div className="text-xs text-muted-fg">
-                    Position: {ALPHABET.indexOf(steps[currentStep].resultChar) + 1}
+                    Position: {mapCharToNumber(steps[currentStep].resultChar, alphabet) + 1}
                   </div>
                 </div>
               </div>
@@ -376,7 +405,9 @@ export const StepByStepAnimation: React.FC<StepByStepAnimationProps> = ({
                   )}
                 </div>
                 <div className="text-center text-xs text-muted-fg mt-2">
-                  ({ALPHABET.indexOf(steps[currentStep].messageChar) + 1} {mode === "encrypt" ? "+" : "-"} {steps[currentStep].shift} = {ALPHABET.indexOf(steps[currentStep].resultChar) + 1})
+                  (idx {mapCharToNumber(steps[currentStep].messageChar, alphabet)}) {" "}
+                  {mode === "encrypt" ? "+" : "-"} (shift {steps[currentStep].shift}) {" "}
+                  % {alphabet.length} = (idx {mapCharToNumber(steps[currentStep].resultChar, alphabet)})
                 </div>
               </motion.div>
             </div>
@@ -445,7 +476,7 @@ export const StepByStepAnimation: React.FC<StepByStepAnimationProps> = ({
       <div className="mt-6 flex justify-center gap-2">
         <button
           onClick={() => {
-            if (animationInterval) {
+            if (animationInterval) { // Check if animationInterval itself is not null
               if (animationInterval.current) {
                 clearInterval(animationInterval.current);
                 animationInterval.current = null;
@@ -454,27 +485,47 @@ export const StepByStepAnimation: React.FC<StepByStepAnimationProps> = ({
             setCurrentStep(-1);
             setIsComplete(false);
             setIsPaused(false);
-            setIsManualControl(true);
+            setIsManualControl(true); // Set to true to stop any ongoing auto-play
+            if(onStepChangeRef.current) onStepChangeRef.current(-1); // Notify parent of reset
           }}
           className="px-3 py-2 bg-muted rounded-md text-muted-fg hover:bg-muted/80 text-sm"
         >
           🔄 Reset
         </button>
         
-        {!isPaused && !isComplete ? (
+        {!isPaused && !isComplete && isPlaying ? ( // Only show Pause if playing
           <button
-            onClick={currentStep === -1 ? startAnimation : pauseAnimation}
+            onClick={pauseAnimation}
             className="px-3 py-2 bg-primary rounded-md text-primary-fg hover:bg-primary/80 text-sm"
           >
-            {currentStep === -1 ? "▶️ Start" : "⏸️ Pause"}
+            ⏸️ Pause
           </button>
         ) : (
           <button
-            onClick={resumeAnimation}
+            onClick={() => {
+              if (isPaused) {
+                setIsManualControl(false); // Resume auto-play
+                resumeAnimation();
+              } else {
+                 setIsManualControl(false); // Start auto-play
+                 // Ensure isPlaying prop is true or handle internally
+                 // For now, assume parent controls isPlaying for initial start
+                 // This button might be better as a "Play" that respects isPlaying prop
+                 // or we trigger parent's play function.
+                 // For simplicity, if currentStep is -1, it implies a fresh start.
+                 if (currentStep === -1) {
+                    setCurrentStep(-1); // Reset to trigger useEffect for playing
+                    setIsComplete(false);
+                    setIsPaused(false);
+                 } else { // If not paused and not -1, it means it was manually stepped. Resume from here.
+                    resumeAnimation();
+                 }
+              }
+            }}
             className="px-3 py-2 bg-primary rounded-md text-primary-fg hover:bg-primary/80 text-sm"
-            disabled={isComplete}
+            disabled={isComplete || !isPlaying && currentStep !== -1} // Disable if complete or if not playing and not at start
           >
-            ▶️ Resume
+            ▶️ {isPaused || currentStep !== -1 ? "Resume" : "Play"}
           </button>
         )}
       </div>
@@ -484,7 +535,9 @@ export const StepByStepAnimation: React.FC<StepByStepAnimationProps> = ({
         <button
           onClick={() => {
             setIsManualControl(true);
+            pauseAnimation(); // Pause auto-play if active
             goToPrevStep();
+            if(onStepChangeRef.current) onStepChangeRef.current(currentStep > 0 ? currentStep -1 : 0);
           }}
           className="px-4 py-2 bg-muted rounded-md text-muted-fg hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed"
           disabled={currentStep <= 0}
@@ -494,7 +547,9 @@ export const StepByStepAnimation: React.FC<StepByStepAnimationProps> = ({
         <button
           onClick={() => {
             setIsManualControl(true);
+            pauseAnimation(); // Pause auto-play if active
             goToNextStep();
+            if(onStepChangeRef.current) onStepChangeRef.current(currentStep < steps.length -1 ? currentStep + 1 : steps.length -1);
           }}
           className="px-4 py-2 bg-primary rounded-md text-primary-fg hover:bg-primary/80 disabled:opacity-50 disabled:cursor-not-allowed"
           disabled={currentStep >= steps.length - 1}
@@ -510,7 +565,9 @@ export const StepByStepAnimation: React.FC<StepByStepAnimationProps> = ({
             key={index}
             onClick={() => {
               setIsManualControl(true);
+              pauseAnimation(); // Pause auto-play if active
               goToStep(index);
+              if(onStepChangeRef.current) onStepChangeRef.current(index);
             }}
             className={`w-8 h-8 rounded-full flex items-center justify-center text-xs ${
               currentStep === index
