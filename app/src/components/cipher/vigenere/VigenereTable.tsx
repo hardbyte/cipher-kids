@@ -54,7 +54,6 @@ export const VigenereTable: React.FC<VigenereTableProps> = ({
   // Get indices for keyword characters
   const keywordIndices = showKeywordRows && cleanKeyword
     ? [...new Set(cleanKeyword.split('').map(char => mapCharToNumber(char, alphabet)))]
-        .filter(idx => idx >= 0) // mapCharToNumber throws error, so this filter might be redundant but safe
     : [];
 
   // Enhanced interaction handler for decrypt mode
@@ -99,15 +98,15 @@ export const VigenereTable: React.FC<VigenereTableProps> = ({
         .split("")
         .filter((char) => alphabet.includes(char))
         .join("");
-      const cleanKeywordEffect = keyword // Already cleaned based on alphabet at the top
+      const cleanKeywordEffect = keyword
         .toUpperCase()
         .split("")
         .filter((char) => alphabet.includes(char))
         .join("");
       
-      if (currentAnimationStep < cleanMessage.length && cleanKeyword) {
+      if (currentAnimationStep < cleanMessage.length && cleanKeywordEffect) { // Used cleanKeywordEffect
         const messageChar = cleanMessage[currentAnimationStep];
-        const keyChar = cleanKeyword[currentAnimationStep % cleanKeyword.length];
+        const keyChar = cleanKeywordEffect[currentAnimationStep % cleanKeywordEffect.length]; // Used cleanKeywordEffect
         
         try {
           const plainIdx = mapCharToNumber(messageChar, alphabet);
@@ -226,7 +225,7 @@ export const VigenereTable: React.FC<VigenereTableProps> = ({
           {/* Top row header (plaintext letters) */}
           {alphabet.split("").map((letter, idx) => (
             <motion.div
-              key={`header-${letter}`}
+              key={`header-${idx}-${letter}`}
               className={`flex items-center justify-center w-6 h-6 rounded-sm font-bold
                 ${highlightedCol === idx ? "bg-success text-white" : "bg-primary/10"}
                 ${mode === "encrypt" ? "cursor-pointer hover:bg-primary/20" : ""}`}
@@ -247,7 +246,7 @@ export const VigenereTable: React.FC<VigenereTableProps> = ({
             const isKeywordRow = keywordIndices.includes(idx);
             return (
               <motion.div
-                key={`row-${letter}`}
+                key={`row-header-${idx}-${letter}`}
                 className={`flex items-center justify-center w-6 h-6 rounded-sm font-bold
                   ${highlightedRow === idx ? "bg-warning text-warning-fg" : isKeywordRow ? "bg-warning/30 text-warning-fg" : "bg-primary/10"}
                   cursor-pointer hover:bg-primary/20`}
