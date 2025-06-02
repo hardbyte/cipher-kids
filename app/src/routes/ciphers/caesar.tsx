@@ -8,7 +8,7 @@ import { CipherResult } from "@/components/cipher/results/CipherResult";
 import { AllCaesarShifts } from "@/components/cipher/results/AllCaesarShifts";
 import { GeneralStepByStepAnimation, AnimationStep } from "@/components/cipher/shared/GeneralStepByStepAnimation";
 import { Button } from "@/components/ui/button";
-import { caesarCipher, ALPHABET } from "@/utils/ciphers";
+import { caesarCipher, DEFAULT_ALPHABET } from "@/utils/ciphers";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/ciphers/caesar")({
@@ -50,15 +50,15 @@ function CaesarCipherPage() {
     for (let i = 0; i < cleanMessage.length; i++) {
       const char = cleanMessage[i];
       
-      if (ALPHABET.includes(char)) {
-        const charIndex = ALPHABET.indexOf(char);
+      if (DEFAULT_ALPHABET.includes(char)) {
+        const charIndex = DEFAULT_ALPHABET.indexOf(char);
         let newIndex;
         if (mode === "decrypt") {
-          newIndex = (charIndex - shift + 26) % 26;
+          newIndex = (charIndex - shift + DEFAULT_ALPHABET.length) % DEFAULT_ALPHABET.length;
         } else {
-          newIndex = (charIndex + shift) % 26;
+          newIndex = (charIndex + shift) % DEFAULT_ALPHABET.length;
         }
-        const transformedChar = ALPHABET[newIndex];
+        const transformedChar = DEFAULT_ALPHABET[newIndex];
 
         steps.push({
           originalChar: char,
@@ -71,7 +71,7 @@ function CaesarCipherPage() {
     }
 
     setAnimationSteps(steps);
-  }, [message, mode, shift]);
+  }, [message, mode, shift]); // DEFAULT_ALPHABET is constant, not needed in deps
 
   // Reset animation states if mode, message or shift changes
   useEffect(() => {
@@ -97,17 +97,17 @@ function CaesarCipherPage() {
       const char = message[i];
       const upperChar = char.toUpperCase();
 
-      if (ALPHABET.includes(upperChar)) {
+      if (DEFAULT_ALPHABET.includes(upperChar)) {
         setCurrentCharToHighlight(upperChar);
 
-        const charIndex = ALPHABET.indexOf(upperChar);
+        const charIndex = DEFAULT_ALPHABET.indexOf(upperChar);
         let newIndex;
         if (mode === "decrypt") {
-          newIndex = (charIndex - shift + 26) % 26;
+          newIndex = (charIndex - shift + DEFAULT_ALPHABET.length) % DEFAULT_ALPHABET.length;
         } else {
-          newIndex = (charIndex + shift) % 26;
+          newIndex = (charIndex + shift) % DEFAULT_ALPHABET.length;
         }
-        const cipheredChar = ALPHABET[newIndex];
+        const cipheredChar = DEFAULT_ALPHABET[newIndex];
 
         // Preserve case
         const resultChar =
@@ -128,10 +128,10 @@ function CaesarCipherPage() {
     setIsAnimating(false);
   };
 
-  // Slider ensures shift is within 0-25.
-  // The modulo 26 for index calculation handles positive shifts correctly.
-  const shiftedAlphabet = ALPHABET.split("").map(
-    (_, i) => ALPHABET[(i + shift + 26) % 26], // Ensure positive result before modulo
+  // Slider ensures shift is within 0-25 for default alphabet.
+  // The modulo DEFAULT_ALPHABET.length for index calculation handles positive shifts correctly.
+  const shiftedAlphabet = DEFAULT_ALPHABET.split("").map(
+    (_, i) => DEFAULT_ALPHABET[(i + shift + DEFAULT_ALPHABET.length) % DEFAULT_ALPHABET.length],
   );
 
   return (
@@ -204,15 +204,15 @@ function CaesarCipherPage() {
                   </div>
                 </div>
               )}
-              <AllCaesarShifts message={message} currentShift={shift} />
+              <AllCaesarShifts message={message} currentShift={shift} alphabet={DEFAULT_ALPHABET} />
             </>
           ) : (
             <CipherResult
               output={output}
               visualizer={
                 <AnimatedMapping
-                  from={mode === "encrypt" ? ALPHABET.split("") : shiftedAlphabet}
-                  to={mode === "encrypt" ? shiftedAlphabet : ALPHABET.split("")}
+                  from={mode === "encrypt" ? DEFAULT_ALPHABET.split("") : shiftedAlphabet}
+                  to={mode === "encrypt" ? shiftedAlphabet : DEFAULT_ALPHABET.split("")}
                   highlightChar={currentCharToHighlight}
                   direction={mode === "encrypt" ? "down" : "up"}
                 />
@@ -249,6 +249,7 @@ function CaesarCipherPage() {
                 cipherType="caesar"
                 title={`Caesar Cipher - Shift ${shift}`}
                 speed={1000}
+                alphabet={DEFAULT_ALPHABET}
               />
             )}
           </div>
