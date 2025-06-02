@@ -4,7 +4,7 @@ import { CipherNav } from "@/components/cipher/CipherNav";
 import { CipherInputs } from "@/components/cipher/CipherInputs";
 import { CipherModeToggle } from "@/components/cipher/CipherModeToggle";
 import { CipherResult } from "@/components/cipher/results/CipherResult";
-import { keywordCipher, ALPHABET } from "@/utils/ciphers";
+import { keywordCipher, DEFAULT_ALPHABET } from "@/utils/ciphers";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/ciphers/keyword")({
@@ -26,7 +26,7 @@ function KeywordCipherPage() {
   const cleanKeyword = Array.from(
     new Set(keyword.toUpperCase().replace(/[^A-Z]/g, ""))
   ).join("");
-  const remaining = ALPHABET.split("").filter(
+  const remaining = DEFAULT_ALPHABET.split("").filter(
     (c) => !cleanKeyword.includes(c)
   );
   const cipherAlphabet = cleanKeyword + remaining.join("");
@@ -55,8 +55,8 @@ function KeywordCipherPage() {
           output={output}
           visualizer={keyword && (
             <AnimatedMapping 
-              from={mode === "encrypt" ? ALPHABET.split("") : cipherAlphabet.split("")} 
-              to={mode === "encrypt" ? cipherAlphabet.split("") : ALPHABET.split("")}
+              from={mode === "encrypt" ? DEFAULT_ALPHABET.split("") : cipherAlphabet.split("")}
+              to={mode === "encrypt" ? cipherAlphabet.split("") : DEFAULT_ALPHABET.split("")}
               direction={mode === "encrypt" ? "down" : "up"}
             />
           )}
