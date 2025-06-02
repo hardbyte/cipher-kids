@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ALPHABET } from "@/utils/ciphers";
+import { mapCharToNumber, mapNumberToChar } from "@/utils/ciphers"; // Import helpers
 import { toast } from "sonner";
 
 interface FrequencyAnalysisProps {
   ciphertext: string;
   keyLength?: number;
   showAnalysis: boolean;
+  alphabet: string; // Added alphabet prop
 }
 
 interface KeyCharacter {
@@ -19,11 +20,14 @@ interface LetterFrequency {
   letter: string;
   count: number;
   frequency: number;
-  expectedFrequency: number;
-  normalized: number;
+  expectedFrequency: number; // This will be less accurate for non-standard alphabets
+  normalized: number; // This will be less accurate for non-standard alphabets
 }
 
 // Common English letter frequencies (approximate percentages)
+// Note: This is specific to English and the standard A-Z alphabet.
+// For custom alphabets, these expected frequencies might not be meaningful
+// unless the custom alphabet is a simple permutation of A-Z.
 const ENGLISH_FREQUENCIES: Record<string, number> = {
   'E': 12.7, 'T': 9.1, 'A': 8.2, 'O': 7.5, 'I': 7.0, 'N': 6.7,
   'S': 6.3, 'H': 6.1, 'R': 6.0, 'D': 4.3, 'L': 4.0, 'C': 2.8,
@@ -36,6 +40,7 @@ export const FrequencyAnalysis: React.FC<FrequencyAnalysisProps> = ({
   ciphertext,
   keyLength = 3,
   showAnalysis,
+  alphabet, // Use the passed alphabet
 }) => {
   const [selectedGroup, setSelectedGroup] = useState<number>(0);
   const [groups, setGroups] = useState<LetterFrequency[][]>([]);
@@ -45,36 +50,52 @@ export const FrequencyAnalysis: React.FC<FrequencyAnalysisProps> = ({
 
   // Generate some example discovered keys based on frequency analysis
   useEffect(() => {
-    if (groups.length > 0 && !discoveredKey.length) {
+    if (groups.length > 0 && !discoveredKey.length && alphabet) {
       const newDiscoveredKey: KeyCharacter[] = [];
+      const mostCommonEnglishLetter = 'E'; // Or could be alphabet[0] for generic case
+
       for (let i = 0; i < keyLength; i++) {
         if (groups[i] && groups[i].length > 0) {
-          const mostFrequent = groups[i][0];
-          // Assume most frequent letter is 'E'
-          const shift = (ALPHABET.indexOf(mostFrequent.letter) - ALPHABET.indexOf('E') + 26) % 26;
-          const keyChar = ALPHABET[shift];
-          newDiscoveredKey.push({
-            position: i + 1,
-            character: keyChar,
-            confidence: Math.min(mostFrequent.frequency * 2, 95) // Use frequency instead of normalized
-          });
+          const mostFrequentInCipherSegment = groups[i][0];
+          try {
+            const mostFrequentCipherIndex = mapCharToNumber(mostFrequentInCipherSegment.letter, alphabet);
+            let assumedPlaintextIndex;
+
+            if (alphabet.includes(mostCommonEnglishLetter)) {
+              assumedPlaintextIndex = mapCharToNumber(mostCommonEnglishLetter, alphabet);
+            } else {
+              // Fallback: assume it maps to the first char of the custom alphabet if 'E' is not present
+              assumedPlaintextIndex = 0;
+            }
+
+            const shift = (mostFrequentCipherIndex - assumedPlaintextIndex + alphabet.length) % alphabet.length;
+            const keyChar = mapNumberToChar(shift, alphabet);
+            newDiscoveredKey.push({
+              position: i + 1,
+              character: keyChar,
+              confidence: Math.min(mostFrequentInCipherSegment.frequency * 2, 95) // Heuristic
+            });
+          } catch (error) {
+            // console.warn(`Could not guess key for group ${i} due to alphabet mismatch:`, error);
+            // Could push a placeholder if needed, or skip this key char
+          }
         }
       }
       if (newDiscoveredKey.length > 0) {
         setDiscoveredKey(newDiscoveredKey);
       }
     }
-  }, [groups, keyLength, discoveredKey.length]);
+  }, [groups, keyLength, discoveredKey.length, alphabet]);
 
   // Calculate frequency analysis for each key position
   useEffect(() => {
-    if (!ciphertext || !showAnalysis) {
+    if (!ciphertext || !showAnalysis || !alphabet) {
       setGroups([]);
       setShowDiscoveredKey(false);
       return;
     }
 
-    const cleanText = ciphertext.toUpperCase().replace(/[^A-Z]/g, "");
+    const cleanText = ciphertext.toUpperCase().split("").filter(char => alphabet.includes(char)).join("");
     const newGroups: LetterFrequency[][] = [];
 
     for (let groupIndex = 0; groupIndex < keyLength; groupIndex++) {
@@ -92,11 +113,11 @@ export const FrequencyAnalysis: React.FC<FrequencyAnalysisProps> = ({
       });
 
       // Add to results
-      const groupFrequencies: LetterFrequency[] = ALPHABET.split('').map(letter => ({
+      const groupFrequencies: LetterFrequency[] = alphabet.split('').map(letter => ({
         letter,
         count: letterCounts[letter] || 0,
         frequency: groupLetters.length > 0 ? ((letterCounts[letter] || 0) / groupLetters.length) * 100 : 0,
-        expectedFrequency: ENGLISH_FREQUENCIES[letter] || 0,
+        expectedFrequency: ENGLISH_FREQUENCIES[letter] || 0, // Still uses ENGLISH_FREQUENCIES
         normalized: (ENGLISH_FREQUENCIES[letter] || 0) > 0 
           ? (((letterCounts[letter] || 0) / groupLetters.length) * 100) / (ENGLISH_FREQUENCIES[letter] || 1) 
           : 0,
@@ -108,7 +129,7 @@ export const FrequencyAnalysis: React.FC<FrequencyAnalysisProps> = ({
     }
 
     setGroups(newGroups);
-  }, [ciphertext, keyLength, showAnalysis]);
+  }, [ciphertext, keyLength, showAnalysis, alphabet]);
 
   // Animation effect
   useEffect(() => {
@@ -132,13 +153,13 @@ export const FrequencyAnalysis: React.FC<FrequencyAnalysisProps> = ({
   if (!showAnalysis || groups.length === 0) {
     return (
       <div className="text-center text-muted-fg p-8">
-        <p>Enter ciphertext to see frequency analysis</p>
+        <p>Enter ciphertext and ensure alphabet is set to see frequency analysis</p>
       </div>
     );
   }
 
   const currentGroup = groups[selectedGroup] || [];
-  const maxFrequency = Math.max(...currentGroup.map(f => f.frequency));
+  const maxFrequency = Math.max(...currentGroup.map(f => f.frequency), 0); // Ensure maxFrequency is not -Infinity
 
   return (
     <div className="bg-muted/5 rounded-lg p-6 border border-muted">
@@ -171,7 +192,7 @@ export const FrequencyAnalysis: React.FC<FrequencyAnalysisProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Frequency chart */}
         <div className="space-y-4">
-          <h4 className="font-semibold text-fg">Letter Frequencies</h4>
+          <h4 className="font-semibold text-fg">Letter Frequencies (Top 10 for Group {selectedGroup + 1})</h4>
           <div className="space-y-2 max-h-96 overflow-y-auto">
             {currentGroup.slice(0, 10).map((freq, index) => (
               <motion.div
@@ -190,29 +211,33 @@ export const FrequencyAnalysis: React.FC<FrequencyAnalysisProps> = ({
                 <div className="flex-1">
                   <div className="flex justify-between text-xs text-muted-fg mb-1">
                     <span>Observed: {freq.frequency.toFixed(1)}%</span>
-                    <span>Expected: {freq.expectedFrequency.toFixed(1)}%</span>
+                    {alphabet.includes(freq.letter) && ENGLISH_FREQUENCIES[freq.letter] && (
+                       <span>Expected (Eng): {freq.expectedFrequency.toFixed(1)}%</span>
+                    )}
                   </div>
                   <div className="relative h-6 bg-muted/30 rounded-full overflow-hidden">
                     <motion.div
                       className="absolute left-0 top-0 h-full bg-gradient-to-r from-primary/60 to-primary rounded-full"
                       initial={{ width: 0 }}
                       animate={{ 
-                        width: index <= animationStep 
+                        width: index <= animationStep && maxFrequency > 0
                           ? `${(freq.frequency / maxFrequency) * 100}%` 
                           : "0%" 
                       }}
                       transition={{ delay: index * 0.1 + 0.2, duration: 0.6 }}
                     />
-                    <motion.div
-                      className="absolute left-0 top-0 h-full bg-warning/40 border-l-2 border-warning"
-                      initial={{ opacity: 0 }}
-                      animate={{ 
-                        opacity: index <= animationStep ? 0.7 : 0,
-                        left: `${(freq.expectedFrequency / maxFrequency) * 100}%`
-                      }}
-                      transition={{ delay: index * 0.1 + 0.4 }}
-                      style={{ width: '2px' }}
-                    />
+                    {alphabet.includes(freq.letter) && ENGLISH_FREQUENCIES[freq.letter] && (
+                       <motion.div
+                        className="absolute left-0 top-0 h-full bg-warning/40 border-l-2 border-warning"
+                        initial={{ opacity: 0 }}
+                        animate={{
+                          opacity: index <= animationStep ? 0.7 : 0,
+                          left: maxFrequency > 0 ? `${(freq.expectedFrequency / maxFrequency) * 100}%` : "0%"
+                        }}
+                        transition={{ delay: index * 0.1 + 0.4 }}
+                        style={{ width: '2px' }}
+                      />
+                    )}
                   </div>
                 </div>
                 <div className="text-xs text-muted-fg w-12 text-right">
@@ -230,16 +255,15 @@ export const FrequencyAnalysis: React.FC<FrequencyAnalysisProps> = ({
           <div className="bg-info/10 p-4 rounded-lg border border-info/30">
             <h5 className="text-info-fg font-medium mb-2">🔍 What to Look For:</h5>
             <ul className="text-sm text-muted-fg space-y-1">
-              <li>• Letters with frequencies close to 'E' (12.7%)</li>
-              <li>• Common patterns like 'T', 'A', 'O' appearing frequently</li>
-              <li>• Rare letters like 'Z', 'Q', 'X' appearing infrequently</li>
+              <li>• Letters with high observed frequencies.</li>
+              <li>• If using a standard alphabet, compare to expected English frequencies (e.g., 'E', 'T', 'A').</li>
             </ul>
           </div>
 
           <div className="bg-warning/10 p-4 rounded-lg border border-warning/30">
-            <h5 className="text-warning-fg font-medium mb-2">🎯 Most Likely Key Letter:</h5>
+            <h5 className="text-warning-fg font-medium mb-2">🎯 Most Likely Key Letter (Guess):</h5>
             <AnimatePresence>
-              {currentGroup.length > 0 && (
+              {currentGroup.length > 0 && alphabet && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -247,17 +271,28 @@ export const FrequencyAnalysis: React.FC<FrequencyAnalysisProps> = ({
                 >
                   <div className="text-2xl font-bold text-warning-fg mb-2">
                     {(() => {
-                      const mostFrequent = currentGroup[0];
-                      if (mostFrequent.frequency > 8) {
-                        // Assume most frequent letter is 'E'
-                        const shift = (ALPHABET.indexOf(mostFrequent.letter) - ALPHABET.indexOf('E') + 26) % 26;
-                        return ALPHABET[shift];
-                      }
+                      const mostFrequentInCipherSegment = currentGroup[0];
+                      const mostCommonEnglishLetter = 'E';
+                      try {
+                        // Heuristic: only guess if frequency is somewhat high
+                        if (mostFrequentInCipherSegment.frequency > 5 && alphabet.includes(mostFrequentInCipherSegment.letter)) {
+                          const mostFrequentCipherIndex = mapCharToNumber(mostFrequentInCipherSegment.letter, alphabet);
+                          let assumedPlaintextIndex;
+                          if (alphabet.includes(mostCommonEnglishLetter)) {
+                            assumedPlaintextIndex = mapCharToNumber(mostCommonEnglishLetter, alphabet);
+                          } else {
+                            // Fallback: assume maps to the first char of the custom alphabet
+                            assumedPlaintextIndex = 0;
+                          }
+                          const shift = (mostFrequentCipherIndex - assumedPlaintextIndex + alphabet.length) % alphabet.length;
+                          return mapNumberToChar(shift, alphabet);
+                        }
+                      } catch (e) { /* fall through to return "?" if any error */ }
                       return "?";
                     })()}
                   </div>
                   <div className="text-xs text-muted-fg">
-                    Assuming '{currentGroup[0]?.letter}' represents 'E'
+                    Assuming '{currentGroup[0]?.letter}' in cipher segment represents '{alphabet.includes('E') ? 'E' : alphabet[0]}'
                   </div>
                 </motion.div>
               )}
