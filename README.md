@@ -2,6 +2,8 @@
 
 A fun, educational web application that teaches kids about cryptography and ciphers through interactive experiences.
 
+**Live App:** [https://cipher-kids.hardbyte.workers.dev/](https://cipher-kids.hardbyte.workers.dev/)
+
 ![Cipher Kids App](https://example.com/placeholder-image.png)
 
 ## Features
@@ -45,7 +47,8 @@ The built files will be in the `dist` directory.
 
 ## Deployment
 
-This project is configured for deployment on Cloudflare Pages. See the [deployment guide](app/DEPLOY.md) for details.
+This project is deployed on Cloudflare Pages. You can access the live application at: [https://cipher-kids.hardbyte.workers.dev/](https://cipher-kids.hardbyte.workers.dev/)
+For more details on the deployment process, see the [deployment guide](app/DEPLOY.md).
 
 ## Project Structure
 
