@@ -14,24 +14,22 @@ export interface AnimationStep {
 export interface GeneralStepByStepAnimationProps {
   steps: AnimationStep[];
   isPlaying: boolean;
-  onComplete: () => void;
-  onStepChange?: (stepIndex: number) => void;
+  onPlayingChange: (playing: boolean) => void;
   speed?: number;
   title?: string;
-  mode: "encrypt" | "decrypt";
-  cipherType: "caesar" | "vigenere" | "keyword";
+  mode?: "encrypt" | "decrypt";
+  cipherType?: "caesar" | "vigenere" | "keyword" | "atbash" | "railfence";
   initialStep?: number;
 }
 
 export const GeneralStepByStepAnimation: React.FC<GeneralStepByStepAnimationProps> = ({
   steps,
   isPlaying,
-  onComplete,
-  onStepChange,
+  onPlayingChange,
   speed = 1500,
   title = "Step-by-Step Animation",
-  mode,
-  cipherType,
+  mode = "encrypt",
+  cipherType = "atbash",
   initialStep = -1,
 }) => {
   const [currentStep, setCurrentStep] = useState<number>(initialStep);
@@ -66,14 +64,14 @@ export const GeneralStepByStepAnimation: React.FC<GeneralStepByStepAnimationProp
         } else {
           setIsComplete(true);
           clearInterval(interval);
-          setTimeout(onComplete, 500);
+          setTimeout(() => onPlayingChange(false), 500);
           return prev;
         }
       });
     }, speed);
 
     return () => clearInterval(interval);
-  }, [isPlaying, steps, isManualControl, isPaused, speed, onComplete, onStepChange, initialStep]);
+  }, [isPlaying, steps, isManualControl, isPaused, speed, onPlayingChange, initialStep]);
 
   const handleManualNext = () => {
     if (currentStep < steps.length - 1) {
@@ -84,7 +82,7 @@ export const GeneralStepByStepAnimation: React.FC<GeneralStepByStepAnimationProp
       }
     } else {
       setIsComplete(true);
-      onComplete();
+      onPlayingChange(false);
     }
   };
 
@@ -103,9 +101,7 @@ export const GeneralStepByStepAnimation: React.FC<GeneralStepByStepAnimationProp
     setCurrentStep(initialStep);
     setIsComplete(false);
     setIsPaused(false);
-    if (onStepChange) {
-      onStepChange(initialStep);
-    }
+    onPlayingChange(false);
   };
 
   const currentStepData = currentStep >= 0 && currentStep < steps.length ? steps[currentStep] : null;
@@ -192,8 +188,74 @@ export const GeneralStepByStepAnimation: React.FC<GeneralStepByStepAnimationProp
           </div>
         );
 
+      case "atbash":
+        return (
+          <div className="text-center space-y-3">
+            <div className="text-sm text-muted-fg">
+              Atbash Cipher - Mirror Alphabet
+            </div>
+            <div className="flex items-center justify-center gap-4">
+              <div className="text-2xl font-mono bg-warning/20 px-4 py-2 rounded-lg border-2 border-warning/30">
+                {currentStepData.originalChar}
+              </div>
+              <div className="text-xl text-primary">↔</div>
+              <div className="text-2xl font-mono bg-success/20 px-4 py-2 rounded-lg border-2 border-success/30">
+                {currentStepData.transformedChar}
+              </div>
+            </div>
+            <div className="text-xs text-muted-fg">
+              {currentStepData.explanation}
+            </div>
+            <div className="text-sm text-muted-fg">
+              Character {currentStep + 1} of {steps.length}
+            </div>
+          </div>
+        );
+
+      case "railfence":
+        return (
+          <div className="text-center space-y-3">
+            <div className="text-sm text-muted-fg">
+              Rail Fence Cipher - Zigzag Pattern
+            </div>
+            <div className="flex items-center justify-center gap-4">
+              <div className="text-2xl font-mono bg-warning/20 px-4 py-2 rounded-lg border-2 border-warning/30">
+                {currentStepData.originalChar}
+              </div>
+              <div className="text-xl text-primary">→</div>
+              <div className="text-2xl font-mono bg-success/20 px-4 py-2 rounded-lg border-2 border-success/30">
+                Rail {currentStepData.shift || 1}
+              </div>
+            </div>
+            <div className="text-xs text-muted-fg">
+              {currentStepData.explanation}
+            </div>
+            <div className="text-sm text-muted-fg">
+              Position {currentStep + 1} of {steps.length}
+            </div>
+          </div>
+        );
+
       default:
-        return null;
+        return (
+          <div className="text-center space-y-3">
+            <div className="flex items-center justify-center gap-4">
+              <div className="text-2xl font-mono bg-warning/20 px-4 py-2 rounded-lg border-2 border-warning/30">
+                {currentStepData.originalChar}
+              </div>
+              <div className="text-2xl text-primary">→</div>
+              <div className="text-2xl font-mono bg-success/20 px-4 py-2 rounded-lg border-2 border-success/30">
+                {currentStepData.transformedChar}
+              </div>
+            </div>
+            <div className="text-xs text-muted-fg">
+              {currentStepData.explanation}
+            </div>
+            <div className="text-sm text-muted-fg">
+              Character {currentStep + 1} of {steps.length}
+            </div>
+          </div>
+        );
     }
   };
 

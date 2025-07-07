@@ -12,8 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ConfigRouteImport } from './routes/config'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CiphersVigenereRouteImport } from './routes/ciphers/vigenere'
+import { Route as CiphersRailfenceRouteImport } from './routes/ciphers/railfence'
 import { Route as CiphersKeywordRouteImport } from './routes/ciphers/keyword'
 import { Route as CiphersCaesarRouteImport } from './routes/ciphers/caesar'
+import { Route as CiphersAtbashRouteImport } from './routes/ciphers/atbash'
 
 const ConfigRoute = ConfigRouteImport.update({
   id: '/config',
@@ -30,6 +32,11 @@ const CiphersVigenereRoute = CiphersVigenereRouteImport.update({
   path: '/ciphers/vigenere',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CiphersRailfenceRoute = CiphersRailfenceRouteImport.update({
+  id: '/ciphers/railfence',
+  path: '/ciphers/railfence',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CiphersKeywordRoute = CiphersKeywordRouteImport.update({
   id: '/ciphers/keyword',
   path: '/ciphers/keyword',
@@ -40,27 +47,38 @@ const CiphersCaesarRoute = CiphersCaesarRouteImport.update({
   path: '/ciphers/caesar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CiphersAtbashRoute = CiphersAtbashRouteImport.update({
+  id: '/ciphers/atbash',
+  path: '/ciphers/atbash',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/config': typeof ConfigRoute
+  '/ciphers/atbash': typeof CiphersAtbashRoute
   '/ciphers/caesar': typeof CiphersCaesarRoute
   '/ciphers/keyword': typeof CiphersKeywordRoute
+  '/ciphers/railfence': typeof CiphersRailfenceRoute
   '/ciphers/vigenere': typeof CiphersVigenereRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/config': typeof ConfigRoute
+  '/ciphers/atbash': typeof CiphersAtbashRoute
   '/ciphers/caesar': typeof CiphersCaesarRoute
   '/ciphers/keyword': typeof CiphersKeywordRoute
+  '/ciphers/railfence': typeof CiphersRailfenceRoute
   '/ciphers/vigenere': typeof CiphersVigenereRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/config': typeof ConfigRoute
+  '/ciphers/atbash': typeof CiphersAtbashRoute
   '/ciphers/caesar': typeof CiphersCaesarRoute
   '/ciphers/keyword': typeof CiphersKeywordRoute
+  '/ciphers/railfence': typeof CiphersRailfenceRoute
   '/ciphers/vigenere': typeof CiphersVigenereRoute
 }
 export interface FileRouteTypes {
@@ -68,30 +86,38 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/config'
+    | '/ciphers/atbash'
     | '/ciphers/caesar'
     | '/ciphers/keyword'
+    | '/ciphers/railfence'
     | '/ciphers/vigenere'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/config'
+    | '/ciphers/atbash'
     | '/ciphers/caesar'
     | '/ciphers/keyword'
+    | '/ciphers/railfence'
     | '/ciphers/vigenere'
   id:
     | '__root__'
     | '/'
     | '/config'
+    | '/ciphers/atbash'
     | '/ciphers/caesar'
     | '/ciphers/keyword'
+    | '/ciphers/railfence'
     | '/ciphers/vigenere'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ConfigRoute: typeof ConfigRoute
+  CiphersAtbashRoute: typeof CiphersAtbashRoute
   CiphersCaesarRoute: typeof CiphersCaesarRoute
   CiphersKeywordRoute: typeof CiphersKeywordRoute
+  CiphersRailfenceRoute: typeof CiphersRailfenceRoute
   CiphersVigenereRoute: typeof CiphersVigenereRoute
 }
 
@@ -118,6 +144,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CiphersVigenereRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ciphers/railfence': {
+      id: '/ciphers/railfence'
+      path: '/ciphers/railfence'
+      fullPath: '/ciphers/railfence'
+      preLoaderRoute: typeof CiphersRailfenceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ciphers/keyword': {
       id: '/ciphers/keyword'
       path: '/ciphers/keyword'
@@ -132,14 +165,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CiphersCaesarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ciphers/atbash': {
+      id: '/ciphers/atbash'
+      path: '/ciphers/atbash'
+      fullPath: '/ciphers/atbash'
+      preLoaderRoute: typeof CiphersAtbashRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ConfigRoute: ConfigRoute,
+  CiphersAtbashRoute: CiphersAtbashRoute,
   CiphersCaesarRoute: CiphersCaesarRoute,
   CiphersKeywordRoute: CiphersKeywordRoute,
+  CiphersRailfenceRoute: CiphersRailfenceRoute,
   CiphersVigenereRoute: CiphersVigenereRoute,
 }
 export const routeTree = rootRouteImport

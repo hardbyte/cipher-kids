@@ -19,8 +19,10 @@ const DEFAULT_USERS: { initial: UserInitial; color: string }[] = [
 
 // Define available ciphers
 const AVAILABLE_CIPHERS = [
+  { id: "atbash", name: "Atbash Cipher", description: "Ancient mirror alphabet cipher where A becomes Z, B becomes Y, etc. No key needed!" },
   { id: "caesar", name: "Caesar Cipher", description: "A simple substitution cipher that shifts letters by a fixed number of positions." },
   { id: "keyword", name: "Keyword Cipher", description: "Uses a keyword to create a mixed alphabet for substitution." },
+  { id: "railfence", name: "Rail Fence Cipher", description: "Write message in zigzag pattern, then read off row by row." },
   { id: "vigenere", name: "Vigenère Cipher", description: "A polyalphabetic substitution cipher using a keyword to determine shifts." },
 ];
 

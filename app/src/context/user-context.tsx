@@ -25,10 +25,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       try {
         return JSON.parse(saved);
       } catch {
-        return ['caesar', 'keyword', 'vigenere'];
+        return ['atbash', 'caesar', 'keyword', 'railfence', 'vigenere'];
       }
     }
-    return ['caesar', 'keyword', 'vigenere'];
+    return ['atbash', 'caesar', 'keyword', 'railfence', 'vigenere'];
   };
 
   const hasAgents = (): boolean => {

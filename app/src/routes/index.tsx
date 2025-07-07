@@ -8,6 +8,12 @@ export const Route = createFileRoute("/")({
 // Define available ciphers
 const AVAILABLE_CIPHERS = [
   { 
+    id: "atbash", 
+    name: "Atbash Cipher", 
+    description: "Ancient mirror alphabet cipher where A becomes Z, B becomes Y, etc.",
+    to: "/ciphers/atbash"
+  },
+  { 
     id: "caesar", 
     name: "Caesar Cipher", 
     description: "A simple substitution cipher that shifts letters by a fixed number of positions.",
@@ -18,6 +24,12 @@ const AVAILABLE_CIPHERS = [
     name: "Keyword Cipher", 
     description: "Uses a keyword to create a mixed alphabet for substitution.",
     to: "/ciphers/keyword"
+  },
+  { 
+    id: "railfence", 
+    name: "Rail Fence Cipher", 
+    description: "Write message in zigzag pattern, then read off row by row.",
+    to: "/ciphers/railfence"
   },
   { 
     id: "vigenere", 
