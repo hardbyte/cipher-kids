@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Theme, ThemeProviderProps, ThemeProviderContext } from "@/components/theme/theme-context";
-import { useTheme } from "@/components/theme/use-theme";
 
 export function ThemeProvider({
   children,
@@ -51,4 +50,3 @@ export function ThemeProvider({
   );
 }
 
-export { useTheme };

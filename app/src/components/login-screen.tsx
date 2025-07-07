@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useUser, UserInitial } from "@/context/user-context";
+import { useUser } from "@/context/use-user";
+import { UserInitial } from "@/context/user-context-types";
 import { useNavigate } from "@tanstack/react-router";
 
 // Define the default users

@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui';
 import { IconMoon, IconSun } from '@intentui/icons';
-import { useTheme } from '@/components/theme-provider';
-import { useUser } from '@/context/user-context';
+import { useTheme } from '@/components/theme/use-theme';
+import { useUser } from '@/context/use-user';
 import { useState, useEffect } from 'react';
 
 interface Props {

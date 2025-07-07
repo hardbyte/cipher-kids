@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useUser } from "@/context/user-context";
+import { useUser } from "@/context/use-user";
 
 export const Route = createFileRoute("/")({
   component: CipherIndex,

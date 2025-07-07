@@ -9,7 +9,8 @@ import { RouterProvider as AriaRouterProvider } from "react-aria-components";
 import type { NavigateOptions, ToOptions } from "@tanstack/react-router";
 
 import { AppContext } from "@/app.tsx";
-import { UserProvider, useUser } from "@/context/user-context";
+import { UserProvider } from "@/context/user-context";
+import { useUser } from "@/context/use-user";
 import { LoginScreen } from "@/components/login-screen";
 import { UserProfile } from "@/components/user-profile";
 import { ThemeSwitcher } from "@/components/theme-switcher";

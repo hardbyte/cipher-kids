@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { useUser, UserInitial } from "@/context/user-context";
+import { useUser } from "@/context/use-user";
+import { UserInitial } from "@/context/user-context-types";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 
 export const Route = createFileRoute("/config")({

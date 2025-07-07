@@ -8,90 +8,38 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-// Import Routes
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as ConfigRouteImport } from './routes/config'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as CiphersVigenereRouteImport } from './routes/ciphers/vigenere'
+import { Route as CiphersKeywordRouteImport } from './routes/ciphers/keyword'
+import { Route as CiphersCaesarRouteImport } from './routes/ciphers/caesar'
 
-import { Route as rootRoute } from './routes/__root'
-import { Route as ConfigImport } from './routes/config'
-import { Route as IndexImport } from './routes/index'
-import { Route as CiphersVigenereImport } from './routes/ciphers/vigenere'
-import { Route as CiphersKeywordImport } from './routes/ciphers/keyword'
-import { Route as CiphersCaesarImport } from './routes/ciphers/caesar'
-
-// Create/Update Routes
-
-const ConfigRoute = ConfigImport.update({
+const ConfigRoute = ConfigRouteImport.update({
   id: '/config',
   path: '/config',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const IndexRoute = IndexImport.update({
+const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const CiphersVigenereRoute = CiphersVigenereImport.update({
+const CiphersVigenereRoute = CiphersVigenereRouteImport.update({
   id: '/ciphers/vigenere',
   path: '/ciphers/vigenere',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const CiphersKeywordRoute = CiphersKeywordImport.update({
+const CiphersKeywordRoute = CiphersKeywordRouteImport.update({
   id: '/ciphers/keyword',
   path: '/ciphers/keyword',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const CiphersCaesarRoute = CiphersCaesarImport.update({
+const CiphersCaesarRoute = CiphersCaesarRouteImport.update({
   id: '/ciphers/caesar',
   path: '/ciphers/caesar',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-// Populate the FileRoutesByPath interface
-
-declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/config': {
-      id: '/config'
-      path: '/config'
-      fullPath: '/config'
-      preLoaderRoute: typeof ConfigImport
-      parentRoute: typeof rootRoute
-    }
-    '/ciphers/caesar': {
-      id: '/ciphers/caesar'
-      path: '/ciphers/caesar'
-      fullPath: '/ciphers/caesar'
-      preLoaderRoute: typeof CiphersCaesarImport
-      parentRoute: typeof rootRoute
-    }
-    '/ciphers/keyword': {
-      id: '/ciphers/keyword'
-      path: '/ciphers/keyword'
-      fullPath: '/ciphers/keyword'
-      preLoaderRoute: typeof CiphersKeywordImport
-      parentRoute: typeof rootRoute
-    }
-    '/ciphers/vigenere': {
-      id: '/ciphers/vigenere'
-      path: '/ciphers/vigenere'
-      fullPath: '/ciphers/vigenere'
-      preLoaderRoute: typeof CiphersVigenereImport
-      parentRoute: typeof rootRoute
-    }
-  }
-}
-
-// Create and export the route tree
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -100,7 +48,6 @@ export interface FileRoutesByFullPath {
   '/ciphers/keyword': typeof CiphersKeywordRoute
   '/ciphers/vigenere': typeof CiphersVigenereRoute
 }
-
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/config': typeof ConfigRoute
@@ -108,16 +55,14 @@ export interface FileRoutesByTo {
   '/ciphers/keyword': typeof CiphersKeywordRoute
   '/ciphers/vigenere': typeof CiphersVigenereRoute
 }
-
 export interface FileRoutesById {
-  __root__: typeof rootRoute
+  __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/config': typeof ConfigRoute
   '/ciphers/caesar': typeof CiphersCaesarRoute
   '/ciphers/keyword': typeof CiphersKeywordRoute
   '/ciphers/vigenere': typeof CiphersVigenereRoute
 }
-
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
@@ -142,13 +87,52 @@ export interface FileRouteTypes {
     | '/ciphers/vigenere'
   fileRoutesById: FileRoutesById
 }
-
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ConfigRoute: typeof ConfigRoute
   CiphersCaesarRoute: typeof CiphersCaesarRoute
   CiphersKeywordRoute: typeof CiphersKeywordRoute
   CiphersVigenereRoute: typeof CiphersVigenereRoute
+}
+
+declare module '@tanstack/react-router' {
+  interface FileRoutesByPath {
+    '/config': {
+      id: '/config'
+      path: '/config'
+      fullPath: '/config'
+      preLoaderRoute: typeof ConfigRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ciphers/vigenere': {
+      id: '/ciphers/vigenere'
+      path: '/ciphers/vigenere'
+      fullPath: '/ciphers/vigenere'
+      preLoaderRoute: typeof CiphersVigenereRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ciphers/keyword': {
+      id: '/ciphers/keyword'
+      path: '/ciphers/keyword'
+      fullPath: '/ciphers/keyword'
+      preLoaderRoute: typeof CiphersKeywordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ciphers/caesar': {
+      id: '/ciphers/caesar'
+      path: '/ciphers/caesar'
+      fullPath: '/ciphers/caesar'
+      preLoaderRoute: typeof CiphersCaesarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+  }
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -158,39 +142,6 @@ const rootRouteChildren: RootRouteChildren = {
   CiphersKeywordRoute: CiphersKeywordRoute,
   CiphersVigenereRoute: CiphersVigenereRoute,
 }
-
-export const routeTree = rootRoute
+export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-/* ROUTE_MANIFEST_START
-{
-  "routes": {
-    "__root__": {
-      "filePath": "__root.tsx",
-      "children": [
-        "/",
-        "/config",
-        "/ciphers/caesar",
-        "/ciphers/keyword",
-        "/ciphers/vigenere"
-      ]
-    },
-    "/": {
-      "filePath": "index.tsx"
-    },
-    "/config": {
-      "filePath": "config.tsx"
-    },
-    "/ciphers/caesar": {
-      "filePath": "ciphers/caesar.tsx"
-    },
-    "/ciphers/keyword": {
-      "filePath": "ciphers/keyword.tsx"
-    },
-    "/ciphers/vigenere": {
-      "filePath": "ciphers/vigenere.tsx"
-    }
-  }
-}
-ROUTE_MANIFEST_END */

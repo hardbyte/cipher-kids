@@ -24,7 +24,7 @@ A fun, educational web application that teaches kids about cryptography and ciph
 1. Clone the repository
 2. Navigate to the app directory:
    ```bash
-   cd juliet-encoding/app
+   cd app
    ```
 3. Install dependencies:
    ```bash
@@ -39,7 +39,7 @@ A fun, educational web application that teaches kids about cryptography and ciph
 ### Building for Production
 
 ```bash
-cd juliet-encoding/app
+cd app
 npm run build
 ```
 
@@ -53,7 +53,7 @@ For more details on the deployment process, see the [deployment guide](app/DEPLO
 ## Project Structure
 
 ```
-juliet-encoding/app/
+app/
 ├── src/
 │   ├── components/    # Reusable UI components
 │   ├── context/       # React context providers

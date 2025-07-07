@@ -1,5 +1,5 @@
 import { Button } from "./ui/button";
-import { useUser } from "@/context/user-context";
+import { useUser } from "@/context/use-user";
 import { useState } from "react";
 
 export function UserProfile() {

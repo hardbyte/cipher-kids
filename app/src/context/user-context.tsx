@@ -1,24 +1,5 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-
-// Define the available users
-export type UserInitial = string;
-export type Theme = "light" | "dark" | "system";
-
-interface UserConfig {
-  theme: Theme;
-}
-
-interface UserContextType {
-  currentUser: UserInitial | null;
-  setCurrentUser: (user: UserInitial | null) => void;
-  isAuthenticated: boolean;
-  getEnabledCiphers: () => string[];
-  hasAgents: () => boolean;
-  getUserConfig: () => UserConfig;
-  updateUserConfig: (config: Partial<UserConfig>) => void;
-}
-
-const UserContext = createContext<UserContextType | undefined>(undefined);
+import { useState, useEffect, ReactNode } from 'react';
+import { UserInitial, UserConfig, UserContext } from './user-context-types';
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [currentUser, setCurrentUser] = useState<UserInitial | null>(() => {
@@ -96,10 +77,3 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export const useUser = (): UserContextType => {
-  const context = useContext(UserContext);
-  if (context === undefined) {
-    throw new Error('useUser must be used within a UserProvider');
-  }
-  return context;
-};
