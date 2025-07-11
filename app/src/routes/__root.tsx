@@ -46,9 +46,9 @@ function AuthenticatedRoute() {
   }
   
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-900 to-black text-white">
-      <header className="border-b border-gray-800 p-4 px-6 flex justify-between items-center bg-black bg-opacity-80">
-        <div className="text-2xl font-bold text-red-600">Cipher Kids</div>
+    <div className="min-h-screen flex flex-col bg-bg text-fg">
+      <header className="border-b border-border p-4 px-6 flex justify-between items-center bg-navbar text-navbar-fg">
+        <div className="text-2xl font-bold text-primary">Cipher Kids</div>
         <div className="flex items-center gap-3">
           <ThemeSwitcher appearance="outline" showDropdown={true} />
           {isAuthenticated && <UserProfile />}

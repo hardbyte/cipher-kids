@@ -16,6 +16,7 @@ function KeywordCipherPage() {
   const [message, setMessage] = useState<string>("");
   const [keyword, setKeyword] = useState<string>("");
   const [output, setOutput] = useState<string>("");
+  const [isAnimating, setIsAnimating] = useState<boolean>(false);
 
   const handleAction = () => {
     const result = keywordCipher(message, keyword, mode === "decrypt");
@@ -49,6 +50,7 @@ function KeywordCipherPage() {
           setParam={setKeyword}
           paramPlaceholder="Enter keyword"
           handleAction={handleAction}
+          isAnimating={isAnimating}
         />
 
         <CipherResult 

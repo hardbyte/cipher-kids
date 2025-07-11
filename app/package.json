@@ -9,7 +9,10 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "start": "vite",
-    "test": "playwright test",
+    "test": "playwright test  --project=chromium --workers=1",
+    "test:smoke": "playwright test tests/smoke.spec.ts --project=chromium",
+    "test:e2e": "playwright test tests/e2e.spec.ts --project=chromium --workers=1",
+    "test:all": "playwright test",
     "deploy": "npm run build && npx wrangler pages deploy ./dist"
   },
   "dependencies": {

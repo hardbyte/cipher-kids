@@ -13,14 +13,14 @@ export function UserProfile() {
   // Get the color based on the user initial
   const getUserColor = (initial: string): string => {
     const colorMap: Record<string, string> = {
-      'A': 'bg-red-600',
-      'L': 'bg-blue-600',
-      'I': 'bg-green-600',
-      'J': 'bg-purple-600',
-      'F': 'bg-yellow-600',
+      'A': 'bg-[var(--user-a)]',
+      'L': 'bg-[var(--user-l)]',
+      'I': 'bg-[var(--user-i)]',
+      'J': 'bg-[var(--user-j)]',
+      'F': 'bg-[var(--user-f)]',
     };
     
-    return colorMap[initial] || 'bg-gray-600';
+    return colorMap[initial] || 'bg-[var(--user-fallback)]';
   };
 
   const handleLogout = () => {
@@ -41,17 +41,17 @@ export function UserProfile() {
       </div>
       
       {isHovered && (
-        <div className="absolute top-full right-0 mt-2 bg-black bg-opacity-90 border border-gray-700 rounded-md shadow-lg p-3 z-10 min-w-40">
-          <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-700">
+        <div className="absolute top-full right-0 mt-2 bg-overlay text-overlay-fg border border-border rounded-md shadow-lg p-3 z-10 min-w-40">
+          <div className="flex items-center gap-2 mb-2 pb-2 border-b border-border">
             <div className={`${getUserColor(currentUser)} w-8 h-8 rounded-md flex items-center justify-center text-white font-bold`}>
               {currentUser}
             </div>
-            <span className="text-white">{currentUser}</span>
+            <span className="text-overlay-fg">{currentUser}</span>
           </div>
           <Button 
             variant="ghost" 
             size="small"
-            className="text-white hover:bg-gray-800 w-full justify-start"
+            className="text-overlay-fg hover:bg-muted w-full justify-start"
             onClick={handleLogout}
           >
             Switch Profiles

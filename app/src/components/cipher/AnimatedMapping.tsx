@@ -8,6 +8,7 @@ interface AnimatedMappingProps {
   isProcessing?: boolean;
   highlightChar?: string;
   direction?: "down" | "up";
+  highlightMode?: "both" | "source-only" | "target-only";
 }
 
 export const AnimatedMapping: React.FC<AnimatedMappingProps> = ({
@@ -16,6 +17,7 @@ export const AnimatedMapping: React.FC<AnimatedMappingProps> = ({
   isProcessing,
   highlightChar,
   direction = "down",
+  highlightMode = "both",
 }) => {
   return (
     <motion.div
@@ -26,12 +28,13 @@ export const AnimatedMapping: React.FC<AnimatedMappingProps> = ({
       {from.map((fromChar, i) => {
         const isSourceHighlighted =
           highlightChar &&
-          fromChar.toUpperCase() === highlightChar.toUpperCase();
+          fromChar.toUpperCase() === highlightChar.toUpperCase() &&
+          (highlightMode === "both" || highlightMode === "source-only");
         
-        // For Atbash cipher, also highlight the mirror character
         const isTargetHighlighted =
           highlightChar &&
-          to[i].toUpperCase() === highlightChar.toUpperCase();
+          to[i].toUpperCase() === highlightChar.toUpperCase() &&
+          (highlightMode === "both" || highlightMode === "target-only");
         
         const isHighlighted = isSourceHighlighted || isTargetHighlighted;
         
