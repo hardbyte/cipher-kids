@@ -24,7 +24,7 @@ export function ThemeSwitcher({ appearance = 'plain', showDropdown = false }: Pr
 		}
 	}, [currentUser, getUserConfig, setTheme, theme]);
 
-	const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
+	const handleThemeChange = (newTheme: 'light' | 'dark' | 'system' | 'matrix') => {
 		setTheme(newTheme);
 		if (currentUser) {
 			updateUserConfig({ theme: newTheme });
@@ -40,6 +40,8 @@ export function ThemeSwitcher({ appearance = 'plain', showDropdown = false }: Pr
 				return <span className="h-[1.2rem] w-[1.2rem] flex items-center justify-center text-lg">🌙</span>;
 			case 'system':
 				return <span className="h-[1.2rem] w-[1.2rem] flex items-center justify-center text-sm font-bold text-fg">⚙</span>;
+			case 'matrix':
+				return <span className="h-[1.2rem] w-[1.2rem] flex items-center justify-center text-sm font-mono text-accent">{"01"}</span>;
 			default:
 				return <span className="h-[1.2rem] w-[1.2rem] flex items-center justify-center text-lg">☀️</span>;
 		}
@@ -84,6 +86,14 @@ export function ThemeSwitcher({ appearance = 'plain', showDropdown = false }: Pr
 								System
 								{theme === 'system' && <span className="ml-auto text-primary">✓</span>}
 							</button>
+							<button
+								className="w-full px-3 py-2 text-left text-sm hover:bg-muted/20 flex items-center gap-2"
+								onClick={() => handleThemeChange('matrix')}
+							>
+								<span className="h-4 w-4 flex items-center justify-center text-xs font-mono">{"01"}</span>
+								Matrix
+								{theme === 'matrix' && <span className="ml-auto text-primary">✓</span>}
+							</button>
 						</div>
 					</div>
 				)}
@@ -93,7 +103,7 @@ export function ThemeSwitcher({ appearance = 'plain', showDropdown = false }: Pr
 
 	// Simple toggle behavior for backward compatibility
 	const cycleTheme = () => {
-		const themes: ('light' | 'dark' | 'system')[] = ['light', 'dark', 'system'];
+		const themes: ('light' | 'dark' | 'system' | 'matrix')[] = ['light', 'dark', 'matrix', 'system'];
 		const currentIndex = themes.indexOf(theme);
 		const nextTheme = themes[(currentIndex + 1) % themes.length];
 		handleThemeChange(nextTheme);

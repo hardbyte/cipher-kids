@@ -14,6 +14,7 @@ interface CipherInputsProps {
   handleAction?: () => void;
   showSampleButton?: boolean;
   isAnimating?: boolean;
+  customSampleHandler?: () => void;
 }
 
 export const CipherInputs: React.FC<CipherInputsProps> = ({
@@ -26,6 +27,7 @@ export const CipherInputs: React.FC<CipherInputsProps> = ({
   handleAction,
   showSampleButton = true,
   isAnimating = false,
+  customSampleHandler,
 }) => {
   return (
     <div className="space-y-4">
@@ -48,7 +50,7 @@ export const CipherInputs: React.FC<CipherInputsProps> = ({
           </div>
           {showSampleButton && (
             <SampleMessageButton 
-              onLoadSample={setMessage}
+              onLoadSample={customSampleHandler || setMessage}
               isDisabled={isAnimating}
             />
           )}

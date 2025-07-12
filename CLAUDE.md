@@ -112,6 +112,10 @@ The `ThemeContext` manages theme state and provides theme switching functionalit
 
 ## Development Guidelines
 
+
+- You have playwright, don't tell me what I should see in my browser until you've confirmed.
+
+
 ### Code Quality
 - ESLint with TypeScript rules enabled
 - React hooks linting configured
@@ -141,3 +145,8 @@ The `ThemeContext` manages theme state and provides theme switching functionalit
 - Vite handles bundling and optimization
 - TanStack Router provides automatic code splitting
 - Build artifacts output to `/app/dist/`
+
+## Performance Considerations
+
+- CSS animations are a lot more resource friendly that JS ones. For a background we should stick with css.
+

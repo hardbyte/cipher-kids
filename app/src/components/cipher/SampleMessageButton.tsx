@@ -1,7 +1,7 @@
 import { useSampleMessages } from "@/hooks/useSampleMessages";
 
 interface SampleMessageButtonProps {
-  onLoadSample: (message: string) => void;
+  onLoadSample: ((message: string) => void) | (() => void);
   isDisabled?: boolean;
   className?: string;
 }
@@ -15,8 +15,14 @@ export function SampleMessageButton({
 
   const handleClick = () => {
     if (!isDisabled) {
-      const sample = getRandomMessage();
-      onLoadSample(sample);
+      // Check if onLoadSample expects a parameter (traditional usage)
+      if (onLoadSample.length > 0) {
+        const sample = getRandomMessage();
+        (onLoadSample as (message: string) => void)(sample);
+      } else {
+        // Custom handler that manages its own sample logic
+        (onLoadSample as () => void)();
+      }
     }
   };
 

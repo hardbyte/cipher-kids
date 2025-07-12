@@ -7,7 +7,7 @@ import { CipherResult } from "@/components/cipher/results/CipherResult";
 import { GeneralStepByStepAnimation, AnimationStep } from "@/components/cipher/shared/GeneralStepByStepAnimation";
 import { CrackButton } from "@/components/cipher/CrackButton";
 import { useSampleMessages } from "@/hooks/useSampleMessages";
-import { ALPHABET } from "@/utils/ciphers";
+import { ALPHABET, atbashCipher } from "@/utils/ciphers";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/ciphers/atbash")({
@@ -80,6 +80,9 @@ function AtbashCipherPage() {
 
     const delay = (ms: number) =>
       new Promise((resolve) => setTimeout(resolve, ms));
+    
+    // Get the full result using the utility function to ensure consistency
+    const fullResult = atbashCipher(message);
     let currentAnimatedOutput = "";
 
     for (let i = 0; i < message.length; i++) {
@@ -91,21 +94,16 @@ function AtbashCipherPage() {
         setCurrentCharToHighlight(upperChar);
         await delay(200);
 
-        const charIndex = alphabet.indexOf(upperChar);
-        const transformedChar = alphabet[25 - charIndex];
-
         // Show the mirror transformation visually by briefly highlighting both chars
         await delay(200);
 
-        // Preserve case
-        const resultChar =
-          char === upperChar ? transformedChar : transformedChar.toLowerCase();
-        currentAnimatedOutput += resultChar;
+        // Add the character from the full result to ensure consistency
+        currentAnimatedOutput += fullResult[i];
         setOutput(currentAnimatedOutput);
         await delay(300);
       } else {
         // Non-alphabetic characters
-        currentAnimatedOutput += char;
+        currentAnimatedOutput += fullResult[i];
         setOutput(currentAnimatedOutput);
         await delay(100);
       }
@@ -118,20 +116,8 @@ function AtbashCipherPage() {
   const handleInstantAction = () => {
     if (isAnimating) return;
     
-    // For Atbash, encrypt and decrypt are the same operation
-    const result = message
-      .split("")
-      .map((char) => {
-        const upperChar = char.toUpperCase();
-        if (alphabet.includes(upperChar)) {
-          const charIndex = alphabet.indexOf(upperChar);
-          const transformedChar = alphabet[25 - charIndex];
-          return char === upperChar ? transformedChar : transformedChar.toLowerCase();
-        }
-        return char;
-      })
-      .join("");
-
+    // Use the utility function for consistency
+    const result = atbashCipher(message);
     setOutput(result);
     setCurrentCharToHighlight(undefined);
   };
