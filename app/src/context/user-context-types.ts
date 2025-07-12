@@ -2,10 +2,24 @@ import { createContext } from 'react';
 
 // Define the available users
 export type UserInitial = string;
-export type Theme = "light" | "dark" | "system";
+export type Theme = "light" | "dark" | "system" | "matrix";
+
+export type UserIconColor = 
+  | "red" 
+  | "blue" 
+  | "green" 
+  | "purple" 
+  | "yellow" 
+  | "orange" 
+  | "pink" 
+  | "cyan" 
+  | "lime" 
+  | "indigo";
 
 export interface UserConfig {
   theme: Theme;
+  iconColor?: UserIconColor;
+  displayName?: string;
 }
 
 export interface UserContextType {

@@ -34,6 +34,7 @@ function VigenereCipherPage() {
   const [showFrequencyAnalysis, setShowFrequencyAnalysis] = useState(false);
   const [keyLength, setKeyLength] = useState(3); // Default key length for analysis
   const [currentStepIndex, setCurrentStepIndex] = useState(-1);
+  const [isAnimating, setIsAnimating] = useState<boolean>(false);
 
   // Stable callback functions for animation
   const handleAnimationComplete = useCallback(() => {
@@ -127,6 +128,7 @@ function VigenereCipherPage() {
               setParam={setKeyword}
               paramPlaceholder="Enter keyword"
               handleAction={handleAction}
+              isAnimating={isAnimating}
             />
               
             {message && keyword && (

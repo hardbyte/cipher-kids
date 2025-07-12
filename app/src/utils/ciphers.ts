@@ -93,7 +93,7 @@ function railFenceDecrypt(cipherText: string, rails: number): string {
     rail += direction;
   }
   
-  // Fill in the characters row by row
+  // Fill in the characters row by row from the cipher text
   let index = 0;
   for (let r = 0; r < rails; r++) {
     for (let c = 0; c < cipherText.length; c++) {
@@ -109,9 +109,7 @@ function railFenceDecrypt(cipherText: string, rails: number): string {
   direction = 1;
   
   for (let i = 0; i < cipherText.length; i++) {
-    if (fence[rail][i]) {
-      result.push(fence[rail][i] as string);
-    }
+    result.push(fence[rail][i] as string);
     
     if (rail === 0) {
       direction = 1;

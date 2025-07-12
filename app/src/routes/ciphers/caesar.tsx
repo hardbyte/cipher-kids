@@ -172,14 +172,8 @@ function CaesarCipherPage() {
           setMessage={(newMessage: string) => {
             if (!isAnimating) setMessage(newMessage);
           }}
-          // param, setParam, and paramPlaceholder are removed as shift is handled by slider
           handleAction={mode !== "crack" ? handleAction : undefined}
-          // Assuming CipherInputs can take an isProcessing/isDisabled prop
-          // and apply it to its internal message input and button.
-          // This is a placeholder for now. A more robust solution would be
-          // to modify CipherInputs to accept and use such a prop.
-          // For the button, its onPress={handleAction} will be guarded by isAnimating check within handleAction.
-          // For the message input, the setMessage guard above helps.
+          isAnimating={isAnimating}
         />
 
         {mode === "crack" ? (

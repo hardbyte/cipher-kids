@@ -2,6 +2,7 @@ import React from "react";
 import { TextField as Input } from "@/components/ui";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { SampleMessageButton } from "./SampleMessageButton";
 
 interface CipherInputsProps {
   mode: "encrypt" | "decrypt" | "crack";
@@ -11,6 +12,9 @@ interface CipherInputsProps {
   setParam?: (param: string) => void;
   paramPlaceholder?: string;
   handleAction?: () => void;
+  showSampleButton?: boolean;
+  isAnimating?: boolean;
+  customSampleHandler?: () => void;
 }
 
 export const CipherInputs: React.FC<CipherInputsProps> = ({
@@ -21,6 +25,9 @@ export const CipherInputs: React.FC<CipherInputsProps> = ({
   setParam,
   paramPlaceholder,
   handleAction,
+  showSampleButton = true,
+  isAnimating = false,
+  customSampleHandler,
 }) => {
   return (
     <div className="space-y-4">
@@ -35,10 +42,18 @@ export const CipherInputs: React.FC<CipherInputsProps> = ({
           onChange={(value: string) => setMessage(value)}
           className="pl-9"
         />
-        <div className="text-xs text-muted-fg mt-1 ml-2">
-          {message.length === 0 ? 
-          mode === "crack" ? "Type a message to crack the code!" : "Type something to begin your adventure!" : 
-          `Characters: ${message.length}`}
+        <div className="flex items-center justify-between mt-1 ml-2">
+          <div className="text-xs text-muted-fg">
+            {message.length === 0 ? 
+            mode === "crack" ? "Type a message to crack the code!" : "Type something to begin your adventure!" : 
+            `Characters: ${message.length}`}
+          </div>
+          {showSampleButton && (
+            <SampleMessageButton 
+              onLoadSample={customSampleHandler || setMessage}
+              isDisabled={isAnimating}
+            />
+          )}
         </div>
       </div>
 

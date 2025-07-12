@@ -54,7 +54,14 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     const saved = localStorage.getItem(`cipher-app-user-config-${currentUser}`);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // Ensure config has default values
+        return {
+          theme: parsed.theme || 'dark',
+          iconColor: parsed.iconColor || undefined,
+          displayName: parsed.displayName || undefined,
+          ...parsed
+        };
       } catch {
         return { theme: 'dark' };
       }
