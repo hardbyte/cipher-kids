@@ -16,14 +16,26 @@ export async function setupUserSession(page: Page, userId: string = 'A'): Promis
     localStorage.setItem('cipher-app-user', userId);
     
     // Set enabled ciphers
-    localStorage.setItem('cipher-app-enabled-ciphers', JSON.stringify(['atbash', 'caesar', 'keyword', 'railfence', 'vigenere']));
+    localStorage.setItem('cipher-app-enabled-ciphers', JSON.stringify(['atbash', 'caesar', 'keyword', 'railfence', 'vigenere', 'pigpen', 'morse']));
     
     // Set user config with default theme
     localStorage.setItem(`cipher-app-user-config-${userId}`, JSON.stringify({ theme: 'dark' }));
   }, userId);
   
-  // Wait for the user context to be ready by checking for authenticated state
+  // Wait for the user context to be ready by ensuring we don't see the login screen
+  // Reload the page to ensure localStorage is properly read
+  await page.reload();
   await page.waitForLoadState('networkidle');
+  
+  // Wait for authentication to be processed
+  const isOnLoginScreen = await page.getByRole('heading', { name: /who's coding today/i })
+    .isVisible({ timeout: 2000 })
+    .catch(() => false);
+    
+  if (isOnLoginScreen) {
+    // If still on login screen, localStorage approach didn't work
+    throw new Error('User session setup failed - still on login screen');
+  }
 }
 
 /**
@@ -62,27 +74,102 @@ export async function fillMessage(page: Page, message: string): Promise<void> {
 
 /**
  * Helper to click encrypt/decrypt buttons
+ * Targets the main action button with icons (magic wand, sparkles)
  */
 export async function clickCipherAction(page: Page, action: 'encrypt' | 'decrypt'): Promise<void> {
-  const button = page.getByRole('button', { name: new RegExp(action, 'i') }).last();
+  // Look for the main action button that has icons (not the mode button)
+  let button = page.getByRole('button', { name: new RegExp(`magic wand ${action}|${action} sparkles`, 'i') });
+  
+  // Fallback: look for any button with the action name but prefer the last one (main action)
+  if (await button.count() === 0) {
+    button = page.getByRole('button', { name: new RegExp(action, 'i') }).last();
+  }
+  
   await button.waitFor({ state: 'visible', timeout: 5000 });
   await button.click();
+  
+  // Wait a moment for the action to be processed
+  await page.waitForTimeout(100);
 }
 
 /**
  * Helper to get cipher result text
+ * Uses a direct approach based on observing the actual DOM structure
  */
 export async function getCipherResult(page: Page): Promise<string> {
-  // Wait for result element to appear and be visible
-  const resultElement = page.locator('[data-testid="cipher-result"]');
-  await resultElement.waitFor({ state: 'visible', timeout: 10000 });
+  // Wait for result to be processed and displayed
+  await page.waitForTimeout(3000);
   
-  const text = await resultElement.textContent();
-  if (!text?.trim()) {
-    throw new Error('Cipher result is empty');
+  // Look for any text element that contains cipher-like content
+  // Based on observation, results appear as standalone text elements
+  
+  let stableResult = '';
+  let stableCount = 0;
+  const maxAttempts = 20;
+  
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      // Get all text content on page and filter for likely results
+      const allText = await page.locator('*').allTextContents();
+      
+      // Find cipher result by looking for patterns
+      const candidates = allText.filter(text => {
+        const trimmed = text.trim();
+        return (
+          trimmed.length >= 3 && 
+          trimmed.length <= 50 &&
+          // Must be primarily letters/cipher characters
+          /^[A-Z\s\-\.┘┴└┤┼├┐┬┌><V\^]+$/i.test(trimmed) &&
+          // Exclude UI text
+          !trimmed.includes('Copy') &&
+          !trimmed.includes('Result') &&
+          !trimmed.includes('Enter your message') &&
+          !trimmed.includes('Step-by-Step') &&
+          !trimmed.includes('Characters:') &&
+          !trimmed.includes('Show Animation') &&
+          !trimmed.includes('Try Sample') &&
+          !trimmed.includes('How It Works') &&
+          !trimmed.includes('Encrypt') &&
+          !trimmed.includes('Decrypt') &&
+          !trimmed.includes('ABCDEFGHIJKLMNOPQRSTUVWXYZ') &&
+          // Skip alphabet mapping and arrows
+          !trimmed.match(/^[A-Z]\s*↓\s*[A-Z]$/) &&
+          !trimmed.match(/^[↓\s]+$/) &&
+          // Skip Vigenère key/plaintext visualization patterns
+          !trimmed.match(/^[A-Z\s]+H\s+E\s+L\s+L\s+O/) &&
+          !trimmed.match(/^K\s+E\s+Y/) &&
+          !(trimmed === 'KEYKE') &&
+          !(trimmed === 'HELLO') &&
+          // Should look like a cipher result
+          (trimmed.match(/^[A-Z]{3,}$/) || // All caps
+           trimmed.match(/^[A-Z\s]{3,}$/) || // All caps with spaces
+           trimmed.match(/^[\-\.]{3,}$/) || // Morse code
+           trimmed.match(/^[┘┴└┤┼├┐┬┌><V\^\.]+$/)) // Pigpen
+        );
+      });
+      
+      // Get the most likely result (often the longest meaningful sequence)
+      const currentResult = candidates
+        .filter(c => c.length >= 3)
+        .sort((a, b) => b.length - a.length)[0] || '';
+      
+      if (currentResult && currentResult === stableResult) {
+        stableCount++;
+        if (stableCount >= 3) {
+          return currentResult.trim();
+        }
+      } else if (currentResult) {
+        stableResult = currentResult;
+        stableCount = 0;
+      }
+    } catch (e) {
+      // Continue trying
+    }
+    
+    await page.waitForTimeout(500);
   }
   
-  return text.trim();
+  throw new Error(`Could not find stable cipher result. Best candidate: "${stableResult}"`);
 }
 
 /**

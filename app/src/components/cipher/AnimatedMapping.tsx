@@ -21,6 +21,7 @@ export const AnimatedMapping: React.FC<AnimatedMappingProps> = ({
 }) => {
   return (
     <motion.div
+      data-testid="animated-mapping"
       className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-13 gap-0.5 text-xs font-mono mt-2 max-w-full overflow-x-auto p-1"
       animate={{ scale: isProcessing ? 1.03 : 1 }}
       transition={{ duration: 0.5, ease: "easeInOut" }}

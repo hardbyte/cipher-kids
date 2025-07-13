@@ -14,6 +14,9 @@ import { useUser } from "@/context/use-user";
 import { LoginScreen } from "@/components/login-screen";
 import { UserProfile } from "@/components/user-profile";
 import { ThemeSwitcher } from "@/components/theme-switcher";
+import { MatrixBackground } from "@/components/matrix-background";
+import { EmojiBackground } from "@/components/emoji-background";
+import { useTheme } from "@/components/theme/use-theme";
 
 declare module "react-aria-components" {
   interface RouterConfig {
@@ -36,6 +39,7 @@ export const Route = createRootRouteWithContext<AppContext>()({
 
 function AuthenticatedRoute() {
   const { isAuthenticated } = useUser();
+  const { theme } = useTheme();
   const location = useLocation();
   
   // Allow unauthenticated access to config page for initial setup
@@ -46,7 +50,9 @@ function AuthenticatedRoute() {
   }
   
   return (
-    <div className="min-h-screen flex flex-col bg-bg text-fg">
+    <div className="relative isolate min-h-screen flex flex-col bg-bg text-fg">
+      <MatrixBackground />
+      <EmojiBackground />
       <header className="border-b border-border p-4 px-6 flex justify-between items-center bg-navbar text-navbar-fg">
         <div className="text-2xl font-bold text-primary">Cipher Kids</div>
         <div className="flex items-center gap-3">
@@ -54,7 +60,7 @@ function AuthenticatedRoute() {
           {isAuthenticated && <UserProfile />}
         </div>
       </header>
-      <main className="flex-1">
+      <main className="flex-1 max-w-7xl mx-auto px-4 py-6">
         <Outlet />
       </main>
     </div>

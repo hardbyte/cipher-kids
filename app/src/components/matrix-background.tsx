@@ -12,7 +12,7 @@ export function MatrixBackground() {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     
     
-    if (theme !== 'matrix' || !containerRef.current || window.innerWidth < 768 || prefersReducedMotion) {
+    if (theme !== 'matrix' || !containerRef.current || prefersReducedMotion) {
       // Clean up if switching away from matrix theme
       if (styleSheetRef.current && styleSheetRef.current.parentNode) {
         styleSheetRef.current.parentNode.removeChild(styleSheetRef.current);
@@ -69,6 +69,7 @@ export function MatrixBackground() {
         left: 0;
         width: 100%;
         text-align: center;
+        opacity: 0; /* Start invisible */
       }
 
       @keyframes matrix-drop {
@@ -77,10 +78,10 @@ export function MatrixBackground() {
           opacity: 0;
         }
         10% {
-          opacity: 1;
+          opacity: 0.3;
         }
         90% {
-          opacity: 1;
+          opacity: 0.3;
         }
         100% {
           transform: translateY(100vh);
@@ -102,22 +103,23 @@ export function MatrixBackground() {
     const secretMessages = ['SECRET', 'CIPHER', 'DECODE', 'PUZZLE', 'HIDDEN', 'CRYPTO', 'SPY', 'HERO'];
     
     // Create columns based on screen width
-    const columnWidth = 20;
+    const isMobile = window.innerWidth < 768;
+    const columnWidth = isMobile ? 40 : 20; // Wider columns for mobile
     const numColumns = Math.floor(window.innerWidth / columnWidth);
     
     for (let col = 0; col < numColumns; col++) {
       const column = document.createElement('div');
       column.className = 'matrix-column';
       
-      // Add 8-12 characters per column with random positions
-      const charsPerColumn = 8 + Math.floor(Math.random() * 5);
+      // Add characters per column with random positions, reduced for mobile
+      const charsPerColumn = isMobile ? (4 + Math.floor(Math.random() * 3)) : (8 + Math.floor(Math.random() * 5));
       
       for (let i = 0; i < charsPerColumn; i++) {
         const char = document.createElement('div');
         char.className = 'matrix-char';
         
         // Randomly choose regular character or secret message word
-        const useSecret = Math.random() < 0.1; // 10% chance
+        const useSecret = Math.random() < 0.25; // 25% chance
         char.textContent = useSecret 
           ? secretMessages[Math.floor(Math.random() * secretMessages.length)]
           : matrixChars[Math.floor(Math.random() * matrixChars.length)];
@@ -128,7 +130,6 @@ export function MatrixBackground() {
         
         char.style.setProperty('--fall-duration', `${fallDuration}s`);
         char.style.setProperty('--fall-delay', `${fallDelay}s`);
-        char.style.top = `${Math.random() * -200}px`; // Start above screen
         
         column.appendChild(char);
       }

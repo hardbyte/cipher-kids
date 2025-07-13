@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Theme, ThemeProviderProps, ThemeProviderContext } from "@/components/theme/theme-context";
+import { THEME_CSS_CLASSES } from "@/components/theme/theme-constants";
 
 export function ThemeProvider({
   children,
@@ -18,7 +19,7 @@ export function ThemeProvider({
     if (typeof window !== "undefined") {
       const root = window.document.documentElement;
 
-      root.classList.remove("light", "dark", "matrix");
+      root.classList.remove(...THEME_CSS_CLASSES);
 
       if (theme === "system") {
         const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
@@ -35,11 +36,11 @@ export function ThemeProvider({
 
   const value = {
     theme,
-    setTheme: (theme: Theme) => {
+    setTheme: (newTheme: Theme) => {
       if (typeof window !== "undefined") {
-        localStorage.setItem(storageKey, theme);
+        localStorage.setItem(storageKey, newTheme);
       }
-      setTheme(theme);
+      setTheme(newTheme);
     },
   };
 

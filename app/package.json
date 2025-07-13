@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "start": "vite",
-    "test": "playwright test  --project=chromium --workers=1",
+    "test": "playwright test  --project='Mobile Chrome' --workers=1",
     "test:smoke": "playwright test tests/smoke.spec.ts --project=chromium",
     "test:e2e": "playwright test tests/e2e.spec.ts --project=chromium --workers=1",
     "test:all": "playwright test",

@@ -68,9 +68,12 @@
     --user-color-cyan: oklch(0.706 0.162 192.177);
     --user-color-lime: oklch(0.784 0.196 136.234);
     --user-color-indigo: oklch(0.491 0.178 275.751);
+    --user-color-gray: oklch(0.56 0.002 286.375);
 
     --slider-track: oklch(0.9 0.002 286.375);
     --slider-thumb: oklch(1 0 0);
+
+    --content-block-bg: var(--bg);
 
     --radius-lg: 0.5rem;
     --radius-xs: calc(var(--radius-lg) * 0.5);
@@ -135,11 +138,14 @@
 
     --slider-track: oklch(0.3 0.006 285.885);
     --slider-thumb: oklch(0.05 0.005 285.823);
+
+    --content-block-bg: var(--bg);
   }
 
   .matrix {
     --bg: oklch(0.02 0 0);
     --fg: oklch(0.85 0.12 130);
+    --content-bg: rgba(0, 0, 0, 0.8); /* Semi-transparent black for content backgrounds */
     
     /* Add a subtle matrix effect even without animation */
     background-image: 
@@ -196,6 +202,25 @@
 
     --slider-track: oklch(0.08 0.03 130);
     --slider-thumb: oklch(0.02 0 0);
+
+    --content-block-bg: rgba(0, 0, 0, 0.8);
+  }
+
+  .emoji {
+    --bg: oklch(0.98 0.01 280);
+    --fg: oklch(0.2 0.05 280);
+    --content-block-bg: rgba(255, 255, 255, 0.9);
+    --primary: oklch(0.7 0.2 20);
+    --primary-fg: oklch(0.98 0.01 20);
+    --secondary: oklch(0.95 0.02 280);
+    --secondary-fg: oklch(0.2 0.05 280);
+    --accent: oklch(0.8 0.25 140);
+    --accent-fg: oklch(0.15 0.08 140);
+    --muted: oklch(0.92 0.01 280);
+    --muted-fg: oklch(0.5 0.03 280);
+    --border: oklch(0.9 0.02 280);
+    --input: oklch(0.88 0.02 280);
+    --ring: oklch(0.7 0.2 20);
   }
 
   /* Matrix Animation Keyframes - Global */

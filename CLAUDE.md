@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Cipher Kids is an educational React web application that teaches children about cryptography through interactive cipher tools. It features a Netflix-style user interface with personalized profiles and supports Caesar, Keyword, and Vigenère ciphers.
+Cipher Kids is an educational React web application that teaches children about cryptography through interactive cipher tools. It features a Netflix-style user interface with personalized profiles and supports Atbash, Caesar, Keyword, Pigpen, Rail Fence, and Vigenère ciphers.
 
 ## Development Commands
 
@@ -57,8 +57,11 @@ app/src/
 ## Cipher Implementation
 
 ### Supported Ciphers
+- **Atbash Cipher**: Ancient mirror alphabet cipher where A becomes Z, B becomes Y, etc.
 - **Caesar Cipher**: Basic substitution with shift parameter
 - **Keyword Cipher**: Substitution using keyword-generated alphabet
+- **Pigpen Cipher**: Geometric substitution cipher using symbols from a grid
+- **Rail Fence Cipher**: Write message in zigzag pattern, then read off row by row
 - **Vigenère Cipher**: Polyalphabetic substitution with keyword
 
 ### Cipher Modes
@@ -130,7 +133,7 @@ The `ThemeContext` manages theme state and provides theme switching functionalit
 ### Educational Focus
 - Age-appropriate interface design
 - Interactive learning through step-by-step animations
-- Progressive difficulty curve (Caesar → Keyword → Vigenère)
+- Progressive difficulty curve (Atbash → Caesar → Keyword → Rail Fence → Vigenère → Pigpen)
 - Historical context and educational explanations
 
 ## Deployment

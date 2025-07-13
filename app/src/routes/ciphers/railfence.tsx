@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CipherNav } from "@/components/cipher/CipherNav";
+import { CipherPageContentWrapper } from "@/components/cipher/CipherPageContentWrapper";
 import { CipherInputs } from "@/components/cipher/CipherInputs";
 import { CipherModeToggle } from "@/components/cipher/CipherModeToggle";
 import { CipherResult } from "@/components/cipher/results/CipherResult";
@@ -68,13 +69,25 @@ function RailFenceCipherPage() {
     setAnimationSteps(steps);
   }, [message, rails]);
 
-  // Reset animation states if mode, message, or rails change
+  // Handle mode changes - auto-populate input with previous result for better UX
+  useEffect(() => {
+    // If we have an output and the mode changed, use it as the new input
+    if (output && output !== message) {
+      setMessage(output);
+    }
+    
+    setOutput("");
+    setShowStepByStep(false);
+    setCrackResults([]);
+  }, [mode]);
+
+  // Reset animation states if message or rails change
   useEffect(() => {
     setOutput("");
     setShowStepByStep(false);
     setCrackResults([]);
     generateAnimationSteps();
-  }, [mode, message, rails, generateAnimationSteps]);
+  }, [message, rails, generateAnimationSteps]);
 
   const handleAction = async () => {
     if (isAnimating) return;
@@ -115,11 +128,10 @@ function RailFenceCipherPage() {
 
 
   return (
-    <div className="min-h-screen bg-bg text-fg p-4 lg:p-6">
-      <div className="max-w-4xl mx-auto space-y-6 lg:space-y-8">
-        <CipherNav activeCipher="railfence" />
+    <CipherPageContentWrapper>
+      <CipherNav activeCipher="railfence" />
 
-        <div className="text-center space-y-4">
+      <div className="text-center space-y-4">
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-primary">Rail Fence Cipher</h1>
           <p className="text-lg lg:text-xl text-muted-fg max-w-3xl mx-auto">
             Write your message in a zigzag pattern across multiple "rails" 🚂
@@ -132,15 +144,6 @@ function RailFenceCipherPage() {
             mode={mode}
             setMode={(newMode) => {
               if (!isAnimating) {
-                // When switching to decrypt and we have output, copy it to input
-                if (newMode === "decrypt" && output && message) {
-                  setMessage(output);
-                  setOutput("");
-                }
-                // When switching to encrypt and we have a message that looks like ciphertext, keep it
-                else if (newMode === "encrypt" && message && !output) {
-                  // Keep the current message as is
-                }
                 setMode(newMode);
               }
             }}
@@ -282,7 +285,6 @@ function RailFenceCipherPage() {
           </div>
         )}
 
-      </div>
-    </div>
+    </CipherPageContentWrapper>
   );
 }

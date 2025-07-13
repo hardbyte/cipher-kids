@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { AnimatedMapping } from "@/components/cipher/AnimatedMapping";
 import { CipherNav } from "@/components/cipher/CipherNav";
+import { CipherPageContentWrapper } from "@/components/cipher/CipherPageContentWrapper";
 import { CipherInputs } from "@/components/cipher/CipherInputs";
 import { CipherModeToggle } from "@/components/cipher/CipherModeToggle";
 import { CipherResult } from "@/components/cipher/results/CipherResult";
@@ -73,7 +74,19 @@ function KeywordCipherPage() {
     return { rating: "Very Weak", score, advice: "Very easy to crack! Pick something less obvious." };
   }, [commonKeywords]);
 
-  // Real-time feedback effect
+  // Handle mode changes - auto-populate input with previous result for better UX
+  useEffect(() => {
+    // If we have an output and the mode changed, use it as the new input
+    if (output && output !== message) {
+      setMessage(output);
+    }
+    
+    setOutput("");
+    setCrackResults("");
+    setCrackAttempts([]);
+  }, [mode]);
+
+  // Real-time feedback effect for message and keyword changes
   useEffect(() => {
     if (mode !== "crack" && message.trim() && keyword.trim() && !isAnimating) {
       const result = keywordCipher(message, keyword, mode === "decrypt");
@@ -81,11 +94,11 @@ function KeywordCipherPage() {
     } else if (mode === "crack") {
       setOutput("");
     }
-  }, [message, keyword, mode, isAnimating]);
+  }, [message, keyword, isAnimating]);
 
   // Sample messages for crack mode - pre-encrypted messages that can be cracked
   const crackSamples = [
-    { encrypted: 'JDMMS VSMRK', keyword: 'SECRET', original: 'HELLO WORLD' },
+    { encrypted: 'DTIIL WLOIR', keyword: 'SECRET', original: 'HELLO WORLD' },
     { encrypted: 'GQOOE LQU', keyword: 'MAGIC', original: 'PIZZA DAY' },
     { encrypted: 'MPZPS LDSSDQF', keyword: 'DRAGON', original: 'SECRET MESSAGE' },
     { encrypted: 'OXDKDQ HQYFS', keyword: 'TREASURE', original: 'HAPPY TIMES' },
@@ -280,7 +293,7 @@ function KeywordCipherPage() {
   const cipherAlphabet = cleanKeyword + remaining.join("");
 
   return (
-    <div className="p-6 max-w-xl mx-auto space-y-4">
+    <CipherPageContentWrapper>
       <CipherNav activeCipher="keyword" />
       
       <div className="rounded-lg border p-4 space-y-4">
@@ -554,6 +567,6 @@ function KeywordCipherPage() {
           </div>
         </div>
       </div>
-    </div>
+    </CipherPageContentWrapper>
   );
 }

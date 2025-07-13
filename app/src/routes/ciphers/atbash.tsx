@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { AnimatedMapping } from "@/components/cipher/AnimatedMapping";
 import { CipherNav } from "@/components/cipher/CipherNav";
+import { CipherPageContentWrapper } from "@/components/cipher/CipherPageContentWrapper";
 import { CipherInputs } from "@/components/cipher/CipherInputs";
 import { CipherModeToggle } from "@/components/cipher/CipherModeToggle";
 import { CipherResult } from "@/components/cipher/results/CipherResult";
@@ -63,13 +64,26 @@ function AtbashCipherPage() {
     setAnimationSteps(steps);
   }, [message, alphabet]);
 
-  // Reset animation states if mode or message changes
+  // Handle mode changes - auto-populate input with previous result for better UX
+  useEffect(() => {
+    // If we have an output and the mode changed, use it as the new input
+    if (output && output !== message) {
+      setMessage(output);
+    }
+    
+    setOutput("");
+    setCurrentCharToHighlight(undefined);
+    setShowStepByStep(false);
+    generateAnimationSteps();
+  }, [mode]); // Only respond to mode changes
+
+  // Handle message changes separately
   useEffect(() => {
     setOutput("");
     setCurrentCharToHighlight(undefined);
     setShowStepByStep(false);
     generateAnimationSteps();
-  }, [mode, message, generateAnimationSteps]);
+  }, [message, generateAnimationSteps]);
 
   const handleAction = async () => {
     if (isAnimating) return;
@@ -129,10 +143,8 @@ function AtbashCipherPage() {
 
 
   return (
-    <div className="min-h-screen bg-bg text-fg p-4 lg:p-6">
-      <div className="max-w-6xl mx-auto space-y-6 lg:space-y-8">
-        {/* Navigation */}
-        <CipherNav activeCipher="atbash" />
+    <CipherPageContentWrapper>
+      <CipherNav activeCipher="atbash" />
 
         {/* Header */}
         <div className="text-center space-y-4">
@@ -248,7 +260,6 @@ function AtbashCipherPage() {
             )}
           </div>
         </div>
-      </div>
-    </div>
+    </CipherPageContentWrapper>
   );
 }

@@ -13,7 +13,7 @@ const DEFAULT_USERS: { initial: UserInitial; color: string }[] = [
 ];
 
 export function LoginScreen() {
-  const { setCurrentUser, hasAgents } = useUser();
+  const { setCurrentUser, hasAgents, getUserConfigFor } = useUser();
   const navigate = useNavigate();
   const [hoveredUser, setHoveredUser] = useState<UserInitial | null>(null);
 
@@ -45,6 +45,28 @@ export function LoginScreen() {
 
   const handleUserSelect = (user: UserInitial) => {
     setCurrentUser(user);
+    navigate({ to: "/" });
+  };
+
+  const getUserDisplayContent = (user: UserInitial): string => {
+    const config = getUserConfigFor(user);
+    return config.avatar || user;
+  };
+
+  const getUserColor = (user: UserInitial): string => {
+    const config = getUserConfigFor(user);
+    
+    if (config.iconColor) {
+      return `bg-[var(--user-color-${config.iconColor})]`;
+    }
+    
+    const defaultColor = DEFAULT_USERS.find(u => u.initial === user)?.color;
+    return defaultColor || 'bg-[var(--user-fallback)]';
+  };
+
+  const getUserDisplayName = (user: UserInitial): string => {
+    const config = getUserConfigFor(user);
+    return config.displayName || user;
   };
 
   return (
@@ -66,19 +88,19 @@ export function LoginScreen() {
               <button
                 onClick={() => handleUserSelect(user.initial)}
                 className={`${
-                  user.color
-                } w-32 h-32 rounded-md flex items-center justify-center text-5xl font-bold text-white shadow-lg transition-all duration-300 ${
+                  getUserColor(user.initial)
+                } w-32 h-32 rounded-md flex items-center justify-center text-5xl font-bold shadow-lg transition-all duration-300 ${
                   hoveredUser === user.initial
                     ? "ring-4 ring-ring scale-110"
                     : "opacity-90 hover:opacity-100"
-                }`}
-                aria-label={`Select user ${user.initial}`}
+                } ${getUserConfigFor(user.initial).avatar ? 'text-black' : 'text-white'}`}
+                aria-label={`Select user ${getUserDisplayName(user.initial)}`}
               >
-                {user.initial}
+                {getUserDisplayContent(user.initial)}
               </button>
               <span className={`mt-4 text-xl font-medium transition-all duration-300 ${
                 hoveredUser === user.initial ? "text-fg scale-110" : "text-muted-fg"
-              }`}>{user.initial}</span>
+              }`}>{getUserDisplayName(user.initial)}</span>
             </div>
           ))}
         </div>

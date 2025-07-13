@@ -15,10 +15,11 @@ export interface GeneralStepByStepAnimationProps {
   steps: AnimationStep[];
   isPlaying: boolean;
   onPlayingChange: (playing: boolean) => void;
+  onStepChange?: (step: number) => void;
   speed?: number;
   title?: string;
-  mode?: "encrypt" | "decrypt";
-  cipherType?: "caesar" | "vigenere" | "keyword" | "atbash" | "railfence";
+  mode?: "encrypt" | "decrypt" | "encode" | "decode";
+  cipherType?: "caesar" | "vigenere" | "keyword" | "atbash" | "railfence" | "morse";
   initialStep?: number;
 }
 
@@ -26,6 +27,7 @@ export const GeneralStepByStepAnimation: React.FC<GeneralStepByStepAnimationProp
   steps,
   isPlaying,
   onPlayingChange,
+  onStepChange,
   speed = 1500,
   title = "Step-by-Step Animation",
   mode = "encrypt",
@@ -71,7 +73,7 @@ export const GeneralStepByStepAnimation: React.FC<GeneralStepByStepAnimationProp
     }, speed);
 
     return () => clearInterval(interval);
-  }, [isPlaying, steps, isManualControl, isPaused, speed, onPlayingChange, initialStep]);
+  }, [isPlaying, steps, isManualControl, isPaused, speed, onPlayingChange, onStepChange, initialStep]);
 
   const handleManualNext = () => {
     if (currentStep < steps.length - 1) {
@@ -232,6 +234,34 @@ export const GeneralStepByStepAnimation: React.FC<GeneralStepByStepAnimationProp
             </div>
             <div className="text-sm text-muted-fg">
               Position {currentStep + 1} of {steps.length}
+            </div>
+          </div>
+        );
+
+      case "morse":
+        return (
+          <div className="text-center space-y-3">
+            <div className="text-sm text-muted-fg">
+              Morse Code - Dots and Dashes
+            </div>
+            <div className="flex items-center justify-center gap-4">
+              <div className="text-2xl font-mono bg-warning/20 px-4 py-2 rounded-lg border-2 border-warning/30">
+                {currentStepData.originalChar}
+              </div>
+              <div className="text-2xl text-primary">→</div>
+              <div className="text-2xl font-mono bg-success/20 px-4 py-2 rounded-lg border-2 border-success/30">
+                {currentStepData.transformedChar.split('').map((symbol, i) => (
+                  <span key={i} className={symbol === '.' ? 'text-warning' : symbol === '-' ? 'text-danger' : ''}>
+                    {symbol === '.' ? '●' : symbol === '-' ? '▬' : symbol}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="text-xs text-muted-fg">
+              {currentStepData.explanation}
+            </div>
+            <div className="text-sm text-muted-fg">
+              Character {currentStep + 1} of {steps.length}
             </div>
           </div>
         );

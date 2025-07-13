@@ -25,10 +25,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       try {
         return JSON.parse(saved);
       } catch {
-        return ['atbash', 'caesar', 'keyword', 'railfence', 'vigenere'];
+        return ['atbash', 'caesar', 'keyword', 'railfence', 'vigenere', 'pigpen', 'morse'];
       }
     }
-    return ['atbash', 'caesar', 'keyword', 'railfence', 'vigenere'];
+    return ['atbash', 'caesar', 'keyword', 'railfence', 'vigenere', 'pigpen', 'morse'];
   };
 
   const hasAgents = (): boolean => {
@@ -50,8 +50,11 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     if (!currentUser) {
       return { theme: 'dark' };
     }
-    
-    const saved = localStorage.getItem(`cipher-app-user-config-${currentUser}`);
+    return getUserConfigFor(currentUser);
+  };
+
+  const getUserConfigFor = (user: UserInitial): UserConfig => {
+    const saved = localStorage.getItem(`cipher-app-user-config-${user}`);
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -60,6 +63,14 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
           theme: parsed.theme || 'dark',
           iconColor: parsed.iconColor || undefined,
           displayName: parsed.displayName || undefined,
+          avatar: parsed.avatar || undefined,
+          achievements: parsed.achievements || [],
+          progress: parsed.progress || {
+            ciphersUsed: [],
+            messagesEncoded: 0,
+            messagesDecoded: 0,
+            codesCracked: 0,
+          },
           ...parsed
         };
       } catch {
@@ -78,7 +89,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <UserContext.Provider value={{ currentUser, setCurrentUser, isAuthenticated, getEnabledCiphers, hasAgents, getUserConfig, updateUserConfig }}>
+    <UserContext.Provider value={{ currentUser, setCurrentUser, isAuthenticated, getEnabledCiphers, hasAgents, getUserConfig, getUserConfigFor, updateUserConfig }}>
       {children}
     </UserContext.Provider>
   );

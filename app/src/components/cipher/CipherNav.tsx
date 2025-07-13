@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "@tanstack/react-router";
 
-type CipherType = "atbash" | "caesar" | "keyword" | "railfence" | "vigenere";
+type CipherType = "atbash" | "caesar" | "keyword" | "railfence" | "vigenere" | "pigpen" | "morse";
 
 interface CipherNavProps {
   activeCipher: CipherType;
@@ -16,6 +16,8 @@ export const CipherNav: React.FC<CipherNavProps> = ({ activeCipher }) => {
         {activeCipher === "keyword" && "Keyword Cipher"}
         {activeCipher === "railfence" && "Rail Fence Cipher"}
         {activeCipher === "vigenere" && "Vigenère Cipher"}
+        {activeCipher === "pigpen" && "Pigpen Cipher"}
+        {activeCipher === "morse" && "Morse Code"}
       </h1>
       <nav className="flex gap-1 md:gap-2 text-xs md:text-sm flex-wrap">
         <Link
@@ -64,6 +66,22 @@ export const CipherNav: React.FC<CipherNavProps> = ({ activeCipher }) => {
           activeProps={{ className: "text-primary hover:underline font-bold" }}
         >
           Vigenère
+        </Link>
+        <span>/</span>
+        <Link
+          to="/ciphers/pigpen"
+          className="text-primary hover:underline whitespace-nowrap"
+          activeProps={{ className: "text-primary hover:underline font-bold" }}
+        >
+          Pigpen
+        </Link>
+        <span>/</span>
+        <Link
+          to="/ciphers/morse"
+          className="text-primary hover:underline whitespace-nowrap"
+          activeProps={{ className: "text-primary hover:underline font-bold" }}
+        >
+          Morse
         </Link>
       </nav>
     </div>

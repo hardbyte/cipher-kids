@@ -5,7 +5,7 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './tests',
-  testMatch: 'smoke.spec.ts',
+  testMatch: ['**/*.spec.ts'],
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -14,12 +14,12 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   /* Enable parallel execution for faster test runs */
   workers: process.env.CI ? '50%' : undefined,
-  /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: 'html',
+  /* Reporter to use. See https://playwright.dev/docs/test-reporters --reporter=line|html|list|json*/
+  reporter: process.env.CI ? 'github' : 'line',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: 'http://localhost:5173',
+    baseURL: 'http://localhost:5174',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
@@ -27,19 +27,19 @@ export default defineConfig({
 
   /* Configure projects for major browsers */
   projects: [
-    {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
-    },
+    // {
+    //   name: 'chromium',
+    //   use: { ...devices['Desktop Chrome'] },
+    // },
 
-    /* Test against mobile viewports. */
+    /* Test against mobile viewports - Important - app designed for mobile use. */
     {
       name: 'Mobile Chrome',
       use: { ...devices['Pixel 5'] },
     }
   ],
 
-  /* Run your local dev server before starting the tests */
+  /* Run the dev server before starting the tests */
   webServer: {
     command: 'npm start',
     url: 'http://localhost:5173',

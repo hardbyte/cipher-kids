@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useUser } from "@/context/use-user";
+import { CipherPageContentWrapper } from "@/components/cipher/CipherPageContentWrapper";
 
 export const Route = createFileRoute("/")({
   component: CipherIndex,
@@ -36,6 +37,18 @@ const AVAILABLE_CIPHERS = [
     name: "Vigenère Cipher", 
     description: "A polyalphabetic substitution cipher using a keyword to determine shifts.",
     to: "/ciphers/vigenere"
+  },
+  {
+    id: "pigpen",
+    name: "Pigpen Cipher",
+    description: "A geometric substitution cipher using symbols from a grid.",
+    to: "/ciphers/pigpen"
+  },
+  {
+    id: "morse",
+    name: "Morse Code",
+    description: "Encode messages using dots and dashes for telegraph-style communication.",
+    to: "/ciphers/morse"
   },
 ];
 
@@ -80,12 +93,14 @@ function CipherIndex() {
             <Link
               key={cipher.id}
               to={cipher.to}
-              className={`block p-6 rounded-lg bg-secondary border-2 ${userColor.split(' ')[1]} hover:bg-muted transition-all transform hover:-translate-y-1 hover:shadow-xl`}
+              className="block"
             >
-              <h2 className="text-2xl font-semibold mb-3 text-secondary-fg">{cipher.name}</h2>
-              <p className="text-muted-fg">
-                {cipher.description}
-              </p>
+              <CipherPageContentWrapper className="h-full hover:bg-muted transition-all transform hover:-translate-y-1 hover:shadow-xl">
+                <h2 className="text-2xl font-semibold mb-3 text-secondary-fg">{cipher.name}</h2>
+                <p className="text-muted-fg">
+                  {cipher.description}
+                </p>
+              </CipherPageContentWrapper>
             </Link>
           ))
         ) : (
