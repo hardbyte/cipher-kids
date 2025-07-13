@@ -3,7 +3,8 @@ import { navigateWithAuth } from './helpers/auth-helpers';
 import { 
   fillMessage, 
   clickCipherAction, 
-  getCipherResult, 
+  getCipherResult,
+  getCipherResultDirect, 
   setSliderValue, 
   fillKeyword 
 } from './test-helpers';
@@ -63,7 +64,7 @@ test.describe('End-to-End Cipher Functionality', () => {
       await clickCipherAction(authenticatedPage, 'encrypt');
       
       // Verify result
-      const result = await getCipherResult(authenticatedPage);
+      const result = await getCipherResultDirect(authenticatedPage);
       expect(result).toBe(TEST_CASES.caesar.expected);
     });
     
@@ -113,7 +114,7 @@ test.describe('End-to-End Cipher Functionality', () => {
       await fillKeyword(authenticatedPage, TEST_CASES.keyword.keyword);
       await clickCipherAction(authenticatedPage, 'encrypt');
       
-      const result = await getCipherResult(authenticatedPage);
+      const result = await getCipherResultDirect(authenticatedPage);
       expect(result).toBe(TEST_CASES.keyword.expected);
     });
   });
@@ -127,7 +128,7 @@ test.describe('End-to-End Cipher Functionality', () => {
       await fillMessage(authenticatedPage, TEST_CASES.atbash.message);
       await clickCipherAction(authenticatedPage, 'encrypt');
       
-      const result = await getCipherResult(authenticatedPage);
+      const result = await getCipherResultDirect(authenticatedPage);
       expect(result).toBe(TEST_CASES.atbash.expected);
     });
   });
@@ -152,7 +153,7 @@ test.describe('End-to-End Cipher Functionality', () => {
       await setSliderValue(authenticatedPage, 'rails', TEST_CASES.railfence.rails);
       await clickCipherAction(authenticatedPage, 'encrypt');
       
-      const result = await getCipherResult(authenticatedPage);
+      const result = await getCipherResultDirect(authenticatedPage);
       expect(result).toBe(TEST_CASES.railfence.expected);
     });
   });
@@ -167,7 +168,7 @@ test.describe('End-to-End Cipher Functionality', () => {
       await fillKeyword(authenticatedPage, TEST_CASES.vigenere.keyword);
       await clickCipherAction(authenticatedPage, 'encrypt');
       
-      const result = await getCipherResult(authenticatedPage);
+      const result = await getCipherResultDirect(authenticatedPage);
       expect(result).toBe(TEST_CASES.vigenere.expected);
     });
   });

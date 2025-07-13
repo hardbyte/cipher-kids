@@ -1,4 +1,4 @@
-import { Page } from '@playwright/test';
+import { Page, expect } from '@playwright/test';
 
 /**
  * Sets up user state programmatically to bypass the user selection UI.
@@ -118,8 +118,8 @@ export async function getCipherResult(page: Page): Promise<string> {
         return (
           trimmed.length >= 3 && 
           trimmed.length <= 50 &&
-          // Must be primarily letters/cipher characters
-          /^[A-Z\s\-\.┘┴└┤┼├┐┬┌><V\^]+$/i.test(trimmed) &&
+          // Must be primarily letters/cipher characters (including punctuation and numbers)
+          /^[A-Z\s\-\.┘┴└┤┼├┐┬┌><V\^0-9,!?;:'"()]+$/i.test(trimmed) &&
           // Exclude UI text
           !trimmed.includes('Copy') &&
           !trimmed.includes('Result') &&
@@ -143,6 +143,7 @@ export async function getCipherResult(page: Page): Promise<string> {
           // Should look like a cipher result
           (trimmed.match(/^[A-Z]{3,}$/) || // All caps
            trimmed.match(/^[A-Z\s]{3,}$/) || // All caps with spaces
+           trimmed.match(/^[A-Z\s0-9,!?;:'"()]{3,}$/) || // All caps with punctuation/numbers
            trimmed.match(/^[\-\.]{3,}$/) || // Morse code
            trimmed.match(/^[┘┴└┤┼├┐┬┌><V\^\.]+$/)) // Pigpen
         );
@@ -170,6 +171,33 @@ export async function getCipherResult(page: Page): Promise<string> {
   }
   
   throw new Error(`Could not find stable cipher result. Best candidate: "${stableResult}"`);
+}
+
+/**
+ * Helper to get cipher result using data-testid - more reliable for animated results
+ */
+export async function getCipherResultDirect(page: Page): Promise<string> {
+  // Wait for result element to appear
+  const resultElement = page.locator('[data-testid="cipher-result"]');
+  await expect(resultElement).toBeVisible({ timeout: 10000 });
+  
+  // Wait for animation to complete by checking the result stabilizes
+  let stableResult = '';
+  let stableCount = 0;
+  for (let i = 0; i < 15; i++) {
+    const currentResult = await resultElement.textContent();
+    const trimmed = currentResult?.trim() || '';
+    if (trimmed === stableResult && trimmed.length > 0) {
+      stableCount++;
+      if (stableCount >= 3) return trimmed;
+    } else {
+      stableResult = trimmed;
+      stableCount = 0;
+    }
+    await page.waitForTimeout(400);
+  }
+  
+  return stableResult;
 }
 
 /**

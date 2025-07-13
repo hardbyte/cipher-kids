@@ -9,6 +9,7 @@ import { GeneralStepByStepAnimation, AnimationStep } from "@/components/cipher/s
 import { CrackButton } from "@/components/cipher/CrackButton";
 import { useSampleMessages } from "@/hooks/useSampleMessages";
 import { ALPHABET, atbashCipher } from "@/utils/ciphers";
+import { createDelay, ANIMATION_TIMINGS } from "@/utils/animation-config";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/ciphers/atbash")({
@@ -92,8 +93,7 @@ function AtbashCipherPage() {
     setOutput("");
     setCurrentCharToHighlight(undefined);
 
-    const delay = (ms: number) =>
-      new Promise((resolve) => setTimeout(resolve, ms));
+    // Using environment-aware delay function
     
     // Get the full result using the utility function to ensure consistency
     const fullResult = atbashCipher(message);
@@ -106,20 +106,20 @@ function AtbashCipherPage() {
       if (alphabet.includes(upperChar)) {
         // Highlight the character being processed
         setCurrentCharToHighlight(upperChar);
-        await delay(200);
+        await createDelay(ANIMATION_TIMINGS.STEP_REVEAL);
 
         // Show the mirror transformation visually by briefly highlighting both chars
-        await delay(200);
+        await createDelay(ANIMATION_TIMINGS.STEP_REVEAL);
 
         // Add the character from the full result to ensure consistency
         currentAnimatedOutput += fullResult[i];
         setOutput(currentAnimatedOutput);
-        await delay(300);
+        await createDelay(ANIMATION_TIMINGS.CHARACTER_PROCESS);
       } else {
         // Non-alphabetic characters
         currentAnimatedOutput += fullResult[i];
         setOutput(currentAnimatedOutput);
-        await delay(100);
+        await createDelay(ANIMATION_TIMINGS.NON_ALPHA_CHARACTER);
       }
     }
 

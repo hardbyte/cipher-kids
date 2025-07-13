@@ -10,6 +10,7 @@ import { AllCaesarShifts } from "@/components/cipher/results/AllCaesarShifts";
 import { GeneralStepByStepAnimation, AnimationStep } from "@/components/cipher/shared/GeneralStepByStepAnimation";
 import { Button } from "@/components/ui/button";
 import { caesarCipher, ALPHABET } from "@/utils/ciphers";
+import { createDelay, ANIMATION_TIMINGS } from "@/utils/animation-config";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/ciphers/caesar")({
@@ -115,8 +116,7 @@ function CaesarCipherPage() {
     setOutput("");
     setCurrentCharToHighlight(undefined);
 
-    const delay = (ms: number) =>
-      new Promise((resolve) => setTimeout(resolve, ms));
+    // Using environment-aware delay function
     let currentAnimatedOutput = "";
 
     try {
@@ -144,13 +144,13 @@ function CaesarCipherPage() {
             char === upperChar ? cipheredChar : cipheredChar.toLowerCase();
           currentAnimatedOutput += resultChar;
           setOutput(currentAnimatedOutput);
-          await delay(350); // Animation step delay for processing a character
+          await createDelay(ANIMATION_TIMINGS.CHARACTER_PROCESS);
         } else {
           // Non-alphabetic characters
           setCurrentCharToHighlight(undefined); // No highlight for non-alpha
           currentAnimatedOutput += char;
           setOutput(currentAnimatedOutput);
-          await delay(50); // Shorter delay for non-alpha characters
+          await createDelay(ANIMATION_TIMINGS.NON_ALPHA_CHARACTER);
         }
       }
     } finally {

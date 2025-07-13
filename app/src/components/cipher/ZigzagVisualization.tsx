@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ANIMATION_TIMINGS } from "@/utils/animation-config";
 
 interface ZigzagVisualizationProps {
   message: string;
@@ -113,8 +114,8 @@ export function ZigzagVisualization({ message, rails, isAnimating = false }: Zig
               setBuiltCiphertext(cipherText);
               
               railIndex++;
-            }, 800); // 800ms per rail
-          }, 1000); // 1 second delay before reading
+            }, ANIMATION_TIMINGS.RAIL_READING);
+          }, ANIMATION_TIMINGS.LONG_DELAY);
           
           return prev;
         }
@@ -122,7 +123,7 @@ export function ZigzagVisualization({ message, rails, isAnimating = false }: Zig
         setAnimatedPositions(allPositions.slice(0, prev + 1));
         return prev + 1;
       });
-    }, 200); // Faster zigzag drawing - 200ms per character
+    }, ANIMATION_TIMINGS.ZIGZAG_CHARACTER);
 
     return () => clearInterval(zigzagTimer);
   }, [isAnimating, message, rails]);
