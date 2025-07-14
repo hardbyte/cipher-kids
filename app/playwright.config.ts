@@ -59,6 +59,7 @@ export default defineConfig({
     /* Test against mobile viewports - Important - app designed for mobile use. */
     {
       name: 'Mobile Chrome',
+      testIgnore: ['**/visual*.spec.ts'], // Exclude visual tests from regular test runs
       use: { ...devices['Pixel 5'] },
     },
     
@@ -72,6 +73,9 @@ export default defineConfig({
         colorScheme: 'light',
         reducedMotion: 'reduce',
         forcedColors: 'none',
+        /* Additional visual testing settings */
+        locale: 'en-US',
+        timezoneId: 'UTC',
       },
     },
     
@@ -85,6 +89,9 @@ export default defineConfig({
         colorScheme: 'light',
         reducedMotion: 'reduce',
         forcedColors: 'none',
+        /* Additional visual testing settings */
+        locale: 'en-US',
+        timezoneId: 'UTC',
       },
     }
   ],

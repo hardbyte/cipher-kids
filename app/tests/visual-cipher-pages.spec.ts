@@ -51,7 +51,10 @@ authTest.describe('Visual Tests - Cipher Pages', () => {
       
       // Set shift value using slider
       const slider = authenticatedPage.locator('[role="slider"]');
-      await slider.fill('3');
+      await slider.click();
+      await authenticatedPage.keyboard.press('ArrowRight');
+      await authenticatedPage.keyboard.press('ArrowRight');
+      await authenticatedPage.keyboard.press('ArrowRight');
       await authenticatedPage.waitForTimeout(500);
       
       await expect(authenticatedPage).toHaveScreenshot('caesar-encrypt-filled.png');
@@ -164,8 +167,8 @@ authTest.describe('Visual Tests - Cipher Pages', () => {
       await authenticatedPage.goto('/ciphers/morse');
       await waitForPageStable(authenticatedPage);
       
-      // Switch to decode mode
-      await authenticatedPage.getByRole('button', { name: /decode/i }).click();
+      // Switch to decrypt mode (Morse uses decrypt, not decode)
+      await authenticatedPage.getByRole('button', { name: /decrypt/i }).click();
       await fillCipherInput(authenticatedPage, '... --- ...');
       
       await expect(authenticatedPage).toHaveScreenshot('morse-decode.png');
@@ -206,7 +209,9 @@ authTest.describe('Visual Tests - Cipher Pages', () => {
       
       // Set rails using slider
       const slider = authenticatedPage.locator('[role="slider"]');
-      await slider.fill('3');
+      await slider.click();
+      await authenticatedPage.keyboard.press('ArrowRight');
+      await authenticatedPage.keyboard.press('ArrowRight');
       await authenticatedPage.waitForTimeout(500);
       
       await expect(authenticatedPage).toHaveScreenshot('railfence-with-zigzag.png');
@@ -252,7 +257,7 @@ authTest.describe('Visual Tests - Theme Variations', () => {
     // Switch to matrix theme
     await authenticatedPage.getByRole('button', { name: /theme/i }).click();
     await authenticatedPage.getByText(/matrix/i).click();
-    await page.waitForTimeout(1000); // Matrix theme may have animations
+    await authenticatedPage.waitForTimeout(1000); // Matrix theme may have animations
     
     await fillCipherInput(authenticatedPage, 'HELLO WORLD');
     

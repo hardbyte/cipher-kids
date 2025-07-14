@@ -90,7 +90,8 @@ jobs:
         name: visual-test-results
         path: |
           ./app/test-results/
-          ./app/tests/visual-regression.spec.ts-snapshots/
+          ./app/tests/visual-cipher-pages.spec.ts-snapshots/
+          ./app/tests/visual-components.spec.ts-snapshots/
         retention-days: 30
     
     - name: Upload Visual Diff Report

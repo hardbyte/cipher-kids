@@ -30,7 +30,7 @@ authTest.describe('Visual Tests - UI Components', () => {
       await waitForComponentStable(authenticatedPage);
       
       // Focus on mode toggle buttons
-      const modeToggle = authenticatedPage.locator('[role="tablist"]');
+      const modeToggle = authenticatedPage.locator('.bg-muted\\/50.p-1.rounded-xl');
       await expect(modeToggle).toHaveScreenshot('button-mode-toggle.png');
     });
 
@@ -51,8 +51,9 @@ authTest.describe('Visual Tests - UI Components', () => {
       await authenticatedPage.getByRole('button', { name: /crack/i }).click();
       await authenticatedPage.waitForTimeout(500);
       
-      const crackButton = authenticatedPage.locator('.space-y-4').filter({ hasText: 'Crack Keyword Cipher' });
-      await expect(crackButton).toHaveScreenshot('button-crack.png');
+      // Focus on the crack mode section specifically
+      const crackSection = authenticatedPage.locator('text=Crack Keyword Cipher').locator('..');
+      await expect(crackSection).toHaveScreenshot('button-crack.png');
     });
   });
 
@@ -74,8 +75,8 @@ authTest.describe('Visual Tests - UI Components', () => {
       await authenticatedPage.getByPlaceholder(/enter.*message/i).fill('HELLO WORLD');
       await authenticatedPage.waitForTimeout(1000);
       
-      // Click encrypt to generate result
-      await authenticatedPage.getByRole('button', { name: /encrypt/i }).click();
+      // Click encrypt to generate result - use first encrypt button
+      await authenticatedPage.getByRole('button', { name: /encrypt/i }).first().click();
       await authenticatedPage.waitForTimeout(1000);
       
       const resultCard = authenticatedPage.locator('.font-mono.whitespace-pre-wrap');
@@ -102,7 +103,8 @@ authTest.describe('Visual Tests - UI Components', () => {
       // Scroll to educational content
       await authenticatedPage.locator('text=How It Works').scrollIntoViewIfNeeded();
       
-      const educationCard = authenticatedPage.locator('.space-y-4').filter({ hasText: 'How It Works: Caesar Cipher' });
+      // Focus on the educational content section specifically
+      const educationCard = authenticatedPage.locator('text=How It Works: Caesar Cipher').locator('..');
       await expect(educationCard).toHaveScreenshot('card-educational.png');
     });
   });
@@ -131,7 +133,8 @@ authTest.describe('Visual Tests - UI Components', () => {
       await authenticatedPage.goto('/ciphers/caesar');
       await waitForComponentStable(authenticatedPage);
       
-      const sliderContainer = authenticatedPage.locator('.space-y-2').filter({ hasText: 'Shift:' });
+      // Focus on the slider input specifically
+      const sliderContainer = authenticatedPage.locator('text=Shift:').locator('..');
       await expect(sliderContainer).toHaveScreenshot('input-slider.png');
     });
 
@@ -266,7 +269,7 @@ authTest.describe('Visual Tests - UI Components', () => {
       await authenticatedPage.getByPlaceholder(/enter.*message/i).fill('HELLO WORLD');
       
       // Click encrypt and try to capture loading state
-      const encryptButton = authenticatedPage.getByRole('button', { name: /encrypt/i });
+      const encryptButton = authenticatedPage.getByRole('button', { name: /encrypt/i }).first();
       await encryptButton.click();
       
       // Try to capture the button in loading state (this might be quick)

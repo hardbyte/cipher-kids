@@ -18,6 +18,10 @@
     "test:visual:all": "playwright test tests/visual*.spec.ts",
     "test:visual:update": "playwright test tests/visual*.spec.ts --project='Visual Tests - Mobile' --update-snapshots",
     "test:visual:baseline": "playwright test tests/visual*.spec.ts --project='Visual Tests - Mobile' --update-snapshots",
+    "test:visual:new": "playwright test tests/visual-cipher-pages.spec.ts tests/visual-components.spec.ts --project='Visual Tests - Mobile'",
+    "test:visual:clean": "rm -rf test-results tests/*-snapshots playwright-report",
+    "test:visual:critical": "playwright test tests/visual-critical.spec.ts --project='Visual Tests - Mobile'",
+    "test:visual:critical:update": "playwright test tests/visual-critical.spec.ts --project='Visual Tests - Mobile' --update-snapshots",
     "deploy": "npm run build && npx wrangler pages deploy ./dist"
   },
   "dependencies": {
