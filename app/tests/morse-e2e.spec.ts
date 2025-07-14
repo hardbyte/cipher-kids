@@ -1,5 +1,5 @@
 import { test as authTest, expect } from './test';
-import { getCipherResult, getCipherResultDirect, fillMessage, clickCipherAction } from './test-helpers';
+import { getCipherResultDirect, fillMessage, clickCipherAction } from './test-helpers';
 
 authTest.describe('Morse Code End-to-End Testing', () => {
   authTest.beforeEach(async ({ authenticatedPage }) => {

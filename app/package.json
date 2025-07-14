@@ -10,9 +10,14 @@
     "preview": "vite preview",
     "start": "vite",
     "test": "playwright test  --project='Mobile Chrome' --workers=1",
-    "test:smoke": "playwright test tests/smoke.spec.ts --project=chromium",
-    "test:e2e": "playwright test tests/e2e.spec.ts --project=chromium --workers=1",
+    "test:smoke": "playwright test tests/smoke.spec.ts --project='Mobile Chrome'",
+    "test:e2e": "playwright test tests/e2e.spec.ts --project='Mobile Chrome' --workers=1",
     "test:all": "playwright test",
+    "test:visual": "playwright test tests/visual*.spec.ts --project='Visual Tests - Mobile'",
+    "test:visual:desktop": "playwright test tests/visual*.spec.ts --project='Visual Tests - Desktop'",
+    "test:visual:all": "playwright test tests/visual*.spec.ts",
+    "test:visual:update": "playwright test tests/visual*.spec.ts --project='Visual Tests - Mobile' --update-snapshots",
+    "test:visual:baseline": "playwright test tests/visual*.spec.ts --project='Visual Tests - Mobile' --update-snapshots",
     "deploy": "npm run build && npx wrangler pages deploy ./dist"
   },
   "dependencies": {

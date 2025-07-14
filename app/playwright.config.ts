@@ -23,19 +23,69 @@ export default defineConfig({
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
+    
+    /* Visual testing configuration */
+    screenshot: 'only-on-failure',
+  },
+
+  /* Visual testing configuration */
+  expect: {
+    /* Threshold for visual comparisons (0-1, where 0 = exact match) */
+    toHaveScreenshot: { 
+      threshold: 0.2, // Allow for minor rendering differences
+      mode: 'strict', // Strict mode for consistent results
+      animations: 'disabled', // Disable animations for consistent screenshots
+    },
+    /* Threshold for visual comparisons */
+    toMatchSnapshot: { threshold: 0.2 },
+  },
+
+  /* Visual testing configuration */
+  expect: {
+    /* Configure visual comparison threshold */
+    toHaveScreenshot: { 
+      threshold: 0.2,
+      mode: 'strict',
+      animations: 'disabled',
+    },
+    toMatchSnapshot: { 
+      threshold: 0.2,
+      mode: 'strict',
+    },
   },
 
   /* Configure projects for major browsers */
   projects: [
-    // {
-    //   name: 'chromium',
-    //   use: { ...devices['Desktop Chrome'] },
-    // },
-
     /* Test against mobile viewports - Important - app designed for mobile use. */
     {
       name: 'Mobile Chrome',
       use: { ...devices['Pixel 5'] },
+    },
+    
+    /* Visual testing projects */
+    {
+      name: 'Visual Tests - Mobile',
+      testMatch: ['**/visual*.spec.ts'],
+      use: { 
+        ...devices['Pixel 5'],
+        /* Ensure consistent visual testing environment */
+        colorScheme: 'light',
+        reducedMotion: 'reduce',
+        forcedColors: 'none',
+      },
+    },
+    
+    {
+      name: 'Visual Tests - Desktop',
+      testMatch: ['**/visual*.spec.ts'],
+      use: { 
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1280, height: 720 },
+        /* Ensure consistent visual testing environment */
+        colorScheme: 'light',
+        reducedMotion: 'reduce',
+        forcedColors: 'none',
+      },
     }
   ],
 

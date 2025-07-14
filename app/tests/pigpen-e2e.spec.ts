@@ -1,18 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { test as authTest } from './fixtures/auth';
-import { fillMessage, clickCipherAction } from './test-helpers';
-
-async function getPigpenResult(page: any): Promise<string> {
-  // Use the data-testid approach since we know it exists
-  const resultElement = page.locator('[data-testid="cipher-result"]');
-  await expect(resultElement).toBeVisible({ timeout: 10000 });
-  
-  // Wait for the result to contain meaningful content
-  await expect(resultElement).not.toBeEmpty();
-  
-  const result = await resultElement.textContent();
-  return result?.trim() || '';
-}
+import { fillMessage, clickCipherAction, getCipherResultDirect } from './test-helpers';
 
 authTest.describe('Pigpen Cipher End-to-End Testing', () => {
   authTest.beforeEach(async ({ authenticatedPage }) => {
@@ -25,7 +13,7 @@ authTest.describe('Pigpen Cipher End-to-End Testing', () => {
       await fillMessage(authenticatedPage, 'HELLO');
       await clickCipherAction(authenticatedPage, 'encrypt');
       
-      const result = await getPigpenResult(authenticatedPage);
+      const result = await getCipherResultDirect(authenticatedPage);
       expect(result).toBe('┬ ┼ └. └. ├.'); 
     });
 
@@ -33,7 +21,7 @@ authTest.describe('Pigpen Cipher End-to-End Testing', () => {
       await fillMessage(authenticatedPage, 'JUMPING FOX');
       await clickCipherAction(authenticatedPage, 'encrypt');
       
-      const result = await getPigpenResult(authenticatedPage);
+      const result = await getCipherResultDirect(authenticatedPage);
       // J U M P I N G   F O X
       expect(result).toBe('┘. < ┤. ┐. ┌ ┼. ┐   ├ ├. >.');
     });
@@ -51,7 +39,7 @@ authTest.describe('Pigpen Cipher End-to-End Testing', () => {
       await fillMessage(authenticatedPage, 'HELLO 123!');
       await clickCipherAction(authenticatedPage, 'encrypt');
       
-      const result = await getPigpenResult(authenticatedPage);
+      const result = await getCipherResultDirect(authenticatedPage);
       expect(result).toBe('┬ ┼ └. └. ├.   1 2 3 !');
     });
   });
@@ -63,7 +51,7 @@ authTest.describe('Pigpen Cipher End-to-End Testing', () => {
       await fillMessage(authenticatedPage, '┬ ┼ └. └. ├.'); // HELLO
       await clickCipherAction(authenticatedPage, 'decrypt');
       
-      const result = await getPigpenResult(authenticatedPage);
+      const result = await getCipherResultDirect(authenticatedPage);
       expect(result).toBe('HELLO');
     });
 
@@ -74,7 +62,7 @@ authTest.describe('Pigpen Cipher End-to-End Testing', () => {
         await fillMessage(authenticatedPage, '┘. < ┤. ┐. ┌ ┼. ┐   ├ ├. >.');
         await clickCipherAction(authenticatedPage, 'decrypt');
         
-        const result = await getPigpenResult(authenticatedPage);
+        const result = await getCipherResultDirect(authenticatedPage);
         expect(result).toBe('JUMPINGFOX');
     });
 
@@ -84,7 +72,7 @@ authTest.describe('Pigpen Cipher End-to-End Testing', () => {
       await fillMessage(authenticatedPage, '┬ ┼ └. 1 2 3 !');
       await clickCipherAction(authenticatedPage, 'decrypt');
       
-      const result = await getPigpenResult(authenticatedPage);
+      const result = await getCipherResultDirect(authenticatedPage);
       expect(result).toBe('HEL123!');
     });
 
@@ -94,7 +82,7 @@ authTest.describe('Pigpen Cipher End-to-End Testing', () => {
         await fillMessage(authenticatedPage, '┘-┴-└.'); // Using invalid separator
         await clickCipherAction(authenticatedPage, 'decrypt');
         
-        const result = await getPigpenResult(authenticatedPage);
+        const result = await getCipherResultDirect(authenticatedPage);
         // Should preserve the invalid character (A from ┘, then -, then B from ┴, then -, then L from └.)
         expect(result).toBe('A-B-L');
     });
@@ -108,7 +96,7 @@ authTest.describe('Pigpen Cipher End-to-End Testing', () => {
       
       await authenticatedPage.getByRole('button', { name: /crack the code/i }).click();
       
-      const result = await getPigpenResult(authenticatedPage);
+      const result = await getCipherResultDirect(authenticatedPage);
       expect(result).toBe('HELLO');
     });
   });
