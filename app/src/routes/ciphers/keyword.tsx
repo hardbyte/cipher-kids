@@ -22,6 +22,7 @@ function KeywordCipherPage() {
   const [crackResults, setCrackResults] = useState<string>("");
   const [crackAttempts, setCrackAttempts] = useState<Array<{keyword: string, result: string, score: number}>>([]);
   const [extendedKeywords, setExtendedKeywords] = useState<string[]>([]);
+  const [apiStatus, setApiStatus] = useState<'loading' | 'success' | 'failed' | 'offline'>('loading');
 
   // Common keywords to try when cracking (single words and phrases)
   const commonKeywords = [
@@ -127,8 +128,22 @@ function KeywordCipherPage() {
     }
   };
 
-  // Load additional keywords from API for enhanced cracking (with offline fallback)
+  // Load additional keywords from API for enhanced cracking (with robust offline fallback)
   const loadExtendedKeywords = useCallback(async (): Promise<string[]> => {
+    setApiStatus('loading');
+    
+    // Fallback keywords - always available
+    const offlineKeywords = [
+      'BIRTHDAY', 'CHRISTMAS', 'VACATION', 'SUNSHINE', 'RAINBOW', 'BUTTERFLY',
+      'ELEPHANT', 'DINOSAUR', 'ADVENTURE', 'DISCOVERY', 'JOURNEY', 'EXPLORER',
+      'FREEDOM', 'VICTORY', 'WISDOM', 'COURAGE', 'STRENGTH', 'LOYALTY',
+      'PRINCESS', 'KINGDOM', 'FANTASY', 'LEGEND', 'DESTINY', 'MIRACLE',
+      'OCEAN', 'MOUNTAIN', 'FOREST', 'DESERT', 'RIVER', 'MEADOW',
+      'LIGHTNING', 'THUNDER', 'STORM', 'CLOUDS', 'SUNRISE', 'SUNSET',
+      'GALAXY', 'PLANET', 'ROCKET', 'ASTRONAUT', 'UNIVERSE', 'COMET',
+      'ROBOT', 'FUTURE', 'SCIENCE', 'INVENTION', 'DISCOVERY', 'GENIUS'
+    ];
+
     try {
       // Use Datamuse API - no API key required
       const response = await fetch('https://api.datamuse.com/words?md=p,f&max=500', {
@@ -140,30 +155,63 @@ function KeywordCipherPage() {
         signal: AbortSignal.timeout(3000)
       });
       
-      if (response.ok) {
-        const data: Array<{ word: string; tags?: string[]; score?: number }> = await response.json();
-        return data
-          .filter(w => w.word.length >= 4 && w.word.length <= 12)
-          .filter(w => w.score! >= 1000)
-          .filter(w => w.tags?.some(t => t === 'n' || t === 'adj'))
-          .slice(0, 50)
-          .map(w => w.word.toUpperCase());
+      // Check if response is ok
+      if (!response.ok) {
+        throw new Error(`API responded with status ${response.status}: ${response.statusText}`);
       }
+
+      // Parse JSON response
+      const data: Array<{ word: string; tags?: string[]; score?: number }> = await response.json();
+      
+      // Validate response structure
+      if (!Array.isArray(data)) {
+        throw new Error('API returned invalid data format');
+      }
+
+      // Filter and process the API data
+      const apiKeywords = data
+        .filter(w => w.word && typeof w.word === 'string' && w.word.length >= 4 && w.word.length <= 12)
+        .filter(w => w.score && w.score >= 1000)
+        .filter(w => w.tags?.some(t => t === 'n' || t === 'adj'))
+        .slice(0, 50)
+        .map(w => w.word.toUpperCase());
+
+      if (apiKeywords.length > 0) {
+        setApiStatus('success');
+        // Combine API keywords with offline fallback for maximum coverage
+        return [...apiKeywords, ...offlineKeywords];
+      } else {
+        throw new Error('API returned no valid keywords');
+      }
+
     } catch (error) {
-      console.info('Using offline keywords only:', error);
+      // Comprehensive error handling
+      let errorMessage = 'Unknown error occurred';
+      
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        errorMessage = 'Network connection failed';
+        setApiStatus('offline');
+      } else if (error instanceof DOMException && error.name === 'AbortError') {
+        errorMessage = 'API request timed out';
+        setApiStatus('failed');
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+        setApiStatus('failed');
+      } else {
+        setApiStatus('failed');
+      }
+
+      // Log detailed error for debugging (but don't expose to user)
+      console.warn('Datamuse API error:', {
+        message: errorMessage,
+        error: error,
+        timestamp: new Date().toISOString()
+      });
     }
     
-    // Fallback: additional offline keywords for enhanced cracking
-    return [
-      'BIRTHDAY', 'CHRISTMAS', 'VACATION', 'SUNSHINE', 'RAINBOW', 'BUTTERFLY',
-      'ELEPHANT', 'DINOSAUR', 'ADVENTURE', 'DISCOVERY', 'JOURNEY', 'EXPLORER',
-      'FREEDOM', 'VICTORY', 'WISDOM', 'COURAGE', 'STRENGTH', 'LOYALTY',
-      'PRINCESS', 'KINGDOM', 'FANTASY', 'LEGEND', 'DESTINY', 'MIRACLE',
-      'OCEAN', 'MOUNTAIN', 'FOREST', 'DESERT', 'RIVER', 'MEADOW',
-      'LIGHTNING', 'THUNDER', 'STORM', 'CLOUDS', 'SUNRISE', 'SUNSET',
-      'GALAXY', 'PLANET', 'ROCKET', 'ASTRONAUT', 'UNIVERSE', 'COMET',
-      'ROBOT', 'FUTURE', 'SCIENCE', 'INVENTION', 'DISCOVERY', 'GENIUS'
-    ];
+    // Always return offline keywords as fallback
+    setApiStatus('offline');
+    return offlineKeywords;
   }, []);
 
   // Load extended keywords on component mount
@@ -371,6 +419,36 @@ function KeywordCipherPage() {
             label="Crack Keyword Cipher"
             description={`Try to crack this cipher using ${commonKeywords.length + extendedKeywords.length} keywords and see the weaknesses!`}
           />
+        )}
+
+        {/* API Status Notification */}
+        {mode === "crack" && (
+          <div className={`p-3 rounded-lg border text-sm ${
+            apiStatus === 'loading' ? 'bg-accent/10 border-accent/30 text-accent' :
+            apiStatus === 'success' ? 'bg-success/10 border-success/30 text-success' :
+            apiStatus === 'failed' ? 'bg-warning/10 border-warning/30 text-warning' :
+            'bg-muted/10 border-muted/30 text-muted-fg'
+          }`}>
+            <div className="flex items-center gap-2">
+              <span className="text-base">
+                {apiStatus === 'loading' ? '🔄' :
+                 apiStatus === 'success' ? '🌐' :
+                 apiStatus === 'failed' ? '⚠️' :
+                 '📚'}
+              </span>
+              <span className="font-medium">
+                {apiStatus === 'loading' ? 'Loading enhanced keywords...' :
+                 apiStatus === 'success' ? `Enhanced keywords loaded from Datamuse API (${extendedKeywords.length} total keywords)` :
+                 apiStatus === 'failed' ? 'API temporarily unavailable - using offline keywords' :
+                 `Using offline keywords only (${extendedKeywords.length} keywords)`}
+              </span>
+            </div>
+            {apiStatus === 'failed' && (
+              <div className="mt-1 text-xs opacity-80">
+                Don't worry! Our offline keyword list is still very effective for cracking common passwords.
+              </div>
+            )}
+          </div>
         )}
 
         <CipherResult 

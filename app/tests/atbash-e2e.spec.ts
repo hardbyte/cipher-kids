@@ -1,4 +1,4 @@
-import { getCipherResult, getCipherResultDirect, fillMessage, clickCipherAction } from './test-helpers';
+import { getCipherResultDirect, fillMessage, clickCipherAction } from './test-helpers';
 import { test as authTest } from './fixtures/auth';
 import { expect } from '@playwright/test';
 
@@ -12,21 +12,21 @@ authTest.describe('Atbash Cipher End-to-End Testing', () => {
     authTest('should encrypt a message correctly', async ({ authenticatedPage }) => {
       await fillMessage(authenticatedPage, 'HELLO WORLD');
       await clickCipherAction(authenticatedPage, 'encrypt');
-      const result = await getCipherResult(authenticatedPage);
+      const result = await getCipherResultDirect(authenticatedPage);
       expect(result).toBe('SVOOL DLIOW');
     });
 
     authTest('should preserve special characters and numbers', async ({ authenticatedPage }) => {
       await fillMessage(authenticatedPage, 'HELLO, WORLD! 123');
       await clickCipherAction(authenticatedPage, 'encrypt');
-      const result = await getCipherResult(authenticatedPage);
+      const result = await getCipherResultDirect(authenticatedPage);
       expect(result).toBe('SVOOL, DLIOW! 123');
     });
 
     authTest('should handle mixed case input', async ({ authenticatedPage }) => {
       await fillMessage(authenticatedPage, 'Hello World');
       await clickCipherAction(authenticatedPage, 'encrypt');
-      const result = await getCipherResult(authenticatedPage);
+      const result = await getCipherResultDirect(authenticatedPage);
       expect(result).toBe('SVOOL DLIOW');
     });
   });
@@ -36,7 +36,7 @@ authTest.describe('Atbash Cipher End-to-End Testing', () => {
       await authenticatedPage.getByRole('button', { name: /decrypt/i }).first().click();
       await fillMessage(authenticatedPage, 'SVOOL DLIOW');
       await clickCipherAction(authenticatedPage, 'decrypt');
-      const result = await getCipherResult(authenticatedPage);
+      const result = await getCipherResultDirect(authenticatedPage);
       expect(result).toBe('HELLO WORLD');
     });
 
@@ -46,7 +46,7 @@ authTest.describe('Atbash Cipher End-to-End Testing', () => {
       // Encrypt
       await fillMessage(authenticatedPage, originalMessage);
       await clickCipherAction(authenticatedPage, 'encrypt');
-      const encrypted = await getCipherResult(authenticatedPage);
+      const encrypted = await getCipherResultDirect(authenticatedPage);
       expect(encrypted).toBe('SVOOL');
 
       // Switch to decrypt and decrypt the encrypted message
@@ -88,7 +88,7 @@ authTest.describe('Atbash Cipher End-to-End Testing', () => {
       await authenticatedPage.getByRole('button', { name: /crack/i }).click();
       await fillMessage(authenticatedPage, 'SVOOL DLIOW');
       await authenticatedPage.getByRole('button', { name: /crack the code/i }).click();
-      const result = await getCipherResult(authenticatedPage);
+      const result = await getCipherResultDirect(authenticatedPage);
       expect(result).toBe('HELLO WORLD');
     });
   });

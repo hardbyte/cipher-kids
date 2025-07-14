@@ -54,14 +54,8 @@ function CaesarCipherPage() {
       const char = cleanMessage[i];
       
       if (ALPHABET.includes(char)) {
-        const charIndex = ALPHABET.indexOf(char);
-        let newIndex;
-        if (mode === "decrypt") {
-          newIndex = (charIndex - shift + 26) % 26;
-        } else {
-          newIndex = (charIndex + shift) % 26;
-        }
-        const transformedChar = ALPHABET[newIndex];
+        // Use the utility function for consistency
+        const transformedChar = caesarCipher(char, shift, mode === "decrypt");
 
         steps.push({
           originalChar: char,
@@ -130,14 +124,8 @@ function CaesarCipherPage() {
         if (ALPHABET.includes(upperChar)) {
           setCurrentCharToHighlight(upperChar);
 
-          const charIndex = ALPHABET.indexOf(upperChar);
-          let newIndex;
-          if (mode === "decrypt") {
-            newIndex = (charIndex - shift + 26) % 26;
-          } else {
-            newIndex = (charIndex + shift) % 26;
-          }
-          const cipheredChar = ALPHABET[newIndex];
+          // Use the utility function for the actual cipher logic
+          const cipheredChar = caesarCipher(upperChar, shift, mode === "decrypt");
 
           // Preserve case
           const resultChar =

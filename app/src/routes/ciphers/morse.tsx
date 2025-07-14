@@ -152,21 +152,40 @@ function MorseCodePage() {
       // Use the core morseCode function for encoding
       const result = morseCode(message, false);
       
-      // Skip animation for now to debug - directly set the result
+      // For encode mode, set the result directly
       setOutput(result);
     } else {
-      // Decode mode
-      const result = morseCode(message, true);
+      // Decode mode - animate the actual decoding process (fixed from original)
+      const morseChars = message.split(' ').filter(char => char.length > 0);
+      const reverseMorseMap = Object.fromEntries(
+        Object.entries(MORSE_CODE_MAPPING).map(([k, v]) => [v, k]).filter(([k]) => k !== '/')
+      );
+      
       let currentAnimatedOutput = "";
       
-      for (let i = 0; i < result.length; i++) {
-        currentAnimatedOutput += result[i];
+      for (let i = 0; i < morseChars.length; i++) {
+        const morseChar = morseChars[i];
+        setCurrentCharToHighlight(morseChar);
+        
+        if (morseChar === '/') {
+          // Word separator becomes space
+          currentAnimatedOutput += ' ';
+        } else if (reverseMorseMap[morseChar]) {
+          // Decode this morse character to its letter
+          const letter = reverseMorseMap[morseChar];
+          currentAnimatedOutput += letter;
+        } else {
+          // Unknown morse pattern, keep as-is
+          currentAnimatedOutput += morseChar;
+        }
+        
         setOutput(currentAnimatedOutput);
-        await delay(300);
+        await delay(500); // Show each morse symbol being decoded
       }
       
-      // Ensure the final output is set to the complete result
-      setOutput(result);
+      // Ensure the final output is correct
+      const finalResult = morseCode(message, true);
+      setOutput(finalResult);
     }
 
     setCurrentCharToHighlight(undefined);
@@ -175,7 +194,7 @@ function MorseCodePage() {
 
   // Create visual morse code representation
   const MorseCodeVisualizer = () => {
-    if (!currentCharToHighlight || !MORSE_CODE_MAPPING[currentCharToHighlight]) {
+    if (!currentCharToHighlight) {
       return (
         <div className="bg-muted/20 p-4 rounded-lg">
           <div className="text-center text-muted-fg">
@@ -185,13 +204,29 @@ function MorseCodePage() {
       );
     }
 
-    const morsePattern = MORSE_CODE_MAPPING[currentCharToHighlight];
+    // Handle both individual characters and morse patterns
+    let morsePattern: string;
+    let displayChar: string;
+    
+    if (MORSE_CODE_MAPPING[currentCharToHighlight]) {
+      // It's a character, show its morse code
+      morsePattern = MORSE_CODE_MAPPING[currentCharToHighlight];
+      displayChar = currentCharToHighlight;
+    } else {
+      // It's a morse pattern, show it directly
+      morsePattern = currentCharToHighlight;
+      // Find the corresponding letter
+      const reverseMorseMap = Object.fromEntries(
+        Object.entries(MORSE_CODE_MAPPING).map(([k, v]) => [v, k]).filter(([k]) => k !== '/')
+      );
+      displayChar = reverseMorseMap[currentCharToHighlight] || '?';
+    }
     
     return (
       <div className="bg-accent/10 p-6 rounded-lg border-2 border-accent/30">
         <div className="text-center mb-4">
           <div className="text-2xl font-bold text-accent mb-2">
-            {currentCharToHighlight}
+            {mode === "encode" ? currentCharToHighlight : `${currentCharToHighlight} → ${displayChar}`}
           </div>
           <div className="text-3xl font-mono tracking-widest text-primary">
             {morsePattern.split('').map((symbol, index) => (
@@ -212,11 +247,12 @@ function MorseCodePage() {
               <Button
                 intent="secondary"
                 size="small"
-                onPress={() => {
-                  initializeAudio();
-                  playCharacterAudio(currentCharToHighlight);
-                }}
-                isDisabled={isPlayingAudio}
+                 onPress={() => {
+                   initializeAudio();
+                   // For decode mode, play the morse pattern; for encode mode, play the character
+                   const charToPlay = mode === "encode" ? currentCharToHighlight : displayChar;
+                   playCharacterAudio(charToPlay);
+                 }}                isDisabled={isPlayingAudio}
               >
                 {isPlayingAudio ? "🔊 Playing..." : "🔊 Listen"}
               </Button>

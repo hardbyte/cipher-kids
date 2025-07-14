@@ -1,46 +1,54 @@
 /**
- * Animation configuration utility for controlling animation speeds in different environments
- * Particularly useful for test environments where we want faster animations
+ * Animation configuration utility for controlling animation speeds in different environments.
+ * 
+ * Speed Control via URL Parameter:
+ * - ?animSpeed=1    = Normal speed (default)
+ * - ?animSpeed=0.1  = 10x faster (for quick tests)
+ * - ?animSpeed=0.01 = 100x faster (for ultra-fast tests)
+ * - ?animSpeed=10   = 10x slower (for demonstrations)
+ * 
+ * Auto-detection:
+ * - Test ports (5174) automatically get 10x faster animations
+ * - Production uses normal speed
  */
 
-// Check if we're in test mode and get animation speed multiplier
-const getAnimationConfig = (() => {
+function getAnimationConfig() {
   let isTestMode = false;
-  let speedMultiplier = 1;
+  let speedFactor = 1; // Default: normal speed
   
   // Check URL parameters first (highest priority)
   if (typeof window !== 'undefined') {
     const urlParams = new URLSearchParams(window.location.search);
     const animSpeedParam = urlParams.get('animSpeed');
     if (animSpeedParam) {
-      speedMultiplier = parseFloat(animSpeedParam);
-      isTestMode = speedMultiplier < 1;
-      return { isTestMode, speedMultiplier };
+      speedFactor = parseFloat(animSpeedParam);
+      isTestMode = speedFactor !== 1;
+      return { isTestMode, speedFactor };
     }
     
     // Check for test parameter
     if (urlParams.get('test') === 'true') {
       isTestMode = true;
-      speedMultiplier = 0.1;
-      return { isTestMode, speedMultiplier };
+      speedFactor = 0.1; // 10x faster
+      return { isTestMode, speedFactor };
     }
   }
   
-  // Check if we're running in browser on test port (Playwright uses 5174)
+  // Auto-detect test environment by port (Playwright typically uses 5174)
   if (typeof window !== 'undefined' && 
       window.location.hostname === 'localhost' && 
       window.location.port === '5174') {
     isTestMode = true;
-    speedMultiplier = 0.1;
-    return { isTestMode, speedMultiplier };
+    speedFactor = 0.1; // 10x faster
+    return { isTestMode, speedFactor };
   }
   
   // Check for Vite test environment variable
   try {
     if (import.meta.env?.VITE_TEST_MODE === 'true') {
       isTestMode = true;
-      speedMultiplier = 0.1;
-      return { isTestMode, speedMultiplier };
+      speedFactor = 0.1; // 10x faster
+      return { isTestMode, speedFactor };
     }
   } catch {
     // import.meta might not be available in all contexts
@@ -49,22 +57,25 @@ const getAnimationConfig = (() => {
   // Check for Playwright global
   if (typeof global !== 'undefined' && (global as any).__PLAYWRIGHT__) {
     isTestMode = true;
-    speedMultiplier = 0.1;
-    return { isTestMode, speedMultiplier };
+    speedFactor = 0.1; // 10x faster
+    return { isTestMode, speedFactor };
   }
   
-  return { isTestMode, speedMultiplier };
-})();
-
-const { isTestMode, speedMultiplier: ANIMATION_SPEED_MULTIPLIER } = getAnimationConfig;
+  return { isTestMode, speedFactor };
+}
 
 /**
- * Get animation delay with test mode optimization
+ * Get animation delay adjusted for current environment
  * @param baseDelay - Base delay in milliseconds
- * @returns Adjusted delay for current environment
+ * @returns Adjusted delay (smaller = faster animations)
  */
 export function getAnimationDelay(baseDelay: number): number {
-  return Math.max(1, baseDelay * ANIMATION_SPEED_MULTIPLIER);
+  const { speedFactor } = getAnimationConfig();
+  // speedFactor directly multiplies the delay:
+  // speedFactor=1   -> normal speed (350ms stays 350ms)  
+  // speedFactor=0.1 -> 10x faster (350ms becomes 35ms)
+  // speedFactor=0.01 -> 100x faster (350ms becomes 3.5ms)
+  return Math.max(0.1, baseDelay * speedFactor);
 }
 
 /**
@@ -78,35 +89,37 @@ export function createDelay(ms: number): Promise<void> {
 
 /**
  * Animation timing constants with test mode awareness
+ * These are functions that dynamically check the current environment
  */
 export const ANIMATION_TIMINGS = {
   // Character processing delay for cipher animations
-  CHARACTER_PROCESS: getAnimationDelay(350),
+  get CHARACTER_PROCESS() { return getAnimationDelay(350); },
   
   // Non-alphabetic character delay
-  NON_ALPHA_CHARACTER: getAnimationDelay(50),
+  get NON_ALPHA_CHARACTER() { return getAnimationDelay(50); },
   
   // Step-by-step animation delays
-  STEP_REVEAL: getAnimationDelay(200),
-  STEP_HIGHLIGHT: getAnimationDelay(800),
+  get STEP_REVEAL() { return getAnimationDelay(200); },
+  get STEP_HIGHLIGHT() { return getAnimationDelay(800); },
   
   // Visualization building delays
-  ZIGZAG_CHARACTER: getAnimationDelay(200),
-  RAIL_READING: getAnimationDelay(800),
+  get ZIGZAG_CHARACTER() { return getAnimationDelay(200); },
+  get RAIL_READING() { return getAnimationDelay(800); },
   
   // Morse code delays
-  MORSE_CHARACTER: getAnimationDelay(300),
-  MORSE_WORD_SEPARATOR: getAnimationDelay(600),
+  get MORSE_CHARACTER() { return getAnimationDelay(300); },
+  get MORSE_WORD_SEPARATOR() { return getAnimationDelay(600); },
   
   // General animation delays
-  SHORT_DELAY: getAnimationDelay(100),
-  MEDIUM_DELAY: getAnimationDelay(500),
-  LONG_DELAY: getAnimationDelay(1000),
+  get SHORT_DELAY() { return getAnimationDelay(100); },
+  get MEDIUM_DELAY() { return getAnimationDelay(500); },
+  get LONG_DELAY() { return getAnimationDelay(1000); },
 } as const;
 
 /**
- * Check if we're currently in test mode
+ * Check if we're currently in test mode (animations are faster than normal)
  */
 export function isInTestMode(): boolean {
+  const { isTestMode } = getAnimationConfig();
   return isTestMode;
 }

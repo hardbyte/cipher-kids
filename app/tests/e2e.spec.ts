@@ -3,7 +3,6 @@ import { navigateWithAuth } from './helpers/auth-helpers';
 import { 
   fillMessage, 
   clickCipherAction, 
-  getCipherResult,
   getCipherResultDirect, 
   setSliderValue, 
   fillKeyword 
@@ -77,7 +76,7 @@ test.describe('End-to-End Cipher Functionality', () => {
       await fillMessage(authenticatedPage, TEST_CASES.caesar.message);
       await setSliderValue(authenticatedPage, 'shift', TEST_CASES.caesar.shift);
       await clickCipherAction(authenticatedPage, 'encrypt');
-      const encrypted = await getCipherResult(authenticatedPage);
+      const encrypted = await getCipherResultDirect(authenticatedPage);
       
       // Switch to decrypt mode by clicking the mode toggle button
       const decryptModeButton = authenticatedPage.getByRole('button', { name: 'unlock Decrypt' });
