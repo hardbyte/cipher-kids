@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { SampleMessageButton } from "./SampleMessageButton";
 
 interface CipherInputsProps {
-  mode: "encrypt" | "decrypt" | "crack";
+  mode: "encrypt" | "decrypt" | "encode" | "decode" | "crack";
   message: string;
   setMessage: (message: string) => void;
   param?: string;
@@ -33,7 +33,8 @@ export const CipherInputs: React.FC<CipherInputsProps> = ({
     <div className="space-y-4">
       <div className="relative">
         <div className="absolute top-2 left-2 text-lg">
-        {mode === "encrypt" ? "✉️" : mode === "decrypt" ? "📬" : "🔍"}
+        {mode === "encrypt" || mode === "encode" ? "✉️" : 
+         mode === "decrypt" || mode === "decode" ? "📬" : "🔍"}
       </div>
         <Input
           label="Your Secret Message"
@@ -60,7 +61,7 @@ export const CipherInputs: React.FC<CipherInputsProps> = ({
       {setParam && (
         <div className="relative">
           <div className="absolute top-2 left-2 text-lg">
-            {mode === "encrypt" ? "🔑" : "🗝️"}
+            {mode === "encrypt" || mode === "encode" ? "🔑" : "🗝️"}
           </div>
           <Input
             label="Secret Key"
@@ -85,9 +86,11 @@ export const CipherInputs: React.FC<CipherInputsProps> = ({
             className="px-8 py-2 text-base font-medium flex items-center gap-2"
           >
             <span role="img" aria-label="magic wand" className="text-lg">
-              {mode === "encrypt" ? "🔐" : "🔓"}
+              {mode === "encrypt" || mode === "encode" ? "🔐" : "🔓"}
             </span>
-            <span>{mode === "encrypt" ? "Encrypt" : "Decrypt"}</span>
+            <span>{mode === "encrypt" ? "Encrypt" : 
+                   mode === "decrypt" ? "Decrypt" :
+                   mode === "encode" ? "Encode" : "Decode"}</span>
             <span role="img" aria-label="sparkles" className="text-lg">
               ✨
             </span>
