@@ -130,8 +130,8 @@ function KeywordCipherPage() {
   // Load additional keywords from API for enhanced cracking (with offline fallback)
   const loadExtendedKeywords = useCallback(async (): Promise<string[]> => {
     try {
-      // Use a public word list API (like Wordnik or similar)
-      const response = await fetch('https://api.wordnik.com/v4/words.json/randomWords?hasDictionaryDef=true&includePartOfSpeech=noun,adjective&minCorpusCount=1000&maxCorpusCount=10000&minDictionaryCount=1&maxDictionaryCount=10&minLength=4&maxLength=12&limit=50&api_key=a2a73e7b926c924fad7001ca3111acd55af2ffabf50eb4ae5', {
+      // Use Datamuse API - no API key required
+      const response = await fetch('https://api.datamuse.com/words?md=p,f&max=500', {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
@@ -141,8 +141,13 @@ function KeywordCipherPage() {
       });
       
       if (response.ok) {
-        const words = await response.json();
-        return words.map((word: { word: string }) => word.word.toUpperCase());
+        const data: Array<{ word: string; tags?: string[]; score?: number }> = await response.json();
+        return data
+          .filter(w => w.word.length >= 4 && w.word.length <= 12)
+          .filter(w => w.score! >= 1000)
+          .filter(w => w.tags?.some(t => t === 'n' || t === 'adj'))
+          .slice(0, 50)
+          .map(w => w.word.toUpperCase());
       }
     } catch (error) {
       console.info('Using offline keywords only:', error);

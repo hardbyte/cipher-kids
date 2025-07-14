@@ -1,18 +1,19 @@
 import { Button } from "./ui/button";
 import { useUser } from "@/context/use-user";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { UserIconColor } from "@/context/user-context-types";
 import { UserSettings } from "./user-settings";
 
 export function UserProfile() {
-  const { currentUser, setCurrentUser, getUserConfig } = useUser();
+  const { currentUser, setCurrentUser, getUserConfig, configVersion } = useUser();
   const [isHovered, setIsHovered] = useState(false);
 
   if (!currentUser) {
     return null;
   }
 
-  const userConfig = getUserConfig();
+  // Use useMemo to re-compute userConfig when configVersion changes
+  const userConfig = useMemo(() => getUserConfig(), [getUserConfig, configVersion]);
 
   // Get the color based on user config or fallback to initial-based color
   const getUserColor = (initial: string): string => {
@@ -44,7 +45,6 @@ export function UserProfile() {
       className="flex items-center gap-2 relative cursor-pointer"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={handleLogout}
     >
       <div 
         className={`${getUserColor(currentUser)} w-10 h-10 rounded-md flex items-center justify-center font-bold transition-transform duration-200 ${isHovered ? 'scale-110' : ''} ${userConfig.avatar ? 'text-black' : 'text-white'}`}

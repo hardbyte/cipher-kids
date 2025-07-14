@@ -68,7 +68,7 @@ test.describe('End-to-End Cipher Functionality', () => {
       expect(result).toBe(TEST_CASES.caesar.expected);
     });
     
-    test.skip('decrypt reverses encryption', async ({ authenticatedPage }) => {
+    test('decrypt reverses encryption', async ({ authenticatedPage }) => {
       // TODO: Fix decrypt mode switching - currently mode buttons don't work as expected in tests
       // This functionality works in manual testing but needs better test implementation
       await navigateWithAuth(authenticatedPage, '/ciphers/caesar');
@@ -79,10 +79,11 @@ test.describe('End-to-End Cipher Functionality', () => {
       await clickCipherAction(authenticatedPage, 'encrypt');
       const encrypted = await getCipherResult(authenticatedPage);
       
-      // Switch to decrypt mode by clicking the mode button
-      const decryptModeButton = authenticatedPage.getByRole('button', { name: /unlock decrypt/i });
+      // Switch to decrypt mode by clicking the mode toggle button
+      const decryptModeButton = authenticatedPage.getByRole('button', { name: 'unlock Decrypt' });
       await decryptModeButton.click();
-      await authenticatedPage.waitForTimeout(500); // Wait for mode change
+      // Wait for mode change by checking the button state
+      await expect(decryptModeButton).toHaveClass(/bg-primary/);
       
       // Clear and fill the encrypted message
       await fillMessage(authenticatedPage, encrypted);
@@ -91,7 +92,7 @@ test.describe('End-to-End Cipher Functionality', () => {
       await clickCipherAction(authenticatedPage, 'decrypt');
       
       // Should get back original message
-      const decrypted = await getCipherResult(authenticatedPage);
+      const decrypted = await getCipherResultDirect(authenticatedPage);
       expect(decrypted.replace(/\s/g, '')).toBe(TEST_CASES.caesar.message.replace(/\s/g, ''));
     });
   });
@@ -183,7 +184,8 @@ test.describe('User Interface', () => {
     
     // Click theme switcher
     await themeButton.click();
-    await authenticatedPage.waitForTimeout(500);
+    // Wait for theme change by checking the HTML class changes (could be light, matrix, or emoji)
+    await expect(authenticatedPage.locator('html')).toHaveAttribute('class');
     
     // Verify theme switched (page should still be functional)
     await expect(authenticatedPage.getByRole('heading', { name: 'Caesar Cipher' }).first()).toBeVisible();

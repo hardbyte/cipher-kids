@@ -40,6 +40,7 @@ export interface UserContextType {
   getUserConfig: () => UserConfig;
   getUserConfigFor: (user: UserInitial) => UserConfig;
   updateUserConfig: (config: Partial<UserConfig>) => void;
+  configVersion: number; // For triggering re-renders when config changes
 }
 
 export const UserContext = createContext<UserContextType | undefined>(undefined);

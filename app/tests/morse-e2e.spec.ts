@@ -167,8 +167,8 @@ authTest.describe('Morse Code End-to-End Testing', () => {
       // Click encrypt to show character
       await clickCipherAction(authenticatedPage, 'encrypt');
       
-      // Wait a bit for the animation to show the character
-      await authenticatedPage.waitForTimeout(500);
+      // Wait for the result to appear
+      await expect(authenticatedPage.locator('[data-testid="cipher-result"]')).toBeVisible();
       
       // Should show listen button if audio is supported
       const listenButton = authenticatedPage.getByRole('button', { name: /🔊 Listen/ });
@@ -200,6 +200,53 @@ authTest.describe('Morse Code End-to-End Testing', () => {
       // Should mention key concepts
       await expect(authenticatedPage.getByText('Dots are short beeps')).toBeVisible();
       await expect(authenticatedPage.getByText('Dashes are long beeps')).toBeVisible();
+    });
+  });
+
+  authTest.describe('Decode Accuracy Tests', () => {
+    authTest('should decode HELLO correctly without truncation', async ({ authenticatedPage }) => {
+      // Switch to decode mode
+      await authenticatedPage.getByRole('button', { name: /decrypt/i }).click();
+      
+      // Enter morse code for HELLO
+      await fillMessage(authenticatedPage, '.... . .-.. .-.. ---');
+      
+      // Click decrypt button
+      await clickCipherAction(authenticatedPage, 'decrypt');
+      
+      // Check the result is HELLO, not HELL
+      const result = await getCipherResultDirect(authenticatedPage);
+      expect(result).toBe('HELLO');
+    });
+
+    authTest('should decode multiple words correctly', async ({ authenticatedPage }) => {
+      // Switch to decode mode
+      await authenticatedPage.getByRole('button', { name: /decrypt/i }).click();
+      
+      // Enter morse code for HELLO WORLD
+      await fillMessage(authenticatedPage, '.... . .-.. .-.. --- / .-- --- .-. .-.. -..');
+      
+      // Click decrypt button
+      await clickCipherAction(authenticatedPage, 'decrypt');
+      
+      // Check the result
+      const result = await getCipherResultDirect(authenticatedPage);
+      expect(result).toBe('HELLO WORLD');
+    });
+
+    authTest('should decode long messages without truncation', async ({ authenticatedPage }) => {
+      // Switch to decode mode
+      await authenticatedPage.getByRole('button', { name: /decrypt/i }).click();
+      
+      // Enter morse code for SECRET MESSAGE
+      await fillMessage(authenticatedPage, '... . -.-. .-. . - / -- . ... ... .- --. .');
+      
+      // Click decrypt button
+      await clickCipherAction(authenticatedPage, 'decrypt');
+      
+      // Check the result
+      const result = await getCipherResultDirect(authenticatedPage);
+      expect(result).toBe('SECRET MESSAGE');
     });
   });
 });

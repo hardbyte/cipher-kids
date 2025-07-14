@@ -3,12 +3,12 @@ import { test as authTest } from './fixtures/auth';
 import { fillMessage, clickCipherAction } from './test-helpers';
 
 async function getPigpenResult(page: any): Promise<string> {
-  // Wait for the result to appear
-  await page.waitForTimeout(2000);
-  
   // Use the data-testid approach since we know it exists
   const resultElement = page.locator('[data-testid="cipher-result"]');
   await expect(resultElement).toBeVisible({ timeout: 10000 });
+  
+  // Wait for the result to contain meaningful content
+  await expect(resultElement).not.toBeEmpty();
   
   const result = await resultElement.textContent();
   return result?.trim() || '';

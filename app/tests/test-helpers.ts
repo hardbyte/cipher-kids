@@ -88,8 +88,8 @@ export async function clickCipherAction(page: Page, action: 'encrypt' | 'decrypt
   await button.waitFor({ state: 'visible', timeout: 5000 });
   await button.click();
   
-  // Wait a moment for the action to be processed
-  await page.waitForTimeout(100);
+  // Wait for any loading state to settle
+  await page.waitForLoadState('domcontentloaded');
 }
 
 /**
@@ -97,8 +97,16 @@ export async function clickCipherAction(page: Page, action: 'encrypt' | 'decrypt
  * Uses a direct approach based on observing the actual DOM structure
  */
 export async function getCipherResult(page: Page): Promise<string> {
-  // Wait for result to be processed and displayed
-  await page.waitForTimeout(3000);
+  // Wait for result to be processed and displayed by checking for result content
+  await page.waitForFunction(() => {
+    const elements = Array.from(document.querySelectorAll('*'));
+    return elements.some(el => {
+      const text = el.textContent?.trim() || '';
+      return text.length >= 3 && /^[A-Z0-9\s.,!?:-]+$/.test(text) && 
+             !text.includes('encrypt') && !text.includes('decrypt') && 
+             !text.includes('message') && !text.includes('cipher');
+    });
+  }, { timeout: 10000 });
   
   // Look for any text element that contains cipher-like content
   // Based on observation, results appear as standalone text elements
@@ -167,7 +175,7 @@ export async function getCipherResult(page: Page): Promise<string> {
       // Continue trying
     }
     
-    await page.waitForTimeout(500);
+    await page.waitForLoadState('domcontentloaded');
   }
   
   throw new Error(`Could not find stable cipher result. Best candidate: "${stableResult}"`);
@@ -181,23 +189,32 @@ export async function getCipherResultDirect(page: Page): Promise<string> {
   const resultElement = page.locator('[data-testid="cipher-result"]');
   await expect(resultElement).toBeVisible({ timeout: 10000 });
   
-  // Wait for animation to complete by checking the result stabilizes
-  let stableResult = '';
+  // Wait for the result to be complete (stable for at least 2 checks)
+  let previousResult = '';
   let stableCount = 0;
-  for (let i = 0; i < 15; i++) {
-    const currentResult = await resultElement.textContent();
-    const trimmed = currentResult?.trim() || '';
-    if (trimmed === stableResult && trimmed.length > 0) {
-      stableCount++;
-      if (stableCount >= 3) return trimmed;
-    } else {
-      stableResult = trimmed;
-      stableCount = 0;
-    }
-    await page.waitForTimeout(400);
-  }
   
-  return stableResult;
+  await page.waitForFunction((selector) => {
+    const element = document.querySelector(selector);
+    if (!element) return false;
+    const text = element.textContent?.trim() || '';
+    
+    // Wait for meaningful content that doesn't look like it's still animating
+    if (text.length === 0) return false;
+    if (text.includes('...') || text.includes('loading')) return false;
+    
+    // Check for stability by comparing with previous result
+    if (text === window._previousResult) {
+      window._stableCount = (window._stableCount || 0) + 1;
+      return window._stableCount >= 3;
+    } else {
+      window._previousResult = text;
+      window._stableCount = 1;
+      return false;
+    }
+  }, '[data-testid="cipher-result"]', { timeout: 10000 });
+  
+  const result = await resultElement.textContent();
+  return result?.trim() || '';
 }
 
 /**

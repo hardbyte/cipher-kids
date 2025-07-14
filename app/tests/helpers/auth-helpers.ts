@@ -25,8 +25,13 @@ export async function waitForAuthState(page: Page): Promise<void> {
 
 /**
  * Navigates to a path and waits for authentication state to be properly initialized
+ * Automatically adds test speed parameter for faster animations
  */
 export async function navigateWithAuth(page: Page, path: string): Promise<void> {
-  await page.goto(path);
+  // Add animation speed parameter for tests
+  const url = new URL(path, 'http://localhost:5174');
+  url.searchParams.set('animSpeed', '0.001'); // Ultra fast animations for tests
+  
+  await page.goto(url.toString());
   await waitForAuthState(page);
 }

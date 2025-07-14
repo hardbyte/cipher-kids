@@ -8,6 +8,9 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     return (savedUser as UserInitial) || null;
   });
 
+  // State to trigger re-renders when user config changes
+  const [configVersion, setConfigVersion] = useState(0);
+
   const isAuthenticated = currentUser !== null;
 
   // Save user to localStorage when it changes
@@ -18,6 +21,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       localStorage.removeItem('cipher-app-user');
     }
   }, [currentUser]);
+
 
   const getEnabledCiphers = (): string[] => {
     const saved = localStorage.getItem('cipher-app-enabled-ciphers');
@@ -86,10 +90,13 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     const currentConfig = getUserConfig();
     const newConfig = { ...currentConfig, ...config };
     localStorage.setItem(`cipher-app-user-config-${currentUser}`, JSON.stringify(newConfig));
+    
+    // Trigger re-render by updating configVersion
+    setConfigVersion(prev => prev + 1);
   };
 
   return (
-    <UserContext.Provider value={{ currentUser, setCurrentUser, isAuthenticated, getEnabledCiphers, hasAgents, getUserConfig, getUserConfigFor, updateUserConfig }}>
+    <UserContext.Provider value={{ currentUser, setCurrentUser, isAuthenticated, getEnabledCiphers, hasAgents, getUserConfig, getUserConfigFor, updateUserConfig, configVersion }}>
       {children}
     </UserContext.Provider>
   );

@@ -65,8 +65,8 @@ test.describe('Theme Switching', () => {
     // Navigate to cipher page using direct navigation (not helper)
     await authenticatedPage.goto('/ciphers/caesar');
     
-    // Give time for theme to load
-    await authenticatedPage.waitForTimeout(1000);
+    // Wait for page to load properly
+    await authenticatedPage.waitForLoadState('networkidle');
     
     // Verify theme persisted (or at least page loads correctly)
     await expect(authenticatedPage.getByRole('heading', { name: /caesar cipher/i }).first()).toBeVisible();

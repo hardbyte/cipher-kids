@@ -54,8 +54,8 @@ test.describe('User Personalization', () => {
     await nameInput.fill('Alice');
     await nameInput.blur(); // Trigger onBlur handler
     
-    // Wait a moment for the blur handler to process
-    await authenticatedPage.waitForTimeout(500);
+    // Wait for the input to show it has processed the change
+    await expect(nameInput).toHaveValue('Alice');
     
     // Close modal
     await authenticatedPage.getByRole('button', { name: /done/i }).click();
@@ -64,7 +64,6 @@ test.describe('User Personalization', () => {
     const savedConfig = await authenticatedPage.evaluate(() => {
       return localStorage.getItem('cipher-app-user-config-A');
     });
-    console.log('Saved config:', savedConfig);
     
     // Reload the page to ensure the new config is loaded
     await authenticatedPage.reload();
@@ -79,9 +78,6 @@ test.describe('User Personalization', () => {
     await expect(profileDropdown).toBeVisible();
     
     // Check for the display name
-    // Debug: print the entire dropdown HTML to understand the structure
-    const dropdownHTML = await profileDropdown.innerHTML();
-    console.log('Dropdown HTML:', dropdownHTML);
     
     await expect(profileDropdown).toContainText('Alice');
   });

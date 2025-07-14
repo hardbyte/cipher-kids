@@ -15,7 +15,12 @@ export const test = baseTest.extend<AuthFixtures>({
       // Set authentication data in localStorage before React app initializes
       window.localStorage.setItem('cipher-app-user', authData.userId);
       window.localStorage.setItem('cipher-app-enabled-ciphers', JSON.stringify(authData.enabledCiphers));
-      window.localStorage.setItem(`cipher-app-user-config-${authData.userId}`, JSON.stringify(authData.userConfig));
+      
+      // Only set user config if it doesn't already exist to avoid overwriting test changes
+      const existingConfig = window.localStorage.getItem(`cipher-app-user-config-${authData.userId}`);
+      if (!existingConfig) {
+        window.localStorage.setItem(`cipher-app-user-config-${authData.userId}`, JSON.stringify(authData.userConfig));
+      }
     }, {
       userId: 'A',
       enabledCiphers: ['atbash', 'caesar', 'keyword', 'railfence', 'vigenere'],

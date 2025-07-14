@@ -51,10 +51,8 @@ authTest.describe('Atbash Cipher End-to-End Testing', () => {
 
       // Switch to decrypt and decrypt the encrypted message
       await authenticatedPage.getByRole('button', { name: /decrypt/i }).first().click();
+      // Ensure the mode switch has completed
       await expect(authenticatedPage.getByRole('button', { name: /decrypt/i }).first()).toHaveClass(/bg-primary/);
-      
-      // Wait a moment for auto-population to complete, then ensure the correct input
-      await authenticatedPage.waitForTimeout(500);
       await fillMessage(authenticatedPage, encrypted);
       await clickCipherAction(authenticatedPage, 'decrypt');
       
