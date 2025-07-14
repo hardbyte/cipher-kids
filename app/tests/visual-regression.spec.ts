@@ -158,8 +158,8 @@ test.describe('Visual Regression Tests', () => {
           await setTheme(authenticatedPage, theme);
           await preparePage(authenticatedPage);
           
-          // Screenshot of various button states
-          const buttonContainer = authenticatedPage.locator('.cipher-inputs');
+          // Screenshot of various button states - use the mode toggle container
+          const buttonContainer = authenticatedPage.locator('.bg-muted\\/50.p-1.rounded-xl');
           await expect(buttonContainer).toHaveScreenshot(`buttons-${theme}.png`);
         });
       });
@@ -173,7 +173,7 @@ test.describe('Visual Regression Tests', () => {
           await preparePage(authenticatedPage);
           
           // Screenshot of mode toggle
-          const modeToggle = authenticatedPage.locator('[role="tablist"]');
+          const modeToggle = authenticatedPage.locator('.bg-muted\\/50.p-1.rounded-xl');
           await expect(modeToggle).toHaveScreenshot(`mode-toggle-${theme}.png`);
         });
       });
@@ -188,8 +188,8 @@ test.describe('Visual Regression Tests', () => {
           await setTheme(authenticatedPage, theme);
           await preparePage(authenticatedPage);
           
-          // Screenshot of cipher navigation
-          const navigation = authenticatedPage.locator('.cipher-nav');
+          // Screenshot of cipher navigation - use the main navigation area
+          const navigation = authenticatedPage.locator('nav').first();
           await expect(navigation).toHaveScreenshot(`navigation-${theme}.png`);
         });
       });
