@@ -1,4 +1,4 @@
-import { useState, startTransition, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
 import { useUser } from '@/context/use-user';
@@ -32,15 +32,15 @@ export function UserSettings({ children }: UserSettingsProps) {
   const { setTheme } = useTheme();
   const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
   
-  if (!currentUser) return null;
-  
-  const userConfig = getUserConfig();
-  
   const handleThemeChange = useCallback((newTheme: Theme) => {
     // Now that event handling is fixed, we can apply changes immediately
     setTheme(newTheme);
     updateUserConfig({ theme: newTheme });
   }, [setTheme, updateUserConfig]);
+  
+  if (!currentUser) return null;
+  
+  const userConfig = getUserConfig();
   
   const handleIconColorChange = (newColor: UserIconColor | undefined) => {
     updateUserConfig({ iconColor: newColor });

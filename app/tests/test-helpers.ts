@@ -107,8 +107,10 @@ export async function getCipherResultDirect(page: Page): Promise<string> {
   await expect(resultElement).toBeVisible({ timeout: 10000 });
   
   // Wait for the result to be complete (stable for at least 2 checks)
-  let previousResult = '';
-  let stableCount = 0;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const previousResult = '';
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const stableCount = 0;
   
   await page.waitForFunction((selector) => {
     const element = document.querySelector(selector);

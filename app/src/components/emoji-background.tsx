@@ -13,7 +13,9 @@ export function EmojiBackground() {
       if (styleSheetRef.current && styleSheetRef.current.parentNode) {
         try {
           styleSheetRef.current.parentNode.removeChild(styleSheetRef.current);
-        } catch {}
+        } catch {
+          // Silently ignore removal errors
+        }
         styleSheetRef.current = null;
       }
       if (containerRef.current) {
@@ -117,13 +119,17 @@ export function EmojiBackground() {
       if (styleSheetRef.current && styleSheetRef.current.parentNode) {
         try {
           styleSheetRef.current.parentNode.removeChild(styleSheetRef.current);
-        } catch {}
+        } catch {
+          // Silently ignore removal errors
+        }
         styleSheetRef.current = null;
       }
       if (container && container.isConnected) {
         try {
           container.textContent = '';
-        } catch {}
+        } catch {
+          // Silently ignore content clearing errors
+        }
       }
     };
   }, [theme]);

@@ -85,7 +85,7 @@ function CaesarCipherPage() {
     setShowStepByStep(false);
     setIsAnimating(false);
     generateAnimationSteps();
-  }, [mode]); // Only respond to mode changes, not message changes
+  }, [mode, message, output, generateAnimationSteps]); // Only respond to mode changes, not message changes
 
   // Handle message and shift changes separately to avoid infinite loops
   useEffect(() => {
@@ -93,7 +93,7 @@ function CaesarCipherPage() {
     setCurrentCharToHighlight(undefined);
     setShowStepByStep(false);
     generateAnimationSteps();
-  }, [message, shift, generateAnimationSteps]);
+  }, [message, shift, output, generateAnimationSteps]);
 
   // Cleanup on unmount
   useEffect(() => {

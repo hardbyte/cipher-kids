@@ -7,7 +7,7 @@ import { test as authTest, expect } from './fixtures/auth';
  */
 
 // Helper function to wait for component to be stable
-async function waitForComponentStable(page: any) {
+async function waitForComponentStable(page: Page) {
   await page.waitForLoadState('networkidle');
   await page.waitForTimeout(500);
   await page.waitForFunction(() => document.fonts.ready);

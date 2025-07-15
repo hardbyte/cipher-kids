@@ -55,7 +55,7 @@ function getAnimationConfig() {
   }
   
   // Check for Playwright global
-  if (typeof global !== 'undefined' && (global as any).__PLAYWRIGHT__) {
+  if (typeof global !== 'undefined' && (global as typeof global & { __PLAYWRIGHT__?: boolean }).__PLAYWRIGHT__) {
     isTestMode = true;
     speedFactor = 0.1; // 10x faster
     return { isTestMode, speedFactor };

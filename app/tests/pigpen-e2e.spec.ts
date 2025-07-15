@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { test as authTest } from './fixtures/auth';
 import { fillMessage, clickCipherAction, getCipherResultDirect } from './test-helpers';
 

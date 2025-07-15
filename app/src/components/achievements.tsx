@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
 import { useUser } from '@/context/use-user';
 import { ACHIEVEMENTS, getEarnedAchievements, getAlmostEarnedAchievements, Achievement } from '@/utils/achievements';
@@ -161,7 +160,7 @@ export function Achievements({ children }: AchievementsProps) {
             ].map(tab => (
               <button
                 key={tab.key}
-                onClick={() => setActiveTab(tab.key as any)}
+                onClick={() => setActiveTab(tab.key as 'earned' | 'progress' | 'all')}
                 className={`flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors ${
                   activeTab === tab.key
                     ? 'bg-primary text-primary-fg shadow-sm'

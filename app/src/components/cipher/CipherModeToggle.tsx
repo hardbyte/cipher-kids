@@ -25,7 +25,7 @@ export const CipherModeToggle: React.FC<CipherModeToggleProps> = ({
               ? "bg-primary text-primary-fg" 
               : "hover:bg-muted"
           }`}
-          onClick={() => setMode(firstMode as any)}
+          onClick={() => setMode(firstMode as "encrypt" | "decrypt" | "encode" | "decode" | "crack")}
           whileTap={{ scale: 0.95 }}
         >
           <span role="img" aria-label="lock" className="text-lg">
@@ -52,7 +52,7 @@ export const CipherModeToggle: React.FC<CipherModeToggleProps> = ({
               ? "bg-primary text-primary-fg" 
               : "hover:bg-muted"
           }`}
-          onClick={() => setMode(secondMode as any)}
+          onClick={() => setMode(secondMode as "encrypt" | "decrypt" | "encode" | "decode" | "crack")}
           whileTap={{ scale: 0.95 }}
         >
           <span role="img" aria-label="unlock" className="text-lg">

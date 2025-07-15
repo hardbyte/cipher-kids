@@ -12,8 +12,6 @@ interface CipherResultProps {
 export const CipherResult: React.FC<CipherResultProps> = ({
   output,
   visualizer,
-  mode,
-  isAnimating,
 }) => {
   const [showCelebration, setShowCelebration] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);

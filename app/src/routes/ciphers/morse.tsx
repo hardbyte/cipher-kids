@@ -107,7 +107,7 @@ function MorseCodePage() {
     setOutput("");
     setCurrentCharToHighlight(undefined);
     setShowStepByStep(false);
-  }, [mode]);
+  }, [mode, message, output]);
 
   // Reset animation states if message changes
   useEffect(() => {
@@ -115,7 +115,7 @@ function MorseCodePage() {
     setCurrentCharToHighlight(undefined);
     setShowStepByStep(false);
     generateAnimationSteps();
-  }, [message, generateAnimationSteps]);
+  }, [message, output, generateAnimationSteps]);
 
   // Initialize audio when component mounts
   useEffect(() => {

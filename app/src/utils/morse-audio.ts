@@ -27,7 +27,7 @@ let audioContext: AudioContext | null = null;
 export function initializeAudio(): boolean {
   try {
     if (!audioContext) {
-      audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      audioContext = new (window.AudioContext || (window as Window & { webkitAudioContext?: AudioContext }).webkitAudioContext)();
     }
     return true;
   } catch (error) {
@@ -163,5 +163,5 @@ export async function playMorseCharacter(morsePattern: string, settings?: Partia
  * Check if audio is supported in this browser
  */
 export function isAudioSupported(): boolean {
-  return !!(window.AudioContext || (window as any).webkitAudioContext);
+  return !!(window.AudioContext || (window as Window & { webkitAudioContext?: AudioContext }).webkitAudioContext);
 }

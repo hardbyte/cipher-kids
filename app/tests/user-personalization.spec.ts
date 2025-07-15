@@ -61,6 +61,7 @@ test.describe('User Personalization', () => {
     await authenticatedPage.getByRole('button', { name: /done/i }).click();
     
     // Verify the value was saved to localStorage
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const savedConfig = await authenticatedPage.evaluate(() => {
       return localStorage.getItem('cipher-app-user-config-A');
     });

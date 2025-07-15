@@ -16,7 +16,6 @@ import { UserProfile } from "@/components/user-profile";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { MatrixBackground } from "@/components/matrix-background";
 import { EmojiBackground } from "@/components/emoji-background";
-import { useTheme } from "@/components/theme/use-theme";
 
 declare module "react-aria-components" {
   interface RouterConfig {
@@ -39,7 +38,6 @@ export const Route = createRootRouteWithContext<AppContext>()({
 
 function AuthenticatedRoute() {
   const { isAuthenticated } = useUser();
-  const { theme } = useTheme();
   const location = useLocation();
   
   // Allow unauthenticated access to config page for initial setup

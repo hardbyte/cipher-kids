@@ -19,7 +19,7 @@ type AnimationPhase = "zigzag" | "reading" | "complete";
 
 export function ZigzagVisualization({ message, rails, isAnimating = false }: ZigzagVisualizationProps) {
   const [animatedPositions, setAnimatedPositions] = useState<PositionData[]>([]);
-  const [currentStep, setCurrentStep] = useState(0);
+  const [, setCurrentStep] = useState(0);
   const [showConnectingLines, setShowConnectingLines] = useState(false);
   const [animationPhase, setAnimationPhase] = useState<AnimationPhase>("zigzag");
   const [highlightedRail, setHighlightedRail] = useState<number | null>(null);
@@ -58,9 +58,9 @@ export function ZigzagVisualization({ message, rails, isAnimating = false }: Zig
   const allPositions = generateZigzagData();
 
   // Get characters for each rail
-  const getRailChars = (railIndex: number): PositionData[] => {
+  const getRailChars = useCallback((railIndex: number): PositionData[] => {
     return allPositions.filter(pos => pos.rail === railIndex);
-  };
+  }, [allPositions]);
 
   // Animation effect
   useEffect(() => {
@@ -126,7 +126,7 @@ export function ZigzagVisualization({ message, rails, isAnimating = false }: Zig
     }, ANIMATION_TIMINGS.ZIGZAG_CHARACTER);
 
     return () => clearInterval(zigzagTimer);
-  }, [isAnimating, message, rails]);
+  }, [isAnimating, message, rails, allPositions, getRailChars]);
 
   if (allPositions.length === 0) return null;
 
@@ -209,7 +209,7 @@ export function ZigzagVisualization({ message, rails, isAnimating = false }: Zig
 
             {/* Characters */}
             <AnimatePresence>
-              {animatedPositions.map((pos, index) => {
+              {animatedPositions.map((pos) => {
                 const isHighlighted = highlightedRail === pos.rail && animationPhase === "reading";
                 return (
                   <motion.g key={`char-${pos.position}-${pos.char}`}>

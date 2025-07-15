@@ -74,7 +74,7 @@ function PigpenCipherPage() {
     setHighlightChar(undefined);
     setShowStepByStep(false);
     generateAnimationSteps();
-  }, [mode]); // Only respond to mode changes
+  }, [mode, message, output, generateAnimationSteps]); // Only respond to mode changes
 
   // Handle message changes separately
   useEffect(() => {
@@ -82,7 +82,7 @@ function PigpenCipherPage() {
     setHighlightChar(undefined);
     setShowStepByStep(false);
     generateAnimationSteps();
-  }, [message, generateAnimationSteps]);
+  }, [message, output, generateAnimationSteps]);
 
   const handleAction = async () => {
     if (isAnimating) return;

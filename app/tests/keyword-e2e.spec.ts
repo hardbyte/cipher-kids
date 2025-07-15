@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { test as authTest } from './fixtures/auth';
 
 authTest.describe('Keyword Cipher End-to-End Testing', () => {

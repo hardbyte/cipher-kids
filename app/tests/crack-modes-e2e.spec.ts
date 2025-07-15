@@ -1,5 +1,5 @@
 import { test as authTest, expect } from './fixtures/auth';
-import { fillMessage, getCipherResultDirect } from './test-helpers';
+import { fillMessage } from './test-helpers';
 
 authTest.describe('Crack Mode E2E Testing', () => {
   authTest.describe('Keyword Cipher Crack Mode', () => {

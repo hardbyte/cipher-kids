@@ -18,6 +18,7 @@ function KeywordCipherPage() {
   const [message, setMessage] = useState<string>("");
   const [keyword, setKeyword] = useState<string>("");
   const [output, setOutput] = useState<string>("");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
   const [crackResults, setCrackResults] = useState<string>("");
   const [crackAttempts, setCrackAttempts] = useState<Array<{keyword: string, result: string, score: number}>>([]);
@@ -25,7 +26,7 @@ function KeywordCipherPage() {
   const [apiStatus, setApiStatus] = useState<'loading' | 'success' | 'failed' | 'offline'>('loading');
 
   // Common keywords to try when cracking (single words and phrases)
-  const commonKeywords = [
+  const commonKeywords = useMemo(() => [
     // Single words
     'SECRET', 'PASSWORD', 'KEY', 'CIPHER', 'CODE', 'MAGIC', 'MYSTERY', 'PUZZLE',
     'HIDDEN', 'ENCRYPT', 'CRYPTO', 'SECURE', 'LOCK', 'SAFE', 'GUARD', 'SHIELD',
@@ -42,7 +43,7 @@ function KeywordCipherPage() {
     'TOP SECRET CODE', 'MAGIC SPELL BOOK', 'TREASURE MAP KEY', 'SECRET AGENT CODE',
     'CASTLE GUARD KNIGHT', 'DRAGON FIRE SWORD', 'HIDDEN TREASURE MAP', 'CIPHER CODE KEY',
     'SAFE HOUSE KEY', 'MAGIC DOOR CODE', 'SECRET MESSAGE CODE', 'PUZZLE PIECE KEY'
-  ];
+  ], []);
 
   // Keyword strength rating
   const getKeywordStrength = useCallback((keyword: string): { rating: string, score: number, advice: string } => {
@@ -85,7 +86,7 @@ function KeywordCipherPage() {
     setOutput("");
     setCrackResults("");
     setCrackAttempts([]);
-  }, [mode]);
+  }, [mode, message, output]);
 
   // Real-time feedback effect for message and keyword changes
   useEffect(() => {
@@ -95,7 +96,7 @@ function KeywordCipherPage() {
     } else if (mode === "crack") {
       setOutput("");
     }
-  }, [message, keyword, isAnimating]);
+  }, [message, keyword, mode, output, isAnimating]);
 
   // Sample messages for crack mode - pre-encrypted messages that can be cracked
   const crackSamples = [
@@ -217,7 +218,7 @@ function KeywordCipherPage() {
   // Load extended keywords on component mount
   useEffect(() => {
     loadExtendedKeywords().then(setExtendedKeywords);
-  }, [loadExtendedKeywords]);
+  }, [mode, loadExtendedKeywords]);
 
   // Advanced scoring function with n-gram analysis
   const scoreText = useCallback((text: string): number => {

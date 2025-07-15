@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { CipherNav } from "@/components/cipher/CipherNav";
 import { CipherPageContentWrapper } from "@/components/cipher/CipherPageContentWrapper";
 import { CipherInputs } from "@/components/cipher/CipherInputs";
@@ -29,7 +28,7 @@ function RailFenceCipherPage() {
   const [crackResults, setCrackResults] = useState<Array<{rails: number, result: string}>>([]);
   
   // Use the sample messages hook
-  const { getRandomMessage } = useSampleMessages();
+  useSampleMessages();
 
 
   // Generate animation steps for the GeneralStepByStepAnimation
@@ -79,7 +78,7 @@ function RailFenceCipherPage() {
     setOutput("");
     setShowStepByStep(false);
     setCrackResults([]);
-  }, [mode]);
+  }, [mode, message, output]);
 
   // Reset animation states if message or rails change
   useEffect(() => {
@@ -87,7 +86,7 @@ function RailFenceCipherPage() {
     setShowStepByStep(false);
     setCrackResults([]);
     generateAnimationSteps();
-  }, [message, rails, generateAnimationSteps]);
+  }, [message, rails, output, generateAnimationSteps]);
 
   const handleAction = async () => {
     if (isAnimating) return;

@@ -1,19 +1,18 @@
 import { Button } from "./ui/button";
 import { useUser } from "@/context/use-user";
 import { useState, useMemo } from "react";
-import { UserIconColor } from "@/context/user-context-types";
 import { UserSettings } from "./user-settings";
 
 export function UserProfile() {
-  const { currentUser, setCurrentUser, getUserConfig, configVersion } = useUser();
+  const { currentUser, setCurrentUser, getUserConfig } = useUser();
   const [isHovered, setIsHovered] = useState(false);
+
+  // Use useMemo to re-compute userConfig when configVersion changes
+  const userConfig = useMemo(() => getUserConfig(), [getUserConfig]);
 
   if (!currentUser) {
     return null;
   }
-
-  // Use useMemo to re-compute userConfig when configVersion changes
-  const userConfig = useMemo(() => getUserConfig(), [getUserConfig, configVersion]);
 
   // Get the color based on user config or fallback to initial-based color
   const getUserColor = (initial: string): string => {

@@ -29,7 +29,7 @@ function AtbashCipherPage() {
   const [isStepAnimationPlaying, setIsStepAnimationPlaying] = useState(false);
   
   // Use the sample messages hook
-  const { getRandomMessage } = useSampleMessages();
+  useSampleMessages();
 
   // Create Atbash alphabet mapping for visualization
   const ALPHABET_FALLBACK = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -76,7 +76,7 @@ function AtbashCipherPage() {
     setCurrentCharToHighlight(undefined);
     setShowStepByStep(false);
     generateAnimationSteps();
-  }, [mode]); // Only respond to mode changes
+  }, [mode, message, output, generateAnimationSteps]); // Only respond to mode changes
 
   // Handle message changes separately
   useEffect(() => {
@@ -84,7 +84,7 @@ function AtbashCipherPage() {
     setCurrentCharToHighlight(undefined);
     setShowStepByStep(false);
     generateAnimationSteps();
-  }, [message, generateAnimationSteps]);
+  }, [message, output, generateAnimationSteps]);
 
   const handleAction = async () => {
     if (isAnimating) return;

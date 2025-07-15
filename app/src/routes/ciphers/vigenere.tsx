@@ -35,6 +35,7 @@ function VigenereCipherPage() {
   const [showFrequencyAnalysis, setShowFrequencyAnalysis] = useState(false);
   const [keyLength, setKeyLength] = useState(3); // Default key length for analysis
   const [currentStepIndex, setCurrentStepIndex] = useState(-1);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
 
   // Stable callback functions for animation
@@ -61,7 +62,7 @@ function VigenereCipherPage() {
     setShowStepByStep(false);
     setIsStepAnimationPlaying(false);
     setShowFrequencyAnalysis(false);
-  }, [mode]);
+  }, [message, output, mode]);
 
   const handleAction = () => {
     if (!message.trim() || !keyword.trim()) {

@@ -7,7 +7,7 @@ import { test as authTest, expect } from './fixtures/auth';
  */
 
 // Helper function to wait for page to be fully loaded and stable
-async function waitForPageStable(page: any) {
+async function waitForPageStable(page: Page) {
   // Wait for network to be idle
   await page.waitForLoadState('networkidle');
   
@@ -19,14 +19,14 @@ async function waitForPageStable(page: any) {
 }
 
 // Helper function to fill cipher input consistently
-async function fillCipherInput(page: any, message: string) {
+async function fillCipherInput(page: Page, message: string) {
   const messageInput = page.getByPlaceholder(/enter.*message|type.*message/i).first();
   await messageInput.fill(message);
   await page.waitForTimeout(500); // Allow for real-time updates
 }
 
 // Helper function to set cipher parameters
-async function setCipherParam(page: any, value: string) {
+async function setCipherParam(page: Page, value: string) {
   const paramInput = page.locator('input[type="text"]').nth(1); // Usually the second input
   await paramInput.fill(value);
   await page.waitForTimeout(500);

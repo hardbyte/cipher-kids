@@ -189,7 +189,8 @@ authTest.describe('Achievement System E2E Testing', () => {
     for (const selector of notificationSelectors) {
       const element = authenticatedPage.locator(selector);
       if (await element.isVisible({ timeout: 2000 }).catch(() => false)) {
-        foundNotification = true;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    foundNotification = true;
         await expect(element).toBeVisible();
         break;
       }

@@ -13,7 +13,7 @@ export interface Achievement {
     type: 'cipher_use' | 'messages_encoded' | 'messages_decoded' | 'codes_cracked' | 'specific_cipher' | 'all_ciphers' | 'custom';
     value?: number;
     cipherId?: string;
-    customCheck?: (progress: any) => boolean;
+    customCheck?: (progress: UserProgress) => boolean;
   };
 }
 
@@ -208,7 +208,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     difficulty: 'bronze',
     requirements: {
       type: 'custom',
-      customCheck: (progress: any) => {
+      customCheck: (progress: UserProgress) => {
         // Check if user has both avatar and custom theme
         return !!(progress.avatar && progress.iconColor);
       }
@@ -223,7 +223,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     difficulty: 'gold',
     requirements: {
       type: 'custom',
-      customCheck: (progress: any) => {
+      customCheck: (progress: UserProgress) => {
         return (progress.messagesEncoded + progress.messagesDecoded) >= 100;
       }
     }
@@ -233,7 +233,7 @@ export const ACHIEVEMENTS: Achievement[] = [
 /**
  * Check if a user has earned a specific achievement
  */
-export function hasEarnedAchievement(achievement: Achievement, userConfig: any): boolean {
+export function hasEarnedAchievement(achievement: Achievement, userConfig: UserConfig): boolean {
   const { requirements } = achievement;
   const progress = userConfig.progress || {
     ciphersUsed: [],
@@ -252,14 +252,16 @@ export function hasEarnedAchievement(achievement: Achievement, userConfig: any):
     case 'codes_cracked':
       return progress.codesCracked >= (requirements.value || 0);
     
-    case 'specific_cipher':
+    case 'specific_cipher': {
       if (!requirements.cipherId) return false;
       const cipherCount = progress.ciphersUsed.filter((id: string) => id === requirements.cipherId).length;
       return cipherCount >= (requirements.value || 0);
+    }
     
-    case 'all_ciphers':
+    case 'all_ciphers': {
       const availableCiphers = ['atbash', 'caesar', 'keyword', 'morse', 'pigpen', 'railfence', 'vigenere'];
       return availableCiphers.every(cipher => progress.ciphersUsed.includes(cipher));
+    }
     
     case 'custom':
       if (requirements.customCheck) {
@@ -275,7 +277,7 @@ export function hasEarnedAchievement(achievement: Achievement, userConfig: any):
 /**
  * Get all achievements earned by a user
  */
-export function getEarnedAchievements(userConfig: any): Achievement[] {
+export function getEarnedAchievements(userConfig: UserConfig): Achievement[] {
   return ACHIEVEMENTS.filter(achievement => 
     hasEarnedAchievement(achievement, userConfig)
   );
@@ -284,7 +286,7 @@ export function getEarnedAchievements(userConfig: any): Achievement[] {
 /**
  * Get achievements that are close to being earned (within 80% of completion)
  */
-export function getAlmostEarnedAchievements(userConfig: any): Array<Achievement & { progress: number }> {
+export function getAlmostEarnedAchievements(userConfig: UserConfig): Array<Achievement & { progress: number }> {
   const progress = userConfig.progress || {
     ciphersUsed: [],
     messagesEncoded: 0,
@@ -314,11 +316,12 @@ export function getAlmostEarnedAchievements(userConfig: any): Array<Achievement 
             currentProgress = count / target;
           }
           break;
-        case 'all_ciphers':
+        case 'all_ciphers': {
           const availableCiphers = ['atbash', 'caesar', 'keyword', 'morse', 'pigpen', 'railfence', 'vigenere'];
           const usedCiphers = availableCiphers.filter(cipher => progress.ciphersUsed.includes(cipher)).length;
           currentProgress = usedCiphers / availableCiphers.length;
           break;
+        }
         default:
           currentProgress = 0;
       }
@@ -336,10 +339,10 @@ export function getAlmostEarnedAchievements(userConfig: any): Array<Achievement 
  * Update user progress after an action
  */
 export function updateUserProgress(
-  currentConfig: any,
+  currentConfig: UserConfig,
   action: 'encode' | 'decode' | 'crack',
   cipherId: string
-): any {
+): UserConfig {
   const progress = currentConfig.progress || {
     ciphersUsed: [],
     messagesEncoded: 0,

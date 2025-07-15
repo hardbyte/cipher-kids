@@ -27,12 +27,14 @@ export const test = baseTest.extend<AuthFixtures>({
       userConfig: { theme: 'dark' }
     });
     
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     await use(context);
     await context.close();
   },
   
   authenticatedPage: async ({ authenticatedContext }, use) => {
     const page = await authenticatedContext.newPage();
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     await use(page);
   }
 });
