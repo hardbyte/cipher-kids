@@ -153,3 +153,16 @@ The `ThemeContext` manages theme state and provides theme switching functionalit
 
 - CSS animations are a lot more resource friendly that JS ones. For a background we should stick with css.
 
+## Test Development Guidelines
+
+
+- Be careful not to run playwright in a mode that starts a dev server all you'll be waiting a long time...
+
+
+When creating E2E tests:
+
+1. **Test incrementally** - Write and run each test as you develop it, don't write all tests then test at the end
+2. **Examine the actual UI first** - Use headed mode or examine the application before making assumptions about features
+3. **Start with basic tests** - Verify simple UI elements exist before testing complex interactions
+4. **Be conservative about completion** - Don't claim tests are done until they're actually passing
+5. **Match reality** - Sometimes fix the test to match the app, sometimes enhance the app to match the test expectation

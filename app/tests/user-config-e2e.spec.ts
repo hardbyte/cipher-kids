@@ -83,39 +83,52 @@ authTest.describe('User Configuration E2E Testing', () => {
   authTest('should save and persist cipher configuration changes', async ({ authenticatedPage }) => {
     await authenticatedPage.goto('/config');
     
-    // Disable a cipher (let's try Morse code as it's likely to be enabled)
+    // Find Morse toggle
     const morseToggle = authenticatedPage.getByRole('checkbox', { name: /morse/i }).or(
       authenticatedPage.getByRole('switch', { name: /morse/i })
     );
     
     if (await morseToggle.isVisible().catch(() => false)) {
-      // Record initial state
-      const initialState = await morseToggle.isChecked().catch(() => true);
+      // ALWAYS set to a known state first (enabled)
+      const currentState = await morseToggle.isChecked().catch(() => false);
+      if (!currentState) {
+        await morseToggle.click();
+        await authenticatedPage.waitForTimeout(100); // Small delay for state update
+      }
       
-      // Toggle it
+      // Verify it's now enabled
+      await expect(morseToggle).toBeChecked();
+      
+      // Now disable it (known transition: enabled -> disabled)
       await morseToggle.click();
+      await authenticatedPage.waitForTimeout(100); // Small delay for state update
+      
+      // Verify it's now disabled
+      await expect(morseToggle).not.toBeChecked();
       
       // Save changes if there's a save button
       const saveButton = authenticatedPage.getByRole('button', { name: /save|apply/i });
       if (await saveButton.isVisible().catch(() => false)) {
         await saveButton.click();
+        await authenticatedPage.waitForTimeout(200); // Wait for save
       }
       
       // Navigate back to home
       await authenticatedPage.goto('/');
       await expect(authenticatedPage.getByText(/Welcome.*ready to explore secret codes/)).toBeVisible();
       
-      // Check if Morse cipher is now hidden/shown based on toggle
+      // Morse cipher should NOT be visible (we disabled it)
       const morseCard = authenticatedPage.getByRole('link', { name: /morse/i });
-      const isMorseVisible = await morseCard.isVisible().catch(() => false);
+      await expect(morseCard).not.toBeVisible();
       
-      // If we disabled it, it should not be visible; if we enabled it, it should be visible
-      if (!initialState) {
-        // We turned it on, so it should be visible
-        expect(isMorseVisible).toBeTruthy();
-      } else {
-        // We turned it off, so it should not be visible  
-        expect(isMorseVisible).toBeFalsy();
+      // Go back to config and verify state persisted
+      await authenticatedPage.goto('/config');
+      await expect(morseToggle).not.toBeChecked();
+      
+      // Re-enable it for other tests
+      await morseToggle.click();
+      if (await saveButton.isVisible().catch(() => false)) {
+        await saveButton.click();
       }
     }
   });

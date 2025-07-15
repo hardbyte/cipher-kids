@@ -153,8 +153,9 @@ authTest.describe('Achievement System E2E Testing', () => {
       // For Morse code, use the encode action
       await clickCipherAction(authenticatedPage, 'encode');
       
-      // Wait for result and check it exists (don't need to validate morse pattern for this test)
-      await authenticatedPage.waitForTimeout(1000);
+      // Wait for result to appear (Morse encode is instant)
+      const resultElement = authenticatedPage.locator('[data-testid="cipher-result"]');
+      await expect(resultElement).toBeVisible({ timeout: 5000 });
       
       await fillMessage(authenticatedPage, '');
     }
@@ -241,8 +242,8 @@ authTest.describe('Achievement System E2E Testing', () => {
         await getCipherResultDirect(authenticatedPage);
       }
       
-      // Wait for processing
-      await authenticatedPage.waitForTimeout(500);
+      // Wait for result to ensure operation completed
+      await authenticatedPage.waitForLoadState('networkidle');
     }
     
     // Check settings for achievements/stats
