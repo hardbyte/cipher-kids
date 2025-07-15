@@ -161,8 +161,8 @@ authTest.describe('Visual Tests - Cipher Pages', () => {
       await authenticatedPage.goto('/ciphers/morse');
       await waitForPageStable(authenticatedPage);
       
-      // Switch to decrypt mode (Morse uses decrypt, not decode)
-      await authenticatedPage.getByRole('button', { name: /decrypt/i }).click();
+      // Switch to decode mode
+      await authenticatedPage.getByRole('button', { name: /decode/i }).click();
       await fillCipherInput(authenticatedPage, '... --- ...');
       
       await expect(authenticatedPage).toHaveScreenshot('morse-decode.png');
