@@ -49,7 +49,13 @@ export function AvatarPicker({ selectedAvatar, onSelect, isOpen, onClose }: Avat
 
   return (
     <Modal isOpen={isOpen} onOpenChange={onClose}>
-      <Modal.Content>
+      <Modal.Content 
+        size="lg" 
+        isBlurred={true}
+        classNames={{
+          overlay: "bg-black/80 dark:bg-black/80",
+        }}
+      >
         <Modal.Header>
           <Modal.Title>Choose Your Avatar</Modal.Title>
         </Modal.Header>
