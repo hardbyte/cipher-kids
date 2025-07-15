@@ -134,9 +134,7 @@ export function EmojiBackground() {
     };
   }, [theme]);
 
-  // Temporarily disabled for testing
-  return null;
-  // if (theme !== 'emoji') return null;
+  if (theme !== 'emoji') return null;
 
   return (
     <div 
