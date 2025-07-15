@@ -19,7 +19,6 @@ test.describe('Animation Timing Verification', () => {
       };
     });
 
-    console.log('Animation config check:', animationConfig);
     expect(animationConfig.search).toContain('animSpeed=0.5');
     expect(animationConfig.testValue).toBe('0.5');
   });
@@ -40,7 +39,6 @@ test.describe('Animation Timing Verification', () => {
       };
     });
 
-    console.log('Port-based config:', config);
     expect(config.port).toBe('5173'); // Dev server port
   });
 
@@ -59,7 +57,6 @@ test.describe('Animation Timing Verification', () => {
       };
     });
 
-    console.log('Test helper config:', config);
     expect(config.animSpeedParam).toBe('0.001');
   });
 
@@ -84,7 +81,6 @@ test.describe('Animation Timing Verification', () => {
     const endTime = Date.now();
     const duration = endTime - startTime;
     
-    console.log(`Animation completed in ${duration}ms with animSpeed=0.001`);
     
     // With ultra-fast animations, it should complete very quickly
     expect(duration).toBeLessThan(2000); // Should be much faster than normal
@@ -111,7 +107,6 @@ test.describe('Animation Timing Verification', () => {
     const endTime = Date.now();
     const duration = endTime - startTime;
     
-    console.log(`Animation completed in ${duration}ms without animSpeed parameter`);
     
     // Should still be reasonably fast due to port-based test mode detection
     expect(duration).toBeLessThan(3000);
@@ -135,7 +130,6 @@ test.describe('Animation Timing Verification', () => {
         calculatedDelay: Math.max(0.1, 350 * speedFactor)
       };
     });
-    console.log('Config for 0.001:', config1);
     
     await authenticatedPage.getByRole('textbox', { name: /secret message/i }).fill('ABC');
     const startTime1 = Date.now();
@@ -159,7 +153,6 @@ test.describe('Animation Timing Verification', () => {
         calculatedDelay: Math.max(0.1, 350 * speedFactor)
       };
     });
-    console.log('Config for 0.1:', config2);
     
     await authenticatedPage.getByRole('textbox', { name: /secret message/i }).fill('ABC');
     const startTime2 = Date.now();
@@ -167,8 +160,6 @@ test.describe('Animation Timing Verification', () => {
     await expect(authenticatedPage.locator('[data-testid="cipher-result"]')).not.toBeEmpty();
     const duration2 = Date.now() - startTime2;
     
-    console.log(`Ultra fast (0.001): ${duration1}ms`);
-    console.log(`Slower (0.1): ${duration2}ms`);
     
     // Both should complete within reasonable time for tests  
     expect(duration1).toBeLessThan(2000);

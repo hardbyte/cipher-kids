@@ -287,7 +287,7 @@ function MorseCodePage() {
       />
 
       <CipherInputs
-        mode={mode === "encode" ? "encrypt" : "decrypt"}
+        mode={mode}
         message={message}
         setMessage={(newMessage: string) => {
           if (!isAnimating) setMessage(newMessage);

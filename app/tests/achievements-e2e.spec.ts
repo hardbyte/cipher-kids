@@ -150,10 +150,8 @@ authTest.describe('Achievement System E2E Testing', () => {
     for (const message of messages) {
       await fillMessage(authenticatedPage, message);
       
-      // For Morse code, wait for the encrypt button to appear and click it
-      const encryptButton = authenticatedPage.getByRole('button').filter({ hasText: 'Encrypt' }).last();
-      await encryptButton.waitFor({ state: 'visible', timeout: 5000 });
-      await encryptButton.click();
+      // For Morse code, use the encode action
+      await clickCipherAction(authenticatedPage, 'encode');
       
       // Wait for result and check it exists (don't need to validate morse pattern for this test)
       await authenticatedPage.waitForTimeout(1000);
@@ -236,10 +234,8 @@ authTest.describe('Achievement System E2E Testing', () => {
       await fillMessage(authenticatedPage, 'TEST');
       
       if (cipher.name === 'morse') {
-        // Special handling for Morse code
-        const encryptButton = authenticatedPage.getByRole('button').filter({ hasText: 'Encrypt' }).last();
-        await encryptButton.waitFor({ state: 'visible', timeout: 5000 });
-        await encryptButton.click();
+        // Special handling for Morse code - use encode
+        await clickCipherAction(authenticatedPage, 'encode');
       } else {
         await clickCipherAction(authenticatedPage, 'encrypt');
         await getCipherResultDirect(authenticatedPage);

@@ -21,9 +21,11 @@ authTest.describe('Pigpen Cipher End-to-End Testing', () => {
       await fillMessage(authenticatedPage, 'JUMPING FOX');
       await clickCipherAction(authenticatedPage, 'encrypt');
       
-      const result = await getCipherResultDirect(authenticatedPage);
+      // Wait for the complete result to appear
+      const resultElement = authenticatedPage.locator('[data-testid="cipher-result"]');
+      await expect(resultElement).toBeVisible({ timeout: 10000 });
       // J U M P I N G   F O X
-      expect(result).toBe('┘. < ┤. ┐. ┌ ┼. ┐   ├ ├. >.');
+      await expect(resultElement).toHaveText('┘. < ┤. ┐. ┌ ┼. ┐   ├ ├. >.', { timeout: 10000 });
     });
 
     authTest('should highlight characters in the Pigpen grid during encryption', async ({ authenticatedPage }) => {
@@ -39,8 +41,10 @@ authTest.describe('Pigpen Cipher End-to-End Testing', () => {
       await fillMessage(authenticatedPage, 'HELLO 123!');
       await clickCipherAction(authenticatedPage, 'encrypt');
       
-      const result = await getCipherResultDirect(authenticatedPage);
-      expect(result).toBe('┬ ┼ └. └. ├.   1 2 3 !');
+      // Wait for complete result including non-alphabetic characters
+      const resultElement = authenticatedPage.locator('[data-testid="cipher-result"]');
+      await expect(resultElement).toBeVisible({ timeout: 10000 });
+      await expect(resultElement).toHaveText('┬ ┼ └. └. ├.   1 2 3 !', { timeout: 10000 });
     });
   });
 
@@ -62,8 +66,10 @@ authTest.describe('Pigpen Cipher End-to-End Testing', () => {
         await fillMessage(authenticatedPage, '┘. < ┤. ┐. ┌ ┼. ┐   ├ ├. >.');
         await clickCipherAction(authenticatedPage, 'decrypt');
         
-        const result = await getCipherResultDirect(authenticatedPage);
-        expect(result).toBe('JUMPINGFOX');
+        // Wait for complete decryption result
+        const resultElement = authenticatedPage.locator('[data-testid="cipher-result"]');
+        await expect(resultElement).toBeVisible({ timeout: 15000 });
+        await expect(resultElement).toHaveText('JUMPINGFOX', { timeout: 15000 });
     });
 
     authTest('should handle mixed symbols and non-symbols during decryption', async ({ authenticatedPage }) => {

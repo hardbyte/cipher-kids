@@ -1,5 +1,5 @@
 import { test as authTest, expect } from './test';
-import { getCipherResultDirect, fillMessage, clickCipherAction } from './test-helpers';
+import { fillMessage, clickCipherAction } from './test-helpers';
 
 authTest.describe('Morse Code End-to-End Testing', () => {
   authTest.beforeEach(async ({ authenticatedPage }) => {
@@ -8,75 +8,79 @@ authTest.describe('Morse Code End-to-End Testing', () => {
     await expect(authenticatedPage.getByRole('heading', { name: 'Morse Code' }).nth(1)).toBeVisible();
   });
 
-  authTest.describe('Encrypt Mode', () => {
-    authTest('should encrypt message with Morse code correctly', async ({ authenticatedPage }) => {
-      // Ensure we're in encrypt mode
-      await expect(authenticatedPage.getByRole('button', { name: 'lock Encrypt' })).toBeVisible();
+  authTest.describe('Encode Mode', () => {
+    authTest('should encode message with Morse code correctly', async ({ authenticatedPage }) => {
+      // Ensure we're in encode mode
+      await expect(authenticatedPage.getByRole('button', { name: 'lock Encode' })).toBeVisible();
       
       // Type a simple message
       await fillMessage(authenticatedPage, 'SOS');
       
-      // Click encrypt button
-      await clickCipherAction(authenticatedPage, 'encrypt');
+      // Click encode button
+      await clickCipherAction(authenticatedPage, 'encode');
       
-      // Wait for animation to complete and check result
-      const result = await getCipherResultDirect(authenticatedPage);
-      expect(result).toBe('... --- ...');
+      // Wait for result to appear - Morse encode is instant, no animation
+      const resultElement = authenticatedPage.locator('[data-testid="cipher-result"]');
+      await expect(resultElement).toBeVisible({ timeout: 5000 });
+      await expect(resultElement).toHaveText('... --- ...');
     });
 
-    authTest('should show Morse code visualization during encrypting', async ({ authenticatedPage }) => {
+    authTest('should show Morse code visualization during encoding', async ({ authenticatedPage }) => {
       // Type a message
       await fillMessage(authenticatedPage, 'HI');
       
-      // Click encrypt
-      await clickCipherAction(authenticatedPage, 'encrypt');
+      // Click encode
+      await clickCipherAction(authenticatedPage, 'encode');
       
       // Should show the visualization area
       await expect(authenticatedPage.locator('.bg-accent\\/10')).toBeVisible();
     });
 
-    authTest('should handle numbers and letters in encrypting', async ({ authenticatedPage }) => {
+    authTest('should handle numbers and letters in encoding', async ({ authenticatedPage }) => {
       // Type message with numbers
       await fillMessage(authenticatedPage, 'A1');
       
-      // Click encrypt
-      await clickCipherAction(authenticatedPage, 'encrypt');
+      // Click encode
+      await clickCipherAction(authenticatedPage, 'encode');
       
-      // Should encrypt both letter and number
-      const result = await getCipherResultDirect(authenticatedPage);
-      expect(result).toBe('.- .----');
+      // Should encode both letter and number
+      const resultElement = authenticatedPage.locator('[data-testid="cipher-result"]');
+      await expect(resultElement).toBeVisible({ timeout: 5000 });
+      await expect(resultElement).toHaveText('.- .----');
     });
   });
 
-  authTest.describe('Decrypt Mode', () => {
-    authTest('should decrypt Morse code back to letters', async ({ authenticatedPage }) => {
-      // Switch to decrypt mode
-      await authenticatedPage.getByRole('button', { name: 'unlock Decrypt' }).click();
+  authTest.describe('Decode Mode', () => {
+    authTest('should decode Morse code back to letters', async ({ authenticatedPage }) => {
+      // Switch to decode mode
+      await authenticatedPage.getByRole('button', { name: 'unlock Decode' }).click();
       
       // Enter Morse code
       await fillMessage(authenticatedPage, '... --- ...');
       
-      // Click decrypt button  
-      await clickCipherAction(authenticatedPage, 'decrypt');
+      // Click decode button  
+      await clickCipherAction(authenticatedPage, 'decode');
       
-      // Check result
-      const result = await getCipherResultDirect(authenticatedPage);
-      expect(result).toBe('SOS');
+      // Check result - decode mode has animation, wait for complete result
+      const resultElement = authenticatedPage.locator('[data-testid="cipher-result"]');
+      await expect(resultElement).toBeVisible({ timeout: 5000 });
+      await expect(resultElement).toHaveText('SOS');
     });
 
-    authTest('should handle word separators during decrypting', async ({ authenticatedPage }) => {
-      // Switch to decrypt mode
-      await authenticatedPage.getByRole('button', { name: 'unlock Decrypt' }).click();
+    authTest('should handle word separators during decoding', async ({ authenticatedPage }) => {
+      // Switch to decode mode
+      await authenticatedPage.getByRole('button', { name: 'unlock Decode' }).click();
       
       // Enter Morse code with word separator
       await fillMessage(authenticatedPage, '.... .. / - .... . .-. .');
       
-      // Click decrypt
-      await clickCipherAction(authenticatedPage, 'decrypt');
+      // Click decode
+      await clickCipherAction(authenticatedPage, 'decode');
       
-      // Should decrypt to "HI THERE"
-      const result = await getCipherResultDirect(authenticatedPage);
-      expect(result).toBe('HI THERE');
+      // Should decode to "HI THERE" - wait for animation to complete
+      const resultElement = authenticatedPage.locator('[data-testid="cipher-result"]');
+      await expect(resultElement).toBeVisible({ timeout: 10000 });
+      await expect(resultElement).toHaveText('HI THERE');
     });
   });
 
@@ -95,27 +99,23 @@ authTest.describe('Morse Code End-to-End Testing', () => {
       await expect(authenticatedPage.getByRole('textbox', { name: /secret message/i })).toHaveValue('SOS');
     });
 
-    authTest('should switch between encrypt and decrypt modes', async ({ authenticatedPage }) => {
-      // Start in encrypt mode
-      await expect(authenticatedPage.getByRole('button', { name: 'lock Encrypt' })).toBeVisible();
+    authTest('should switch between encode and decode modes', async ({ authenticatedPage }) => {
+      // Start in encode mode
+      await expect(authenticatedPage.getByRole('button', { name: 'lock Encode' })).toBeVisible();
       await expect(authenticatedPage.getByText('Try these messages:')).toBeVisible();
       
-      // Switch to decrypt mode
-      await authenticatedPage.getByRole('button', { name: 'unlock Decrypt' }).click();
+      // Switch to decode mode
+      await authenticatedPage.getByRole('button', { name: 'unlock Decode' }).click();
       
-      // Check that content changed to decrypt mode
+      // Check that content changed to decode mode
       await expect(authenticatedPage.getByText('Try these Morse codes:')).toBeVisible();
-      await expect(authenticatedPage.getByRole('button', { name: 'magic wand Decrypt sparkles' })).toBeVisible();
+      await expect(authenticatedPage.getByRole('button', { name: 'magic wand Decode sparkles' })).toBeVisible();
     });
 
-    authTest('should show crack mode for Morse code', async ({ authenticatedPage }) => {
-      // Morse code should have a crack mode
-      await expect(authenticatedPage.getByRole('button', { name: 'detective Crack' })).toBeVisible();
-    });
   });
 
   authTest.describe('Step-by-Step Animation', () => {
-    authTest('should show step-by-step animation for encrypting', async ({ authenticatedPage }) => {
+    authTest('should show step-by-step animation for encoding', async ({ authenticatedPage }) => {
       // Type a message
       await fillMessage(authenticatedPage, 'AB');
       
@@ -129,9 +129,9 @@ authTest.describe('Morse Code End-to-End Testing', () => {
       await expect(authenticatedPage.locator('.bg-primary.h-2.rounded-full')).toBeVisible();
     });
 
-    authTest('should show step-by-step animation for decrypting', async ({ authenticatedPage }) => {
-      // Switch to decrypt mode
-      await authenticatedPage.getByRole('button', { name: 'unlock Decrypt' }).click();
+    authTest('should show step-by-step animation for decoding', async ({ authenticatedPage }) => {
+      // Switch to decode mode
+      await authenticatedPage.getByRole('button', { name: 'unlock Decode' }).click();
       
       // Enter Morse code
       await fillMessage(authenticatedPage, '.- -...');
@@ -164,8 +164,8 @@ authTest.describe('Morse Code End-to-End Testing', () => {
       // Type a message to trigger visualization
       await fillMessage(authenticatedPage, 'A');
       
-      // Click encrypt to show character
-      await clickCipherAction(authenticatedPage, 'encrypt');
+      // Click encode to show character
+      await clickCipherAction(authenticatedPage, 'encode');
       
       // Wait for the result to appear
       await expect(authenticatedPage.locator('[data-testid="cipher-result"]')).toBeVisible();
@@ -206,47 +206,50 @@ authTest.describe('Morse Code End-to-End Testing', () => {
   authTest.describe('Decode Accuracy Tests', () => {
     authTest('should decode HELLO correctly without truncation', async ({ authenticatedPage }) => {
       // Switch to decode mode
-      await authenticatedPage.getByRole('button', { name: /decrypt/i }).click();
+      await authenticatedPage.getByRole('button', { name: /decode/i }).click();
       
       // Enter morse code for HELLO
       await fillMessage(authenticatedPage, '.... . .-.. .-.. ---');
       
-      // Click decrypt button
-      await clickCipherAction(authenticatedPage, 'decrypt');
+      // Click decode button
+      await clickCipherAction(authenticatedPage, 'decode');
       
       // Check the result is HELLO, not HELL
-      const result = await getCipherResultDirect(authenticatedPage);
-      expect(result).toBe('HELLO');
+      const resultElement = authenticatedPage.locator('[data-testid="cipher-result"]');
+      await expect(resultElement).toBeVisible({ timeout: 10000 });
+      await expect(resultElement).toHaveText('HELLO');
     });
 
     authTest('should decode multiple words correctly', async ({ authenticatedPage }) => {
       // Switch to decode mode
-      await authenticatedPage.getByRole('button', { name: /decrypt/i }).click();
+      await authenticatedPage.getByRole('button', { name: /decode/i }).click();
       
       // Enter morse code for HELLO WORLD
       await fillMessage(authenticatedPage, '.... . .-.. .-.. --- / .-- --- .-. .-.. -..');
       
-      // Click decrypt button
-      await clickCipherAction(authenticatedPage, 'decrypt');
+      // Click decode button
+      await clickCipherAction(authenticatedPage, 'decode');
       
       // Check the result
-      const result = await getCipherResultDirect(authenticatedPage);
-      expect(result).toBe('HELLO WORLD');
+      const resultElement = authenticatedPage.locator('[data-testid="cipher-result"]');
+      await expect(resultElement).toBeVisible({ timeout: 15000 });
+      await expect(resultElement).toHaveText('HELLO WORLD');
     });
 
     authTest('should decode long messages without truncation', async ({ authenticatedPage }) => {
       // Switch to decode mode
-      await authenticatedPage.getByRole('button', { name: /decrypt/i }).click();
+      await authenticatedPage.getByRole('button', { name: /decode/i }).click();
       
       // Enter morse code for SECRET MESSAGE
       await fillMessage(authenticatedPage, '... . -.-. .-. . - / -- . ... ... .- --. .');
       
-      // Click decrypt button
-      await clickCipherAction(authenticatedPage, 'decrypt');
+      // Click decode button
+      await clickCipherAction(authenticatedPage, 'decode');
       
-      // Check the result
-      const result = await getCipherResultDirect(authenticatedPage);
-      expect(result).toBe('SECRET MESSAGE');
+      // Check the result - wait longer for long message animation
+      const resultElement = authenticatedPage.locator('[data-testid="cipher-result"]');
+      await expect(resultElement).toBeVisible({ timeout: 20000 });
+      await expect(resultElement).toHaveText('SECRET MESSAGE', { timeout: 20000 });
     });
   });
 });

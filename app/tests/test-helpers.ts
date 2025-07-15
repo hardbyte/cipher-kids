@@ -73,10 +73,10 @@ export async function fillMessage(page: Page, message: string): Promise<void> {
 }
 
 /**
- * Helper to click encrypt/decrypt buttons
+ * Helper to click encrypt/decrypt/encode/decode buttons
  * Targets the main action button with icons (magic wand, sparkles)
  */
-export async function clickCipherAction(page: Page, action: 'encrypt' | 'decrypt'): Promise<void> {
+export async function clickCipherAction(page: Page, action: 'encrypt' | 'decrypt' | 'encode' | 'decode'): Promise<void> {
   // Look for the main action button that has icons (not the mode button)
   let button = page.getByRole('button', { name: new RegExp(`magic wand ${action}|${action} sparkles`, 'i') });
   
