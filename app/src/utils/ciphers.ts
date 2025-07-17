@@ -93,7 +93,7 @@ function railFenceDecrypt(cipherText: string, rails: number): string {
     rail += direction;
   }
   
-  // Fill in the characters row by row
+  // Fill in the characters row by row from the cipher text
   let index = 0;
   for (let r = 0; r < rails; r++) {
     for (let c = 0; c < cipherText.length; c++) {
@@ -109,9 +109,7 @@ function railFenceDecrypt(cipherText: string, rails: number): string {
   direction = 1;
   
   for (let i = 0; i < cipherText.length; i++) {
-    if (fence[rail][i]) {
-      result.push(fence[rail][i] as string);
-    }
+    result.push(fence[rail][i] as string);
     
     if (rail === 0) {
       direction = 1;
@@ -179,7 +177,7 @@ export function keywordCipher(
   return text
     .toUpperCase()
     .split("")
-    .map((char) => mapping[char] || char)
+    .map((char) => (char === ' ' ? ' ' : mapping[char] || char))
     .join("");
 }
 
@@ -197,17 +195,156 @@ export function vigenereCipher(
 ): string {
   const cleanKeyword = keyword.toUpperCase().replace(/[^A-Z]/g, "");
   if (cleanKeyword.length === 0) return text;
-
+  let keyIndex = 0;
   return text
     .toUpperCase()
     .split("")
-    .map((char, i) => {
+    .map((char) => {
       const idx = ALPHABET.indexOf(char);
       if (idx === -1) return char;
-      const keyChar = cleanKeyword[i % cleanKeyword.length];
+      const keyChar = cleanKeyword[keyIndex % cleanKeyword.length];
+      keyIndex++;
       const keyShift = ALPHABET.indexOf(keyChar);
       const shift = decrypt ? 26 - keyShift : keyShift;
       return ALPHABET[(idx + shift) % 26];
     })
     .join("");
+}
+
+/**
+ * A mapping of each letter to its corresponding Pigpen cipher symbol.
+ * Uses Unicode box-drawing and other characters to represent the grid.
+ */
+export const PIGPEN_MAPPING: Record<string, string> = {
+  A: '┘', B: '┴', C: '└',
+  D: '┤', E: '┼', F: '├',
+  G: '┐', H: '┬', I: '┌',
+  J: '┘.', K: '┴.', L: '└.',
+  M: '┤.', N: '┼.', O: '├.',
+  P: '┐.', Q: '┬.', R: '┌.',
+  S: '>', T: 'V', U: '<',
+  V: 'V.', W: '<.', X: '>.',
+  Y: '^', Z: '^.'
+};
+
+let REVERSE_PIGPEN_MAPPING: Record<string, string> | null = null;
+let REVERSE_PIGPEN_KEYS: string[] | null = null;
+
+function getReversePigpenMapping() {
+  if (REVERSE_PIGPEN_MAPPING && REVERSE_PIGPEN_KEYS) {
+    return { reverseMap: REVERSE_PIGPEN_MAPPING, sortedKeys: REVERSE_PIGPEN_KEYS };
+  }
+
+  const reverseMap: Record<string, string> = {};
+  for (const key in PIGPEN_MAPPING) {
+    reverseMap[PIGPEN_MAPPING[key]] = key;
+  }
+  
+  const sortedKeys = Object.keys(reverseMap).sort((a, b) => b.length - a.length);
+  
+  REVERSE_PIGPEN_MAPPING = reverseMap;
+  REVERSE_PIGPEN_KEYS = sortedKeys;
+  
+  return { reverseMap, sortedKeys };
+}
+
+/**
+ * Applies a Pigpen cipher to the input text.
+ * @param text - The message to encrypt or decrypt.
+ * @param decrypt - Whether to decrypt (true) or encrypt (false).
+ * @returns The transformed text.
+ */
+export function pigpenCipher(text: string, decrypt = false): string {
+  if (decrypt) {
+    const { reverseMap, sortedKeys } = getReversePigpenMapping();
+    let result = "";
+    let i = 0;
+    while (i < text.length) {
+      let found = false;
+      for (const key of sortedKeys) {
+        if (text.substring(i, i + key.length) === key) {
+          result += reverseMap[key];
+          i += key.length;
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        // Preserve non-symbol characters, but skip spaces during decryption
+        if (text[i] !== ' ') {
+          result += text[i];
+        }
+        i++;
+      }
+    }
+    return result;
+  } else {
+    // Encryption logic remains the same
+    return text
+      .toUpperCase()
+      .split("")
+      .map((char) => PIGPEN_MAPPING[char] || char)
+      .join(" ");
+  }
+}
+
+/**
+ * A mapping of each letter and number to its corresponding Morse code.
+ * Uses dots (.) and dashes (-) for transmission.
+ */
+export const MORSE_CODE_MAPPING: Record<string, string> = {
+  A: '.-', B: '-...', C: '-.-.', D: '-..', E: '.', F: '..-.',
+  G: '--.', H: '....', I: '..', J: '.---', K: '-.-', L: '.-..',
+  M: '--', N: '-.', O: '---', P: '.--.', Q: '--.-', R: '.-.',
+  S: '...', T: '-', U: '..-', V: '...-', W: '.--', X: '-..-',
+  Y: '-.--', Z: '--..', 
+  '0': '-----', '1': '.----', '2': '..---', '3': '...--', '4': '....-',
+  '5': '.....', '6': '-....', '7': '--...', '8': '---..', '9': '----.',
+  ' ': '/'  // Space between words
+};
+
+let REVERSE_MORSE_MAPPING: Record<string, string> | null = null;
+
+function getReverseMorseMapping() {
+  if (REVERSE_MORSE_MAPPING) {
+    return REVERSE_MORSE_MAPPING;
+  }
+
+  const reverseMap: Record<string, string> = {};
+  for (const key in MORSE_CODE_MAPPING) {
+    if (key !== ' ') { // Skip space mapping for reverse lookup
+      reverseMap[MORSE_CODE_MAPPING[key]] = key;
+    }
+  }
+  
+  REVERSE_MORSE_MAPPING = reverseMap;
+  return reverseMap;
+}
+
+/**
+ * Applies Morse code to the input text.
+ * @param text - The message to encode or decode.
+ * @param decrypt - Whether to decode (true) or encode (false).
+ * @returns The transformed text.
+ */
+export function morseCode(text: string, decrypt = false): string {
+  if (decrypt) {
+    const reverseMap = getReverseMorseMapping();
+    // Split by spaces to get individual morse code characters
+    const morseChars = text.split(' ').filter(char => char.length > 0);
+    
+    return morseChars
+      .map(morseChar => {
+        if (morseChar === '/') return ' '; // Word separator
+        return reverseMap[morseChar] || morseChar;
+      })
+      .join('');
+  } else {
+    // Encoding
+    return text
+      .toUpperCase()
+      .split('')
+      .map(char => MORSE_CODE_MAPPING[char] || char)
+      .join(' ');
+  }
 }

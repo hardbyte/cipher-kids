@@ -13,6 +13,8 @@ import { Route as ConfigRouteImport } from './routes/config'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CiphersVigenereRouteImport } from './routes/ciphers/vigenere'
 import { Route as CiphersRailfenceRouteImport } from './routes/ciphers/railfence'
+import { Route as CiphersPigpenRouteImport } from './routes/ciphers/pigpen'
+import { Route as CiphersMorseRouteImport } from './routes/ciphers/morse'
 import { Route as CiphersKeywordRouteImport } from './routes/ciphers/keyword'
 import { Route as CiphersCaesarRouteImport } from './routes/ciphers/caesar'
 import { Route as CiphersAtbashRouteImport } from './routes/ciphers/atbash'
@@ -37,6 +39,16 @@ const CiphersRailfenceRoute = CiphersRailfenceRouteImport.update({
   path: '/ciphers/railfence',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CiphersPigpenRoute = CiphersPigpenRouteImport.update({
+  id: '/ciphers/pigpen',
+  path: '/ciphers/pigpen',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CiphersMorseRoute = CiphersMorseRouteImport.update({
+  id: '/ciphers/morse',
+  path: '/ciphers/morse',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CiphersKeywordRoute = CiphersKeywordRouteImport.update({
   id: '/ciphers/keyword',
   path: '/ciphers/keyword',
@@ -59,6 +71,8 @@ export interface FileRoutesByFullPath {
   '/ciphers/atbash': typeof CiphersAtbashRoute
   '/ciphers/caesar': typeof CiphersCaesarRoute
   '/ciphers/keyword': typeof CiphersKeywordRoute
+  '/ciphers/morse': typeof CiphersMorseRoute
+  '/ciphers/pigpen': typeof CiphersPigpenRoute
   '/ciphers/railfence': typeof CiphersRailfenceRoute
   '/ciphers/vigenere': typeof CiphersVigenereRoute
 }
@@ -68,6 +82,8 @@ export interface FileRoutesByTo {
   '/ciphers/atbash': typeof CiphersAtbashRoute
   '/ciphers/caesar': typeof CiphersCaesarRoute
   '/ciphers/keyword': typeof CiphersKeywordRoute
+  '/ciphers/morse': typeof CiphersMorseRoute
+  '/ciphers/pigpen': typeof CiphersPigpenRoute
   '/ciphers/railfence': typeof CiphersRailfenceRoute
   '/ciphers/vigenere': typeof CiphersVigenereRoute
 }
@@ -78,6 +94,8 @@ export interface FileRoutesById {
   '/ciphers/atbash': typeof CiphersAtbashRoute
   '/ciphers/caesar': typeof CiphersCaesarRoute
   '/ciphers/keyword': typeof CiphersKeywordRoute
+  '/ciphers/morse': typeof CiphersMorseRoute
+  '/ciphers/pigpen': typeof CiphersPigpenRoute
   '/ciphers/railfence': typeof CiphersRailfenceRoute
   '/ciphers/vigenere': typeof CiphersVigenereRoute
 }
@@ -89,6 +107,8 @@ export interface FileRouteTypes {
     | '/ciphers/atbash'
     | '/ciphers/caesar'
     | '/ciphers/keyword'
+    | '/ciphers/morse'
+    | '/ciphers/pigpen'
     | '/ciphers/railfence'
     | '/ciphers/vigenere'
   fileRoutesByTo: FileRoutesByTo
@@ -98,6 +118,8 @@ export interface FileRouteTypes {
     | '/ciphers/atbash'
     | '/ciphers/caesar'
     | '/ciphers/keyword'
+    | '/ciphers/morse'
+    | '/ciphers/pigpen'
     | '/ciphers/railfence'
     | '/ciphers/vigenere'
   id:
@@ -107,6 +129,8 @@ export interface FileRouteTypes {
     | '/ciphers/atbash'
     | '/ciphers/caesar'
     | '/ciphers/keyword'
+    | '/ciphers/morse'
+    | '/ciphers/pigpen'
     | '/ciphers/railfence'
     | '/ciphers/vigenere'
   fileRoutesById: FileRoutesById
@@ -117,6 +141,8 @@ export interface RootRouteChildren {
   CiphersAtbashRoute: typeof CiphersAtbashRoute
   CiphersCaesarRoute: typeof CiphersCaesarRoute
   CiphersKeywordRoute: typeof CiphersKeywordRoute
+  CiphersMorseRoute: typeof CiphersMorseRoute
+  CiphersPigpenRoute: typeof CiphersPigpenRoute
   CiphersRailfenceRoute: typeof CiphersRailfenceRoute
   CiphersVigenereRoute: typeof CiphersVigenereRoute
 }
@@ -151,6 +177,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CiphersRailfenceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ciphers/pigpen': {
+      id: '/ciphers/pigpen'
+      path: '/ciphers/pigpen'
+      fullPath: '/ciphers/pigpen'
+      preLoaderRoute: typeof CiphersPigpenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ciphers/morse': {
+      id: '/ciphers/morse'
+      path: '/ciphers/morse'
+      fullPath: '/ciphers/morse'
+      preLoaderRoute: typeof CiphersMorseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ciphers/keyword': {
       id: '/ciphers/keyword'
       path: '/ciphers/keyword'
@@ -181,6 +221,8 @@ const rootRouteChildren: RootRouteChildren = {
   CiphersAtbashRoute: CiphersAtbashRoute,
   CiphersCaesarRoute: CiphersCaesarRoute,
   CiphersKeywordRoute: CiphersKeywordRoute,
+  CiphersMorseRoute: CiphersMorseRoute,
+  CiphersPigpenRoute: CiphersPigpenRoute,
   CiphersRailfenceRoute: CiphersRailfenceRoute,
   CiphersVigenereRoute: CiphersVigenereRoute,
 }

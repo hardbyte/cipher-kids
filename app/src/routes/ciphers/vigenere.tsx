@@ -1,6 +1,7 @@
 import { useState, useEffect, ChangeEvent, useCallback } from "react";
 import { AnimatedMapping } from "@/components/cipher/AnimatedMapping";
 import { CipherNav } from "@/components/cipher/CipherNav";
+import { CipherPageContentWrapper } from "@/components/cipher/CipherPageContentWrapper";
 import { CipherInputs } from "@/components/cipher/CipherInputs";
 import { CipherModeToggle } from "@/components/cipher/CipherModeToggle";
 import { CipherResult } from "@/components/cipher/results/CipherResult";
@@ -34,6 +35,8 @@ function VigenereCipherPage() {
   const [showFrequencyAnalysis, setShowFrequencyAnalysis] = useState(false);
   const [keyLength, setKeyLength] = useState(3); // Default key length for analysis
   const [currentStepIndex, setCurrentStepIndex] = useState(-1);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [isAnimating, setIsAnimating] = useState<boolean>(false);
 
   // Stable callback functions for animation
   const handleAnimationComplete = useCallback(() => {
@@ -43,6 +46,23 @@ function VigenereCipherPage() {
   const handleStepChange = useCallback((stepIndex: number) => {
     setCurrentStepIndex(stepIndex);
   }, []);
+
+  // Handle mode changes - auto-populate input with previous result for better UX
+  useEffect(() => {
+    // If we have an output and the mode changed, use it as the new input
+    if (output && output !== message) {
+      setMessage(output);
+    }
+    
+    setOutput("");
+    // Clear keyword when switching to crack mode
+    if (mode === "crack") {
+      setKeyword("");
+    }
+    setShowStepByStep(false);
+    setIsStepAnimationPlaying(false);
+    setShowFrequencyAnalysis(false);
+  }, [message, output, mode]);
 
   const handleAction = () => {
     if (!message.trim() || !keyword.trim()) {
@@ -88,19 +108,13 @@ function VigenereCipherPage() {
   }, [message, cleanKeyword, showFullTable]);
 
   return (
-    <div className="p-6 max-w-2xl mx-auto space-y-4">
+    <CipherPageContentWrapper>
       <CipherNav activeCipher="vigenere" />
       
       <div className="rounded-lg border p-4 space-y-4">
         <CipherModeToggle 
           mode={mode} 
-          setMode={(newMode) => {
-            setMode(newMode);
-            // Clear keyword when switching to crack mode, but preserve message
-            if (newMode === "crack") {
-              setKeyword("");
-            }
-          }} 
+          setMode={setMode}
         />
 
         {mode === "crack" ? (
@@ -127,6 +141,7 @@ function VigenereCipherPage() {
               setParam={setKeyword}
               paramPlaceholder="Enter keyword"
               handleAction={handleAction}
+              isAnimating={isAnimating}
             />
               
             {message && keyword && (
@@ -543,6 +558,6 @@ function VigenereCipherPage() {
           )}
         </div>
       </div>
-    </div>
+    </CipherPageContentWrapper>
   );
 }

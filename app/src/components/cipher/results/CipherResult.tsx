@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 
 interface CipherResultProps {
   output: string;
-  visualizer: ReactNode;
+  visualizer?: ReactNode;
+  mode?: "encrypt" | "decrypt" | "crack";
+  isAnimating?: boolean;
 }
 
 export const CipherResult: React.FC<CipherResultProps> = ({
@@ -31,15 +33,17 @@ export const CipherResult: React.FC<CipherResultProps> = ({
 
   return (
     <div className="space-y-4">
-      <motion.div
-        className="mt-4 p-3 bg-muted/10 rounded-lg border border-muted"
-        animate={{ opacity: output ? 1 : 0.7 }}
-      >
-        <div className="text-sm text-muted-fg mb-2 font-medium">
-          Alphabet Mapping:
-        </div>
-        {visualizer}
-      </motion.div>
+      {visualizer && (
+        <motion.div
+          className="mt-4 p-3 bg-muted/10 rounded-lg border border-muted"
+          animate={{ opacity: output ? 1 : 0.7 }}
+        >
+          <div className="text-sm text-muted-fg mb-2 font-medium">
+            Alphabet Mapping:
+          </div>
+          {visualizer}
+        </motion.div>
+      )}
 
       <div className="relative overflow-hidden">
         <motion.div
@@ -102,6 +106,7 @@ export const CipherResult: React.FC<CipherResultProps> = ({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   className="p-2 bg-bg rounded font-bold text-success text-lg tracking-wide"
+                  data-testid="cipher-result"
                 >
                   {output}
                 </motion.div>

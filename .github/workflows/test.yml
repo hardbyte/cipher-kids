@@ -1,0 +1,128 @@
+name: Playwright Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [20]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: 'app/package-lock.json'
+    
+    - name: Install dependencies
+      working-directory: ./app
+      run: npm ci
+    
+    - name: Install Playwright Browsers
+      working-directory: ./app
+      run: npx playwright install --with-deps
+    
+    - name: Build application
+      working-directory: ./app
+      run: npm run build
+    
+    - name: Run Playwright tests
+      working-directory: ./app
+      run: npm run test
+    
+    - name: Upload Playwright Report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: playwright-report
+        path: ./app/playwright-report/
+        retention-days: 30
+
+  visual-tests:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [20]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: 'app/package-lock.json'
+    
+    - name: Install dependencies
+      working-directory: ./app
+      run: npm ci
+    
+    - name: Install Playwright Browsers
+      working-directory: ./app
+      run: npx playwright install --with-deps
+    
+    - name: Build application
+      working-directory: ./app
+      run: npm run build
+    
+    - name: Run Visual Regression Tests
+      working-directory: ./app
+      run: npm run test:visual
+    
+    - name: Upload Visual Test Results
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: visual-test-results
+        path: |
+          ./app/test-results/
+          ./app/tests/visual-cipher-pages.spec.ts-snapshots/
+          ./app/tests/visual-components.spec.ts-snapshots/
+        retention-days: 30
+    
+    - name: Upload Visual Diff Report
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: visual-diff-report
+        path: ./app/playwright-report/
+        retention-days: 30
+
+  lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: 'npm'
+        cache-dependency-path: 'app/package-lock.json'
+    
+    - name: Install dependencies
+      working-directory: ./app
+      run: npm ci
+    
+    - name: Run ESLint
+      working-directory: ./app
+      run: npm run lint
+    
+    - name: Check build
+      working-directory: ./app
+      run: npm run build

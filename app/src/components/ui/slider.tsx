@@ -137,9 +137,8 @@ const SliderTrack = ({ className, ...props }: SliderTrackProps) => {
       className={composeTailwindRenderProps(
         className,
         twJoin([
-          "[--slider:color-mix(in_oklab,var(--color-muted)_90%,black_10%)] dark:[--slider:color-mix(in_oklab,var(--color-muted)_90%,white_10%)]",
-          "group/track relative cursor-default rounded-full bg-(--slider) disabled:cursor-default disabled:opacity-60",
-          "grow group-data-[orientation=horizontal]:h-1.5 group-data-[orientation=horizontal]:w-full group-data-[orientation=vertical]:w-1.5 group-data-[orientation=vertical]:flex-1",
+          "group/track relative cursor-default rounded-full bg-[var(--slider-track)] border border-border disabled:cursor-default disabled:opacity-60 shadow-inner",
+          "grow group-data-[orientation=horizontal]:h-2 group-data-[orientation=horizontal]:w-full group-data-[orientation=vertical]:w-2 group-data-[orientation=vertical]:flex-1",
         ]),
       )}
     />
@@ -168,7 +167,7 @@ const SliderFiller = ({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
       {...props}
       style={getStyle()}
       className={twMerge(
-        "group-data-[orientation=horizontal]/top-0 pointer-events-none absolute rounded-full bg-primary group-disabled/track:opacity-60 group-data-[orientation=vertical]/track:bottom-0 group-data-[orientation=horizontal]/track:h-full group-data-[orientation=vertical]/track:w-full",
+        "group-data-[orientation=horizontal]/top-0 pointer-events-none absolute rounded-full bg-primary shadow-sm group-disabled/track:opacity-60 group-data-[orientation=vertical]/track:bottom-0 group-data-[orientation=horizontal]/track:h-full group-data-[orientation=vertical]/track:w-full",
         className,
       )}
     />
@@ -177,17 +176,17 @@ const SliderFiller = ({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
 
 const thumbStyles = tv({
   base: [
-    "top-[50%] left-[50%] size-[1.25rem] rounded-full border border-fg/10 bg-white outline-hidden ring-black transition-[width,height]",
+    "top-[50%] left-[50%] size-[1.4rem] rounded-full border-2 border-primary bg-[var(--slider-thumb)] outline-hidden ring-primary/20 transition-[width,height,box-shadow] shadow-lg hover:shadow-xl cursor-pointer",
   ],
   variants: {
     isFocusVisible: {
-      true: "border-primary outline-hidden ring-ring/20",
+      true: "border-primary outline-hidden ring-4 ring-primary/30 shadow-xl",
     },
     isDragging: {
-      true: "size-[1.35rem] cursor-grabbing border-primary",
+      true: "size-[1.5rem] cursor-grabbing border-primary shadow-2xl ring-4 ring-primary/40",
     },
     isDisabled: {
-      true: "opacity-50 forced-colors:border-[GrayText]",
+      true: "opacity-50 cursor-not-allowed forced-colors:border-[GrayText]",
     },
   },
 })
