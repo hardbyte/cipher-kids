@@ -148,7 +148,6 @@ function AtbashCipherPage() {
 
         {/* Header */}
         <div className="text-center space-y-4">
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-primary">Atbash Cipher</h1>
           <p className="text-lg lg:text-xl text-muted-fg max-w-3xl mx-auto">
             The ancient mirror alphabet cipher where A becomes Z, B becomes Y, and so on.
             Used in biblical cryptography over 2,500 years ago! 📜

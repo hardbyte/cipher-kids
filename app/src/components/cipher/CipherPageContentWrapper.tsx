@@ -10,7 +10,7 @@ interface CipherPageContentWrapperProps {
 export function CipherPageContentWrapper({ children, className }: CipherPageContentWrapperProps) {
   const { theme } = useTheme();
 
-  const baseClasses = "rounded-lg border p-4 space-y-4";
+  const baseClasses = "rounded-lg border p-3 md:p-4 space-y-3 md:space-y-4";
 
   return (
     <div

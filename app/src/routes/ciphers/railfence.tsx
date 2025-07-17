@@ -131,7 +131,6 @@ function RailFenceCipherPage() {
       <CipherNav activeCipher="railfence" />
 
       <div className="text-center space-y-4">
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-primary">Rail Fence Cipher</h1>
           <p className="text-lg lg:text-xl text-muted-fg max-w-3xl mx-auto">
             Write your message in a zigzag pattern across multiple "rails" 🚂
           </p>

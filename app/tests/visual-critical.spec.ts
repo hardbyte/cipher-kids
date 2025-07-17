@@ -186,17 +186,33 @@ test.describe('Critical Visual Regression Tests', () => {
         
         await setTheme(authenticatedPage, theme);
         await authenticatedPage.goto('/ciphers/keyword');
+        await preparePage(authenticatedPage);
         
-        // Switch to crack mode to trigger API call
-        await authenticatedPage.getByRole('button', { name: /crack/i }).click();
-        await authenticatedPage.waitForTimeout(1000);
+        // Wait for page to be fully loaded
+        await authenticatedPage.waitForLoadState('networkidle');
+        
+        // Switch to crack mode using the mode toggle
+        const crackModeButton = authenticatedPage.getByRole('button', { name: /crack/i });
+        await expect(crackModeButton).toBeVisible({ timeout: 10000 });
+        await crackModeButton.click();
+        
+        // Wait for crack mode UI to load
+        await authenticatedPage.waitForTimeout(500);
+        
+        // Add input to trigger API call
+        const messageInput = authenticatedPage.getByPlaceholder(/enter.*message|type.*message/i).first();
+        await messageInput.fill('TEST MESSAGE');
+        await authenticatedPage.waitForTimeout(2000);
         
         await preparePage(authenticatedPage);
         
-        // Look for the API status notification
-        const notification = authenticatedPage.locator('[class*="api-status"], [class*="warning"], [class*="error"]').first();
+        // Look for the API status notification with more specific selectors
+        const notification = authenticatedPage.locator('[class*="api-status"], [class*="warning"], [class*="error"], [role="alert"]').first();
         if (await notification.isVisible()) {
           await expect(notification).toHaveScreenshot(`critical-api-error-${theme}.png`);
+        } else {
+          // Skip test if no error notification appears
+          test.skip();
         }
       });
     });

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { AnimatedMapping } from "@/components/cipher/AnimatedMapping";
 import { CipherNav } from "@/components/cipher/CipherNav";
 import { CipherPageContentWrapper } from "@/components/cipher/CipherPageContentWrapper";

@@ -119,7 +119,6 @@ function PigpenCipherPage() {
     <CipherPageContentWrapper>
       <CipherNav activeCipher="pigpen" />
       <div className="text-center space-y-4">
-        <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-primary">Pigpen Cipher</h1>
         <p className="text-lg lg:text-xl text-muted-fg max-w-3xl mx-auto">
           The super secret spy cipher that uses cool shapes instead of letters!
         </p>

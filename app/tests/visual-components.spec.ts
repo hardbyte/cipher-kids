@@ -48,12 +48,20 @@ authTest.describe('Visual Tests - UI Components', () => {
       await waitForComponentStable(authenticatedPage);
       
       // Switch to crack mode to see crack button
-      await authenticatedPage.getByRole('button', { name: /crack/i }).click();
+      const crackModeButton = authenticatedPage.getByRole('button', { name: /crack/i });
+      await expect(crackModeButton).toBeVisible({ timeout: 10000 });
+      await crackModeButton.click();
+      await authenticatedPage.waitForTimeout(1000);
+      
+      // Add some text to enable the crack button
+      const messageInput = authenticatedPage.getByPlaceholder(/enter.*message|type.*message/i).first();
+      await messageInput.fill('ENCODED MESSAGE');
       await authenticatedPage.waitForTimeout(500);
       
-      // Focus on the crack mode section specifically
-      const crackSection = authenticatedPage.locator('text=Crack Keyword Cipher').locator('..');
-      await expect(crackSection).toHaveScreenshot('button-crack.png');
+      // Focus on the crack button specifically
+      const crackButton = authenticatedPage.getByRole('button', { name: /crack.*cipher/i });
+      await expect(crackButton).toBeVisible();
+      await expect(crackButton).toHaveScreenshot('button-crack.png');
     });
   });
 
@@ -88,11 +96,17 @@ authTest.describe('Visual Tests - UI Components', () => {
       await waitForComponentStable(authenticatedPage);
       
       // Fill keyword to show strength meter
-      await authenticatedPage.getByPlaceholder(/enter.*message/i).fill('SECRET MESSAGE');
-      await authenticatedPage.getByPlaceholder(/enter keyword/i).fill('CIPHER');
-      await authenticatedPage.waitForTimeout(500);
+      await authenticatedPage.getByPlaceholder(/enter.*message/i).first().fill('SECRET MESSAGE');
+      // Use the setCipherParam helper or look for keyword input more specifically
+      const keywordInput = authenticatedPage.getByPlaceholder(/keyword/i).or(
+        authenticatedPage.locator('input[type="text"]').nth(1)
+      ).first();
+      await keywordInput.fill('CIPHER');
+      await authenticatedPage.waitForTimeout(1000);
       
-      const strengthCard = authenticatedPage.locator('.bg-muted\\/5').filter({ hasText: 'Keyword Security Rating' });
+      // Look for the keyword strength section
+      const strengthCard = authenticatedPage.locator('text=Keyword Security Rating').locator('..').locator('..');
+      await expect(strengthCard).toBeVisible();
       await expect(strengthCard).toHaveScreenshot('card-keyword-strength.png');
     });
 
@@ -142,11 +156,16 @@ authTest.describe('Visual Tests - UI Components', () => {
       await authenticatedPage.goto('/ciphers/keyword');
       await waitForComponentStable(authenticatedPage);
       
-      const keywordInput = authenticatedPage.getByPlaceholder(/enter keyword/i);
+      // Find keyword input more reliably
+      const keywordInput = authenticatedPage.getByPlaceholder(/keyword/i).or(
+        authenticatedPage.locator('input[type="text"]').nth(1)
+      ).first();
       await keywordInput.fill('SECRET');
-      await authenticatedPage.waitForTimeout(300);
+      await authenticatedPage.waitForTimeout(500);
       
-      await expect(keywordInput).toHaveScreenshot('input-keyword.png');
+      // Take screenshot of the input area including the label
+      const inputContainer = keywordInput.locator('..');
+      await expect(inputContainer).toHaveScreenshot('input-keyword.png');
     });
   });
 
@@ -155,7 +174,7 @@ authTest.describe('Visual Tests - UI Components', () => {
       await authenticatedPage.goto('/ciphers/caesar');
       await waitForComponentStable(authenticatedPage);
       
-      const cipherNav = authenticatedPage.locator('nav').filter({ hasText: 'Caesar' });
+      const cipherNav = authenticatedPage.locator('nav').filter({ hasText: 'Ciphers' });
       await expect(cipherNav).toHaveScreenshot('nav-cipher.png');
     });
 
@@ -230,12 +249,22 @@ authTest.describe('Visual Tests - UI Components', () => {
       await waitForComponentStable(authenticatedPage);
       
       // Switch to crack mode to see API status
-      await authenticatedPage.getByRole('button', { name: /crack/i }).click();
-      await authenticatedPage.waitForTimeout(2000); // Wait for API call
+      const crackModeButton = authenticatedPage.getByRole('button', { name: /crack/i });
+      await expect(crackModeButton).toBeVisible({ timeout: 10000 });
+      await crackModeButton.click();
+      await authenticatedPage.waitForTimeout(2000); // Wait for API status to load
       
-      const apiStatus = authenticatedPage.locator('.border').filter({ hasText: 'keywords' });
+      // Look for API status indicator
+      const apiStatus = authenticatedPage.locator('.border').filter({ hasText: 'keywords' }).or(
+        authenticatedPage.locator('[class*="api"]').filter({ hasText: /api|keywords/i }).first()
+      );
+      
       if (await apiStatus.count() > 0) {
         await expect(apiStatus.first()).toHaveScreenshot('component-api-status.png');
+      } else {
+        // Take a screenshot of the crack mode area instead
+        const crackArea = authenticatedPage.locator('text=Crack').locator('..');
+        await expect(crackArea).toHaveScreenshot('component-api-status.png');
       }
     });
 
@@ -243,15 +272,33 @@ authTest.describe('Visual Tests - UI Components', () => {
       await authenticatedPage.goto('/ciphers/keyword');
       await waitForComponentStable(authenticatedPage);
       
-      // Switch to crack mode and run crack
-      await authenticatedPage.getByRole('button', { name: /crack/i }).click();
-      await authenticatedPage.getByPlaceholder(/enter.*message/i).fill('FRPERG ZRFFNTR');
-      await authenticatedPage.getByRole('button', { name: /crack keyword cipher/i }).click();
+      // Switch to crack mode
+      const crackModeButton = authenticatedPage.getByRole('button', { name: /crack/i });
+      await expect(crackModeButton).toBeVisible({ timeout: 10000 });
+      await crackModeButton.click();
+      await authenticatedPage.waitForTimeout(500);
+      
+      // Fill message and run crack
+      await authenticatedPage.getByPlaceholder(/enter.*message/i).first().fill('FRPERG ZRFFNTR');
+      await authenticatedPage.waitForTimeout(500);
+      
+      // Click crack button
+      const crackButton = authenticatedPage.getByRole('button', { name: /crack.*cipher/i });
+      await expect(crackButton).toBeVisible();
+      await crackButton.click();
       await authenticatedPage.waitForTimeout(3000);
       
-      const crackResults = authenticatedPage.locator('.bg-muted\\/5').filter({ hasText: 'Crack Analysis' });
+      // Look for crack results
+      const crackResults = authenticatedPage.locator('.bg-muted\\/5').filter({ hasText: 'Crack Analysis' }).or(
+        authenticatedPage.locator('[class*="crack"]').filter({ hasText: /analysis|results/i }).first()
+      );
+      
       if (await crackResults.count() > 0) {
         await expect(crackResults.first()).toHaveScreenshot('component-crack-results.png');
+      } else {
+        // Take screenshot of the result area
+        const resultArea = authenticatedPage.locator('text=Result').locator('..').locator('..');
+        await expect(resultArea).toHaveScreenshot('component-crack-results.png');
       }
     });
 

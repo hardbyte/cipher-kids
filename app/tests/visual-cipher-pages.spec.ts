@@ -27,7 +27,10 @@ async function fillCipherInput(page: Page, message: string) {
 
 // Helper function to set cipher parameters
 async function setCipherParam(page: Page, value: string) {
-  const paramInput = page.locator('input[type="text"]').nth(1); // Usually the second input
+  // Look for keyword/key input by placeholder or label
+  const paramInput = page.getByPlaceholder(/keyword|key|shift/i).or(
+    page.locator('input[type="text"]').nth(1)
+  ).first();
   await paramInput.fill(value);
   await page.waitForTimeout(500);
 }
@@ -117,8 +120,12 @@ authTest.describe('Visual Tests - Cipher Pages', () => {
       await authenticatedPage.goto('/ciphers/keyword');
       await waitForPageStable(authenticatedPage);
       
-      // Switch to crack mode
-      await authenticatedPage.getByRole('button', { name: /crack/i }).click();
+      // Switch to crack mode - the button is in the mode toggle
+      const crackModeButton = authenticatedPage.getByRole('button', { name: /crack/i });
+      await expect(crackModeButton).toBeVisible({ timeout: 10000 });
+      await crackModeButton.click();
+      await authenticatedPage.waitForTimeout(500);
+      
       await fillCipherInput(authenticatedPage, 'FRPERG ZRFFNTR');
       
       // Wait for API status to load

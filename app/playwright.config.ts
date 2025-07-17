@@ -60,7 +60,11 @@ export default defineConfig({
     {
       name: 'Mobile Chrome',
       testIgnore: ['**/visual*.spec.ts'], // Exclude visual tests from regular test runs
-      use: { ...devices['Pixel 5'] },
+      use: { 
+        ...devices['Pixel 5'],
+        // Ensure headless mode for CI
+        headless: process.env.CI ? true : false,
+      },
     },
     
     /* Visual testing projects */
@@ -76,6 +80,8 @@ export default defineConfig({
         /* Additional visual testing settings */
         locale: 'en-US',
         timezoneId: 'UTC',
+        // Ensure headless mode for CI
+        headless: process.env.CI ? true : false,
       },
     },
     
@@ -92,6 +98,8 @@ export default defineConfig({
         /* Additional visual testing settings */
         locale: 'en-US',
         timezoneId: 'UTC',
+        // Ensure headless mode for CI
+        headless: process.env.CI ? true : false,
       },
     }
   ],

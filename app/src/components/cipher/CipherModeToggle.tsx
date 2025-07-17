@@ -17,10 +17,10 @@ export const CipherModeToggle: React.FC<CipherModeToggleProps> = ({
   const firstMode = isEncodeMode ? "encode" : "encrypt";
   const secondMode = isEncodeMode ? "decode" : "decrypt";
   return (
-    <div className="mb-4">
-      <div className="bg-muted/50 p-1 rounded-xl flex justify-between max-w-md mx-auto">
+    <div className="mb-3 md:mb-4">
+      <div className="bg-muted/50 p-1 rounded-xl flex justify-between max-w-sm md:max-w-md mx-auto">
         <motion.button
-          className={`relative px-6 py-2 rounded-lg text-center transition-colors flex items-center justify-center gap-2 ${
+          className={`relative px-3 md:px-6 py-2 rounded-lg text-center transition-colors flex items-center justify-center gap-1 md:gap-2 text-sm md:text-base ${
             mode === firstMode 
               ? "bg-primary text-primary-fg" 
               : "hover:bg-muted"
@@ -28,7 +28,7 @@ export const CipherModeToggle: React.FC<CipherModeToggleProps> = ({
           onClick={() => setMode(firstMode as "encrypt" | "decrypt" | "encode" | "decode" | "crack")}
           whileTap={{ scale: 0.95 }}
         >
-          <span role="img" aria-label="lock" className="text-lg">
+          <span role="img" aria-label="lock" className="text-base md:text-lg">
             🔒
           </span>
           <span>{isEncodeMode ? "Encode" : "Encrypt"}</span>
@@ -47,7 +47,7 @@ export const CipherModeToggle: React.FC<CipherModeToggleProps> = ({
         </motion.button>
 
         <motion.button
-          className={`relative px-6 py-2 rounded-lg text-center transition-colors flex items-center justify-center gap-2 ${
+          className={`relative px-3 md:px-6 py-2 rounded-lg text-center transition-colors flex items-center justify-center gap-1 md:gap-2 text-sm md:text-base ${
             mode === secondMode 
               ? "bg-primary text-primary-fg" 
               : "hover:bg-muted"
@@ -55,7 +55,7 @@ export const CipherModeToggle: React.FC<CipherModeToggleProps> = ({
           onClick={() => setMode(secondMode as "encrypt" | "decrypt" | "encode" | "decode" | "crack")}
           whileTap={{ scale: 0.95 }}
         >
-          <span role="img" aria-label="unlock" className="text-lg">
+          <span role="img" aria-label="unlock" className="text-base md:text-lg">
             🔓
           </span>
           <span>{isEncodeMode ? "Decode" : "Decrypt"}</span>
@@ -75,7 +75,7 @@ export const CipherModeToggle: React.FC<CipherModeToggleProps> = ({
         
         {!hideCrack && (
           <motion.button
-            className={`relative px-5 py-2 rounded-lg text-center transition-colors flex items-center justify-center gap-2 ${
+            className={`relative px-3 md:px-5 py-2 rounded-lg text-center transition-colors flex items-center justify-center gap-1 md:gap-2 text-sm md:text-base ${
               mode === "crack" 
                 ? "bg-primary text-primary-fg" 
                 : "hover:bg-muted"
@@ -83,7 +83,7 @@ export const CipherModeToggle: React.FC<CipherModeToggleProps> = ({
             onClick={() => setMode("crack")}
             whileTap={{ scale: 0.95 }}
           >
-            <span role="img" aria-label="detective" className="text-lg">
+            <span role="img" aria-label="detective" className="text-base md:text-lg">
               🕵️‍♀️
             </span>
             <span>Crack</span>
