@@ -1,4 +1,4 @@
-import { Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 /**
  * Waits for React authentication context to properly initialize
@@ -29,7 +29,7 @@ export async function waitForAuthState(page: Page): Promise<void> {
  */
 export async function navigateWithAuth(page: Page, path: string): Promise<void> {
   // Add animation speed parameter for tests
-  const url = new URL(path, 'http://localhost:5174');
+  const url = new URL(path, 'http://localhost:5173');
   url.searchParams.set('animSpeed', '0.001'); // Ultra fast animations for tests
   
   await page.goto(url.toString());

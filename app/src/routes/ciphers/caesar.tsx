@@ -12,13 +12,17 @@ import { Button } from "@/components/ui/button";
 import { caesarCipher, ALPHABET } from "@/utils/ciphers";
 import { createDelay, ANIMATION_TIMINGS } from "@/utils/animation-config";
 import { createFileRoute } from "@tanstack/react-router";
+import { useProgress } from "@/hooks/use-progress";
+import { AchievementNotification } from "@/components/achievement-notification";
 
 export const Route = createFileRoute("/ciphers/caesar")({
   component: CaesarCipherPage,
 });
 
 function CaesarCipherPage() {
+  const { trackAction } = useProgress();
   const [mode, setMode] = useState<"encrypt" | "decrypt" | "crack">("encrypt");
+  const [newAchievements, setNewAchievements] = useState<string[]>([]);
   const [message, setMessage] = useState<string>("");
   const [shift, setShift] = useState<number>(3); // Default shift to 3, type is number
   const [output, setOutput] = useState<string>("");
@@ -75,17 +79,11 @@ function CaesarCipherPage() {
     // Cancel any ongoing animation
     animationRef.current = false;
     
-    // If we have an output and the mode changed, use it as the new input
-    if (output && output !== message) {
-      setMessage(output);
-    }
-    
     setOutput("");
     setCurrentCharToHighlight(undefined);
     setShowStepByStep(false);
     setIsAnimating(false);
-    generateAnimationSteps();
-  }, [mode, message, output, generateAnimationSteps]); // Only respond to mode changes, not message changes
+  }, [mode]); // Only respond to mode changes
 
   // Handle message and shift changes separately to avoid infinite loops
   useEffect(() => {
@@ -93,7 +91,7 @@ function CaesarCipherPage() {
     setCurrentCharToHighlight(undefined);
     setShowStepByStep(false);
     generateAnimationSteps();
-  }, [message, shift, output, generateAnimationSteps]);
+  }, [message, shift, generateAnimationSteps]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -145,6 +143,18 @@ function CaesarCipherPage() {
       setCurrentCharToHighlight(undefined); // Clear highlight at the end
       animationRef.current = false;
       setIsAnimating(false);
+      
+      // Track the action for achievements
+      if (currentAnimatedOutput && message) {
+        try {
+          const result = trackAction("caesar", mode === "encrypt" ? "encode" : "decode");
+          if (result && result.length > 0) {
+            setNewAchievements(result);
+          }
+        } catch (error) {
+          console.warn("Achievement tracking failed:", error);
+        }
+      }
     }
   };
 
@@ -217,7 +227,21 @@ function CaesarCipherPage() {
                   </div>
                 </div>
               )}
-              <AllCaesarShifts message={message} currentShift={shift} />
+              <AllCaesarShifts 
+                message={message} 
+                currentShift={shift} 
+                onCrack={async () => {
+                  // Track the crack action for achievements
+                  try {
+                    const result = trackAction("caesar", "crack");
+                    if (result && result.length > 0) {
+                      setNewAchievements(result);
+                    }
+                  } catch (error) {
+                    console.warn("Achievement tracking failed:", error);
+                  }
+                }}
+              />
             </>
           ) : (
             <CipherResult
@@ -463,6 +487,15 @@ function CaesarCipherPage() {
             </div>
           </div>
         </div>
+
+        {/* Achievement notifications */}
+        {newAchievements.length > 0 && (
+          <AchievementNotification
+            achievements={newAchievements}
+            onClose={() => setNewAchievements([])}
+          />
+        )}
+
     </CipherPageContentWrapper>
   );
 }

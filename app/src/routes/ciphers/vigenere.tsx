@@ -16,12 +16,16 @@ import { VigenereKeyFinder } from "@/components/cipher/vigenere/VigenereKeyFinde
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { useProgress } from "@/hooks/use-progress";
+import { AchievementNotification } from "@/components/achievement-notification";
 
 export const Route = createFileRoute("/ciphers/vigenere")({
   component: VigenereCipherPage,
 });
 
 function VigenereCipherPage() {
+  const { trackAction } = useProgress();
+  const [newAchievements, setNewAchievements] = useState<string[]>([]);
   const [mode, setMode] = useState<"encrypt" | "decrypt" | "crack">("encrypt");
   const [message, setMessage] = useState<string>("");
   const [keyword, setKeyword] = useState<string>("");
@@ -62,9 +66,10 @@ function VigenereCipherPage() {
     setShowStepByStep(false);
     setIsStepAnimationPlaying(false);
     setShowFrequencyAnalysis(false);
-  }, [message, output, mode]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Intentionally excluding output to prevent infinite loops
+  }, [message, mode]);
 
-  const handleAction = () => {
+  const handleAction = async () => {
     if (!message.trim() || !keyword.trim()) {
       toast.error("Please enter both a message and a keyword!");
       return;
@@ -72,6 +77,18 @@ function VigenereCipherPage() {
     
     const result = vigenereCipher(message, keyword, mode === "decrypt");
     setOutput(result);
+    
+    // Track the action for achievements
+    if (result && message) {
+      try {
+        const trackResult = trackAction("vigenere", mode === "encrypt" ? "encode" : "decode");
+        if (trackResult && trackResult.length > 0) {
+          setNewAchievements(trackResult);
+        }
+      } catch (error) {
+        console.warn("Achievement tracking failed:", error);
+      }
+    }
     
     // Trigger animation for keyword repetition (only if not already animating)
     if (!animateKeywordRepetition) {
@@ -193,7 +210,7 @@ function VigenereCipherPage() {
               
               <VigenereKeyFinder 
                 ciphertext={message}
-                onKeyLengthDetected={(length) => {
+                onKeyLengthDetected={async (length) => {
                   setShowFrequencyAnalysis(true);
                   // Pass detected key length to FrequencyAnalysis
                   if (length > 0) {
@@ -558,6 +575,14 @@ function VigenereCipherPage() {
           )}
         </div>
       </div>
+      
+      {/* Achievement notifications */}
+      {newAchievements.length > 0 && (
+        <AchievementNotification
+          achievements={newAchievements}
+          onClose={() => setNewAchievements([])}
+        />
+      )}
     </CipherPageContentWrapper>
   );
 }

@@ -9,12 +9,16 @@ import { createFileRoute } from "@tanstack/react-router";
 import { CipherModeToggle } from "@/components/cipher/CipherModeToggle";
 import { GeneralStepByStepAnimation, AnimationStep } from "@/components/cipher/shared/GeneralStepByStepAnimation";
 import { Button } from "@/components/ui/button";
+import { useProgress } from "@/hooks/use-progress";
+import { AchievementNotification } from "@/components/achievement-notification";
 
 export const Route = createFileRoute("/ciphers/pigpen")({
   component: PigpenCipherPage,
 });
 
 function PigpenCipherPage() {
+  const { trackAction } = useProgress();
+  const [newAchievements, setNewAchievements] = useState<string[]>([]);
   const [mode, setMode] = useState<"encrypt" | "decrypt" | "crack">("encrypt");
   const [message, setMessage] = useState<string>("");
   const [output, setOutput] = useState<string>("");
@@ -74,7 +78,8 @@ function PigpenCipherPage() {
     setHighlightChar(undefined);
     setShowStepByStep(false);
     generateAnimationSteps();
-  }, [mode, message, output, generateAnimationSteps]); // Only respond to mode changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Intentionally excluding output to prevent infinite loops
+  }, [mode]); // Only respond to mode changes
 
   // Handle message changes separately
   useEffect(() => {
@@ -82,7 +87,7 @@ function PigpenCipherPage() {
     setHighlightChar(undefined);
     setShowStepByStep(false);
     generateAnimationSteps();
-  }, [message, output, generateAnimationSteps]);
+  }, [message, generateAnimationSteps]);
 
   const handleAction = async () => {
     if (isAnimating) return;
@@ -105,14 +110,39 @@ function PigpenCipherPage() {
       setOutput(currentAnimatedOutput);
     }
 
+
     setHighlightChar(undefined);
     setIsAnimating(false);
+    
+    // Track the action for achievements
+    if (currentAnimatedOutput && message) {
+      try {
+        const trackResult = trackAction("pigpen", mode === "encrypt" ? "encode" : "decode");
+        if (trackResult && trackResult.length > 0) {
+          setNewAchievements(trackResult);
+        }
+      } catch (error) {
+        console.warn("Achievement tracking failed:", error);
+      }
+    }
   };
 
-  const handleCrack = () => {
+  const handleCrack = async () => {
     // In crack mode, we just decrypt.
     const result = pigpenCipher(message, true);
     setOutput(result);
+    
+    // Track the crack action for achievements
+    if (result && message) {
+      try {
+        const trackResult = trackAction("pigpen", "crack");
+        if (trackResult && trackResult.length > 0) {
+          setNewAchievements(trackResult);
+        }
+      } catch (error) {
+        console.warn("Achievement tracking failed:", error);
+      }
+    }
   };
 
   return (
@@ -247,6 +277,14 @@ function PigpenCipherPage() {
           )}
         </div>
       </div>
+      
+      {/* Achievement notifications */}
+      {newAchievements.length > 0 && (
+        <AchievementNotification
+          achievements={newAchievements}
+          onClose={() => setNewAchievements([])}
+        />
+      )}
     </CipherPageContentWrapper>
   );
 }

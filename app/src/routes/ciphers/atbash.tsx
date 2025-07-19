@@ -11,13 +11,17 @@ import { useSampleMessages } from "@/hooks/useSampleMessages";
 import { ALPHABET, atbashCipher } from "@/utils/ciphers";
 import { createDelay, ANIMATION_TIMINGS } from "@/utils/animation-config";
 import { createFileRoute } from "@tanstack/react-router";
+import { useProgress } from "@/hooks/use-progress";
+import { AchievementNotification } from "@/components/achievement-notification";
 
 export const Route = createFileRoute("/ciphers/atbash")({
   component: AtbashCipherPage,
 });
 
 function AtbashCipherPage() {
+  const { trackAction } = useProgress();
   const [mode, setMode] = useState<"encrypt" | "decrypt" | "crack">("encrypt");
+  const [newAchievements, setNewAchievements] = useState<string[]>([]);
   const [message, setMessage] = useState<string>("");
   const [output, setOutput] = useState<string>("");
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
@@ -76,7 +80,8 @@ function AtbashCipherPage() {
     setCurrentCharToHighlight(undefined);
     setShowStepByStep(false);
     generateAnimationSteps();
-  }, [mode, message, output, generateAnimationSteps]); // Only respond to mode changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Intentionally excluding output to prevent infinite loops
+  }, [mode]); // Only respond to mode changes
 
   // Handle message changes separately
   useEffect(() => {
@@ -84,7 +89,7 @@ function AtbashCipherPage() {
     setCurrentCharToHighlight(undefined);
     setShowStepByStep(false);
     generateAnimationSteps();
-  }, [message, output, generateAnimationSteps]);
+  }, [message, generateAnimationSteps]);
 
   const handleAction = async () => {
     if (isAnimating) return;
@@ -125,20 +130,40 @@ function AtbashCipherPage() {
 
     setCurrentCharToHighlight(undefined);
     setIsAnimating(false);
+    
+    // Track the action for achievements
+    if (currentAnimatedOutput && message) {
+      try {
+        const result = trackAction("atbash", mode === "encrypt" ? "encode" : "decode");
+        if (result && result.length > 0) {
+          setNewAchievements(result);
+        }
+      } catch (error) {
+        console.warn("Achievement tracking failed:", error);
+      }
+    }
   };
 
-  const handleInstantAction = () => {
-    if (isAnimating) return;
-    
-    // Use the utility function for consistency
-    const result = atbashCipher(message);
-    setOutput(result);
-    setCurrentCharToHighlight(undefined);
-  };
 
   const handleCrack = () => {
     // For Atbash, cracking is just applying the cipher again (self-inverse)
-    handleInstantAction();
+    if (isAnimating) return;
+    
+    const result = atbashCipher(message);
+    setOutput(result);
+    setCurrentCharToHighlight(undefined);
+    
+    // Track the crack action for achievements
+    if (result && message) {
+      try {
+        const trackResult = trackAction("atbash", "crack");
+        if (trackResult && trackResult.length > 0) {
+          setNewAchievements(trackResult);
+        }
+      } catch (error) {
+        console.warn("Achievement tracking failed:", error);
+      }
+    }
   };
 
 
@@ -259,6 +284,15 @@ function AtbashCipherPage() {
             )}
           </div>
         </div>
+
+        {/* Achievement notifications */}
+        {newAchievements.length > 0 && (
+          <AchievementNotification
+            achievements={newAchievements}
+            onClose={() => setNewAchievements([])}
+          />
+        )}
+
     </CipherPageContentWrapper>
   );
 }

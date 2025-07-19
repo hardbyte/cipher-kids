@@ -3,20 +3,20 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ACHIEVEMENTS } from '@/utils/achievements';
 
 interface AchievementNotificationProps {
-  achievementIds: string[];
+  achievements?: string[];
   onClose: () => void;
 }
 
-export function AchievementNotification({ achievementIds, onClose }: AchievementNotificationProps) {
+export function AchievementNotification({ achievements: achievementIds, onClose }: AchievementNotificationProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
 
-  const achievements = achievementIds
+  const achievements = (achievementIds || [])
     .map(id => ACHIEVEMENTS.find(a => a.id === id))
     .filter(Boolean);
 
   useEffect(() => {
-    if (achievements.length === 0) {
+    if (!achievementIds || achievementIds.length === 0 || achievements.length === 0) {
       onClose();
       return;
     }
@@ -35,9 +35,9 @@ export function AchievementNotification({ achievementIds, onClose }: Achievement
     }, 3000);
 
     return () => clearTimeout(timer);
-  }, [currentIndex, achievements.length, onClose]);
+  }, [currentIndex, achievements.length, onClose, achievementIds]);
 
-  if (!achievements.length || !isVisible) return null;
+  if (!achievementIds || achievementIds.length === 0 || !achievements.length || !isVisible) return null;
 
   const currentAchievement = achievements[currentIndex];
 

@@ -7,8 +7,8 @@ import { updateUserProgress } from '@/utils/achievements';
 export function useProgress() {
   const { currentUser, getUserConfig, updateUserConfig } = useUser();
 
-  const trackAction = (action: 'encode' | 'decode' | 'crack', cipherId: string) => {
-    if (!currentUser) return;
+  const trackAction = (cipherId: string, action: 'encode' | 'decode' | 'crack') => {
+    if (!currentUser) return [];
 
     const currentConfig = getUserConfig();
     const updatedConfig = updateUserProgress(currentConfig, action, cipherId);
@@ -21,11 +21,7 @@ export function useProgress() {
     const newAchievements = updatedConfig.achievements || [];
     const newlyEarned = newAchievements.filter((id: string) => !oldAchievements.includes(id));
 
-    return {
-      newAchievements: newlyEarned,
-      totalAchievements: newAchievements.length,
-      progress: updatedConfig.progress
-    };
+    return newlyEarned;
   };
 
   const getStats = () => {

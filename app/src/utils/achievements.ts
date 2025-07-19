@@ -2,6 +2,17 @@
  * Achievement system for tracking user progress and milestones
  */
 
+import { UserConfig } from '@/context/user-context-types';
+
+export interface UserProgress {
+  ciphersUsed: string[];
+  messagesEncoded: number;
+  messagesDecoded: number;
+  codesCracked: number;
+  avatar?: string;
+  iconColor?: string;
+}
+
 export interface Achievement {
   id: string;
   name: string;

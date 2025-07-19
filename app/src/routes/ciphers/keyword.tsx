@@ -8,12 +8,16 @@ import { CipherResult } from "@/components/cipher/results/CipherResult";
 import { keywordCipher, ALPHABET } from "@/utils/ciphers";
 import { createFileRoute } from "@tanstack/react-router";
 import { CrackButton } from "@/components/cipher/CrackButton";
+import { useProgress } from "@/hooks/use-progress";
+import { AchievementNotification } from "@/components/achievement-notification";
 
 export const Route = createFileRoute("/ciphers/keyword")({
   component: KeywordCipherPage,
 });
 
 function KeywordCipherPage() {
+  const { trackAction } = useProgress();
+  const [newAchievements, setNewAchievements] = useState<string[]>([]);
   const [mode, setMode] = useState<"encrypt" | "decrypt" | "crack">("encrypt");
   const [message, setMessage] = useState<string>("");
   const [keyword, setKeyword] = useState<string>("");
@@ -86,7 +90,8 @@ function KeywordCipherPage() {
     setOutput("");
     setCrackResults("");
     setCrackAttempts([]);
-  }, [mode, message, output]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Intentionally excluding output to prevent infinite loops
+  }, [mode]);
 
   // Real-time feedback effect for message and keyword changes
   useEffect(() => {
@@ -96,7 +101,8 @@ function KeywordCipherPage() {
     } else if (mode === "crack") {
       setOutput("");
     }
-  }, [message, keyword, mode, output, isAnimating]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Intentionally excluding output to prevent infinite loops  
+  }, [message, keyword, isAnimating]);
 
   // Sample messages for crack mode - pre-encrypted messages that can be cracked
   const crackSamples = [
@@ -298,6 +304,18 @@ function KeywordCipherPage() {
       const result = keywordCipher(message, keyword, mode === "decrypt");
       setOutput(result);
       setCrackResults("");
+      
+      // Track the action for achievements
+      if (result && message) {
+        try {
+          const trackResult = trackAction("keyword", mode === "encrypt" ? "encode" : "decode");
+          if (trackResult && trackResult.length > 0) {
+            setNewAchievements(trackResult);
+          }
+        } catch (error) {
+          console.warn("Achievement tracking failed:", error);
+        }
+      }
     }
   };
 
@@ -329,9 +347,33 @@ function KeywordCipherPage() {
     if (bestAttempt && bestAttempt.score > 50) {
       setCrackResults(`🎯 Possible crack found! Keyword "${bestAttempt.keyword}" gives readable text.`);
       setOutput(bestAttempt.result);
+      
+      // Track the crack action for achievements
+      if (bestAttempt.result && message) {
+        try {
+          const trackResult = trackAction("keyword", "crack");
+          if (trackResult && trackResult.length > 0) {
+            setNewAchievements(trackResult);
+          }
+        } catch (error) {
+          console.warn("Achievement tracking failed:", error);
+        }
+      }
     } else if (bestAttempt && bestAttempt.score > 30) {
       setCrackResults(`🤔 Found a possible solution with keyword "${bestAttempt.keyword}", but it might not be perfect.`);
       setOutput(bestAttempt.result);
+      
+      // Track the crack action for achievements
+      if (bestAttempt.result && message) {
+        try {
+          const trackResult = trackAction("keyword", "crack");
+          if (trackResult && trackResult.length > 0) {
+            setNewAchievements(trackResult);
+          }
+        } catch (error) {
+          console.warn("Achievement tracking failed:", error);
+        }
+      }
     } else {
       setCrackResults("❌ No obvious solution found with common keywords. The cipher may use an uncommon keyword, or this might not be a keyword cipher.");
     }
@@ -651,6 +693,14 @@ function KeywordCipherPage() {
           </div>
         </div>
       </div>
+
+      {/* Achievement notifications */}
+      {newAchievements.length > 0 && (
+        <AchievementNotification
+          achievements={newAchievements}
+          onClose={() => setNewAchievements([])}
+        />
+      )}
     </CipherPageContentWrapper>
   );
 }

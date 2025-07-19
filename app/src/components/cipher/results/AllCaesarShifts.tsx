@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button";
 interface AllCaesarShiftsProps {
   message: string;
   currentShift?: number; // Optional prop to highlight a specific shift
+  onCrack?: () => void; // Optional callback when user makes a crack attempt
 }
 
 export const AllCaesarShifts: React.FC<AllCaesarShiftsProps> = ({
   message,
   currentShift,
+  onCrack,
 }) => {
   // Track which shift the user thinks is correct for the challenge
   const [userGuess, setUserGuess] = useState<number | null>(null);
@@ -42,6 +44,11 @@ export const AllCaesarShifts: React.FC<AllCaesarShiftsProps> = ({
     // Give some points for finding words - this is just for fun!
     // In a real educational app, we'd check for actual English words
     setScore(prevScore => prevScore + 10);
+    
+    // Notify parent that a crack attempt was made
+    if (onCrack) {
+      onCrack();
+    }
   };
   
   // Handle copying a shift result to clipboard

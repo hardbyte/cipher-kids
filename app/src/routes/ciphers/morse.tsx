@@ -9,12 +9,16 @@ import { Button } from "@/components/ui/button";
 import { morseCode, MORSE_CODE_MAPPING } from "@/utils/ciphers";
 import { initializeAudio, playMorseCharacter, isAudioSupported } from "@/utils/morse-audio";
 import { createFileRoute } from "@tanstack/react-router";
+import { useProgress } from "@/hooks/use-progress";
+import { AchievementNotification } from "@/components/achievement-notification";
 
 export const Route = createFileRoute("/ciphers/morse")({
   component: MorseCodePage,
 });
 
 function MorseCodePage() {
+  const { trackAction } = useProgress();
+  const [newAchievements, setNewAchievements] = useState<string[]>([]);
   const [mode, setMode] = useState<"encode" | "decode">("encode");
   const [message, setMessage] = useState<string>("");
   const [output, setOutput] = useState<string>("");
@@ -107,7 +111,8 @@ function MorseCodePage() {
     setOutput("");
     setCurrentCharToHighlight(undefined);
     setShowStepByStep(false);
-  }, [mode, message, output]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Intentionally excluding output to prevent infinite loops
+  }, [mode]);
 
   // Reset animation states if message changes
   useEffect(() => {
@@ -115,7 +120,7 @@ function MorseCodePage() {
     setCurrentCharToHighlight(undefined);
     setShowStepByStep(false);
     generateAnimationSteps();
-  }, [message, output, generateAnimationSteps]);
+  }, [message, generateAnimationSteps]);
 
   // Initialize audio when component mounts
   useEffect(() => {
@@ -154,6 +159,18 @@ function MorseCodePage() {
       
       // For encode mode, set the result directly
       setOutput(result);
+      
+      // Track the action for achievements
+      if (result && message) {
+        try {
+          const trackResult = trackAction("morse", "encode");
+          if (trackResult && trackResult.length > 0) {
+            setNewAchievements(trackResult);
+          }
+        } catch (error) {
+          console.warn("Achievement tracking failed:", error);
+        }
+      }
     } else {
       // Decode mode - animate the actual decoding process (fixed from original)
       const morseChars = message.split(' ').filter(char => char.length > 0);
@@ -186,6 +203,18 @@ function MorseCodePage() {
       // Ensure the final output is correct
       const finalResult = morseCode(message, true);
       setOutput(finalResult);
+      
+      // Track the action for achievements
+      if (finalResult && message) {
+        try {
+          const trackResult = trackAction("morse", "decode");
+          if (trackResult && trackResult.length > 0) {
+            setNewAchievements(trackResult);
+          }
+        } catch (error) {
+          console.warn("Achievement tracking failed:", error);
+        }
+      }
     }
 
     setCurrentCharToHighlight(undefined);
@@ -483,6 +512,14 @@ function MorseCodePage() {
           </div>
         </div>
       </div>
+      
+      {/* Achievement notifications */}
+      {newAchievements.length > 0 && (
+        <AchievementNotification
+          achievements={newAchievements}
+          onClose={() => setNewAchievements([])}
+        />
+      )}
     </CipherPageContentWrapper>
   );
 }

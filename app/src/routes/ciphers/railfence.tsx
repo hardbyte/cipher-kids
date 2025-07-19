@@ -8,7 +8,8 @@ import { GeneralStepByStepAnimation, AnimationStep } from "@/components/cipher/s
 import { ZigzagVisualization } from "@/components/cipher/ZigzagVisualization";
 import { Slider } from "@/components/ui/slider";
 import { CrackButton } from "@/components/cipher/CrackButton";
-import { useSampleMessages } from "@/hooks/useSampleMessages";
+import { useProgress } from "@/hooks/use-progress";
+import { AchievementNotification } from "@/components/achievement-notification";
 import { railFenceCipher } from "@/utils/ciphers";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -17,6 +18,8 @@ export const Route = createFileRoute("/ciphers/railfence")({
 });
 
 function RailFenceCipherPage() {
+  const { trackAction } = useProgress();
+  const [newAchievements, setNewAchievements] = useState<string[]>([]);
   const [mode, setMode] = useState<"encrypt" | "decrypt" | "crack">("encrypt");
   const [message, setMessage] = useState<string>("");
   const [rails, setRails] = useState<number>(3);
@@ -27,8 +30,6 @@ function RailFenceCipherPage() {
   const [isStepAnimationPlaying, setIsStepAnimationPlaying] = useState(false);
   const [crackResults, setCrackResults] = useState<Array<{rails: number, result: string}>>([]);
   
-  // Use the sample messages hook
-  useSampleMessages();
 
 
   // Generate animation steps for the GeneralStepByStepAnimation
@@ -78,7 +79,8 @@ function RailFenceCipherPage() {
     setOutput("");
     setShowStepByStep(false);
     setCrackResults([]);
-  }, [mode, message, output]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Intentionally excluding output to prevent infinite loops
+  }, [mode]);
 
   // Reset animation states if message or rails change
   useEffect(() => {
@@ -86,7 +88,7 @@ function RailFenceCipherPage() {
     setShowStepByStep(false);
     setCrackResults([]);
     generateAnimationSteps();
-  }, [message, rails, output, generateAnimationSteps]);
+  }, [message, rails, generateAnimationSteps]);
 
   const handleAction = async () => {
     if (isAnimating) return;
@@ -106,6 +108,18 @@ function RailFenceCipherPage() {
     setOutput(result);
     
     setIsAnimating(false);
+    
+    // Track the action for achievements
+    if (result && message) {
+      try {
+        const trackResult = trackAction("railfence", mode === "encrypt" ? "encode" : "decode");
+        if (trackResult && trackResult.length > 0) {
+          setNewAchievements(trackResult);
+        }
+      } catch (error) {
+        console.warn("Achievement tracking failed:", error);
+      }
+    }
   };
 
 
@@ -122,6 +136,18 @@ function RailFenceCipherPage() {
     
     setCrackResults(results);
     setOutput(""); // Clear single output when showing multiple results
+    
+    // Track the crack action for achievements
+    if (results.length > 0 && message) {
+      try {
+        const trackResult = trackAction("railfence", "crack");
+        if (trackResult && trackResult.length > 0) {
+          setNewAchievements(trackResult);
+        }
+      } catch (error) {
+        console.warn("Achievement tracking failed:", error);
+      }
+    }
   };
 
 
@@ -283,6 +309,13 @@ function RailFenceCipherPage() {
           </div>
         )}
 
+        {/* Achievement notifications */}
+        {newAchievements.length > 0 && (
+          <AchievementNotification
+            achievements={newAchievements}
+            onClose={() => setNewAchievements([])}
+          />
+        )}
     </CipherPageContentWrapper>
   );
 }

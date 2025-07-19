@@ -1,4 +1,5 @@
-import { Page, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 /**
  * Sets up user state programmatically to bypass the user selection UI.
@@ -77,8 +78,11 @@ export async function fillMessage(page: Page, message: string): Promise<void> {
  * Targets the main action button with icons (magic wand, sparkles)
  */
 export async function clickCipherAction(page: Page, action: 'encrypt' | 'decrypt' | 'encode' | 'decode'): Promise<void> {
-  // Look for the main action button that has icons (not the mode button)
-  let button = page.getByRole('button', { name: new RegExp(`magic wand ${action}|${action} sparkles`, 'i') });
+  // Normalize action to match button text
+  const buttonText = action.charAt(0).toUpperCase() + action.slice(1);
+  
+  // Look for the main action button with magic wand and sparkles
+  let button = page.getByRole('button', { name: new RegExp(`magic wand ${buttonText} sparkles`, 'i') });
   
   // Fallback: look for any button with the action name but prefer the last one (main action)
   if (await button.count() === 0) {

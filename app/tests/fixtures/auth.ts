@@ -1,4 +1,5 @@
-import { test as baseTest, BrowserContext, Page } from '@playwright/test';
+import { test as baseTest } from '@playwright/test';
+import type { BrowserContext, Page } from '@playwright/test';
 
 type AuthFixtures = {
   authenticatedPage: Page;
