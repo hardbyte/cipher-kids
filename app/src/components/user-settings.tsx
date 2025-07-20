@@ -5,8 +5,8 @@ import { useUser } from '@/context/use-user';
 import { useTheme } from '@/components/theme/use-theme';
 import { UserIconColor, Theme } from '@/context/user-context-types';
 import { AvatarPicker } from '@/components/avatar-picker';
-import { Achievements } from '@/components/achievements';
 import { THEME_OPTIONS } from '@/components/theme/theme-constants';
+import { useNavigate } from '@tanstack/react-router';
 
 const ICON_COLORS: { color: UserIconColor; name: string; bgClass: string }[] = [
   { color: 'red', name: 'Red', bgClass: 'bg-[var(--user-color-red)]' },
@@ -24,12 +24,13 @@ const ICON_COLORS: { color: UserIconColor; name: string; bgClass: string }[] = [
 // Use shared theme constants
 
 interface UserSettingsProps {
-  children: React.ReactNode;
+  onOpenChange?: () => void;
 }
 
-export function UserSettings({ children }: UserSettingsProps) {
+export function UserSettings({ onOpenChange }: UserSettingsProps) {
   const { currentUser, getUserConfig, updateUserConfig } = useUser();
   const { setTheme } = useTheme();
+  const navigate = useNavigate();
   const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
   
   const handleThemeChange = useCallback((newTheme: Theme) => {
@@ -56,9 +57,13 @@ export function UserSettings({ children }: UserSettingsProps) {
   
   
   return (
-    <Modal>
-      <Modal.Trigger>
-        {children}
+    <Modal onOpenChange={(isOpen) => {
+      if (!isOpen && onOpenChange) {
+        onOpenChange();
+      }
+    }}>
+      <Modal.Trigger className="text-overlay-fg hover:bg-muted w-full justify-start px-3 py-2 rounded-md cursor-pointer transition-colors flex items-center gap-2 border-none bg-transparent">
+        ⚙️ Settings
       </Modal.Trigger>
       <Modal.Content size="md" isBlurred={true}>
         <Modal.Header>
@@ -211,11 +216,16 @@ export function UserSettings({ children }: UserSettingsProps) {
                   </div>
                 </div>
               </div>
-              <Achievements>
-                <span className="inline-flex items-center justify-center gap-x-2 font-medium px-3 py-1.5 text-sm bg-muted hover:bg-muted/80 text-fg rounded-md cursor-pointer transition-colors">
-                  View All
-                </span>
-              </Achievements>
+              <Button
+                intent="secondary"
+                size="small"
+                onPress={() => {
+                  navigate({ to: '/achievements' });
+                  if (onOpenChange) onOpenChange();
+                }}
+              >
+                View All
+              </Button>
             </div>
           </div>
         </Modal.Body>

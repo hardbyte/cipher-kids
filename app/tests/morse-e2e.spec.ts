@@ -5,7 +5,7 @@ authTest.describe('Morse Code End-to-End Testing', () => {
   authTest.beforeEach(async ({ authenticatedPage }) => {
     await authenticatedPage.goto('/ciphers/morse');
     // Use the larger main heading, not the navigation heading
-    await expect(authenticatedPage.getByRole('heading', { name: 'Morse Code' }).nth(1)).toBeVisible();
+    await expect(authenticatedPage.getByRole('heading', { name: 'Morse Code' })).toBeVisible();
   });
 
   authTest.describe('Encode Mode', () => {

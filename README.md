@@ -84,6 +84,9 @@ Cipher Kids helps children:
 - Practice pattern recognition and problem-solving skills
 - Explore the foundations of modern computer security
 
-## License
+## Future Enhancements
 
-MIT
+
+- Introduction to Modern Cryptography: A brief, high-level overview of modern, computer-based encryption and concepts like public and private keys.
+- Deeper Dive into Cryptanalysis: Interactive module demonstrating frequency analysis.
+- Biographies of Cryptographers: Introducing key figures in the history of cryptography, such as Alan Turing or Elizebeth Friedman

@@ -5,7 +5,7 @@ import { expect } from '@playwright/test';
 authTest.describe('Atbash Cipher End-to-End Testing', () => {
   authTest.beforeEach(async ({ authenticatedPage }) => {
     await authenticatedPage.goto('/ciphers/atbash');
-    await expect(authenticatedPage.getByRole('heading', { name: 'Atbash Cipher' }).nth(1)).toBeVisible({ timeout: 10000 });
+    await expect(authenticatedPage.getByRole('heading', { name: 'Atbash Cipher' })).toBeVisible({ timeout: 10000 });
   });
 
   authTest.describe('Encrypt Mode', () => {

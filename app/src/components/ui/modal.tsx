@@ -25,12 +25,12 @@ const Modal = (props: DialogTriggerProps) => {
 const modalOverlayStyles = tv({
   base: [
     "fixed top-0 left-0 isolate z-50 h-(--visual-viewport-height) w-full",
-    "flex items-end justify-end bg-fg/15 text-center sm:block dark:bg-bg/40",
+    "flex items-end justify-end bg-black/50 text-center sm:block dark:bg-black/70",
     "[--visual-viewport-vertical-padding:16px] sm:[--visual-viewport-vertical-padding:32px]",
   ],
   variants: {
     isBlurred: {
-      true: "bg-bg supports-backdrop-filter:bg-bg/15 supports-backdrop-filter:backdrop-blur dark:supports-backdrop-filter:bg-bg/40",
+      true: "bg-black/75 supports-backdrop-filter:bg-black/60 supports-backdrop-filter:backdrop-blur-lg dark:bg-black/85 dark:supports-backdrop-filter:bg-black/70",
     },
     isEntering: {
       true: "fade-in animate-in duration-200 ease-out",

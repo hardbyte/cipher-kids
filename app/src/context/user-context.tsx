@@ -37,7 +37,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
   const hasAgents = (): boolean => {
     const saved = localStorage.getItem('cipher-app-agents');
-    const defaultUsers = ['A', 'L', 'I', 'J', 'F'];
+    const defaultUsers = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
     
     if (saved) {
       try {

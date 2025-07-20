@@ -214,6 +214,8 @@
     --primary-fg: oklch(0.98 0.01 20);
     --secondary: oklch(0.95 0.02 280);
     --secondary-fg: oklch(0.2 0.05 280);
+    --overlay: oklch(0.98 0.01 280);
+    --overlay-fg: oklch(0.2 0.05 280);
     --accent: oklch(0.8 0.25 140);
     --accent-fg: oklch(0.15 0.08 140);
     --muted: oklch(0.92 0.01 280);

@@ -110,31 +110,37 @@ export async function getCipherResultDirect(page: Page): Promise<string> {
   const resultElement = page.locator('[data-testid="cipher-result"]');
   await expect(resultElement).toBeVisible({ timeout: 10000 });
   
-  // Wait for the result to be complete (stable for at least 2 checks)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const previousResult = '';
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const stableCount = 0;
+  // In test mode, animations should be ultra-fast, so wait a bit longer for completion
+  // and use a simpler stability check
+  await page.waitForTimeout(1500); // Give 1.5 seconds for ultra-fast animations to complete
   
-  await page.waitForFunction((selector) => {
-    const element = document.querySelector(selector);
-    if (!element) return false;
-    const text = element.textContent?.trim() || '';
-    
-    // Wait for meaningful content that doesn't look like it's still animating
-    if (text.length === 0) return false;
-    if (text.includes('...') || text.includes('loading')) return false;
-    
-    // Check for stability by comparing with previous result
-    if (text === window._previousResult) {
-      window._stableCount = (window._stableCount || 0) + 1;
-      return window._stableCount >= 3;
-    } else {
-      window._previousResult = text;
-      window._stableCount = 1;
-      return false;
+  // Wait for text content to be present and have meaningful content
+  await page.waitForFunction(`
+    () => {
+      const element = document.querySelector('[data-testid="cipher-result"]');
+      if (!element) return false;
+      const text = element.textContent?.trim() || '';
+      
+      // Must have content and not be animating indicators
+      if (text.length === 0) return false;
+      if (text.includes('...') || text.includes('loading')) return false;
+      
+      // For test mode stability, just check that we have non-empty, meaningful content
+      // and that it's been stable for a short time
+      if (!window._testStableCheck) {
+        window._testStableCheck = { lastText: '', stableCount: 0 };
+      }
+      
+      if (text === window._testStableCheck.lastText) {
+        window._testStableCheck.stableCount++;
+        return window._testStableCheck.stableCount >= 2; // Just 2 checks for faster tests
+      } else {
+        window._testStableCheck.lastText = text;
+        window._testStableCheck.stableCount = 1;
+        return false;
+      }
     }
-  }, '[data-testid="cipher-result"]', { timeout: 10000 });
+  `, { timeout: 8000 });
   
   const result = await resultElement.textContent();
   return result?.trim() || '';

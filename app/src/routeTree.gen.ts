@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ConfigRouteImport } from './routes/config'
+import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CiphersVigenereRouteImport } from './routes/ciphers/vigenere'
 import { Route as CiphersRailfenceRouteImport } from './routes/ciphers/railfence'
@@ -22,6 +23,11 @@ import { Route as CiphersAtbashRouteImport } from './routes/ciphers/atbash'
 const ConfigRoute = ConfigRouteImport.update({
   id: '/config',
   path: '/config',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AchievementsRoute = AchievementsRouteImport.update({
+  id: '/achievements',
+  path: '/achievements',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -67,6 +73,7 @@ const CiphersAtbashRoute = CiphersAtbashRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/achievements': typeof AchievementsRoute
   '/config': typeof ConfigRoute
   '/ciphers/atbash': typeof CiphersAtbashRoute
   '/ciphers/caesar': typeof CiphersCaesarRoute
@@ -78,6 +85,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/achievements': typeof AchievementsRoute
   '/config': typeof ConfigRoute
   '/ciphers/atbash': typeof CiphersAtbashRoute
   '/ciphers/caesar': typeof CiphersCaesarRoute
@@ -90,6 +98,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/achievements': typeof AchievementsRoute
   '/config': typeof ConfigRoute
   '/ciphers/atbash': typeof CiphersAtbashRoute
   '/ciphers/caesar': typeof CiphersCaesarRoute
@@ -103,6 +112,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/achievements'
     | '/config'
     | '/ciphers/atbash'
     | '/ciphers/caesar'
@@ -114,6 +124,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/achievements'
     | '/config'
     | '/ciphers/atbash'
     | '/ciphers/caesar'
@@ -125,6 +136,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/achievements'
     | '/config'
     | '/ciphers/atbash'
     | '/ciphers/caesar'
@@ -137,6 +149,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AchievementsRoute: typeof AchievementsRoute
   ConfigRoute: typeof ConfigRoute
   CiphersAtbashRoute: typeof CiphersAtbashRoute
   CiphersCaesarRoute: typeof CiphersCaesarRoute
@@ -154,6 +167,13 @@ declare module '@tanstack/react-router' {
       path: '/config'
       fullPath: '/config'
       preLoaderRoute: typeof ConfigRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/achievements': {
+      id: '/achievements'
+      path: '/achievements'
+      fullPath: '/achievements'
+      preLoaderRoute: typeof AchievementsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -217,6 +237,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AchievementsRoute: AchievementsRoute,
   ConfigRoute: ConfigRoute,
   CiphersAtbashRoute: CiphersAtbashRoute,
   CiphersCaesarRoute: CiphersCaesarRoute,

@@ -140,7 +140,7 @@ export function Achievements({ children }: AchievementsProps) {
       <Modal.Trigger>
         {children}
       </Modal.Trigger>
-      <Modal.Content size="lg">
+      <Modal.Content size="lg" isBlurred={true}>
         <Modal.Header>
           <Modal.Title className="flex items-center gap-2">
             🏆 Your Achievements

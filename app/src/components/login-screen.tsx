@@ -3,13 +3,34 @@ import { useUser } from "@/context/use-user";
 import { UserInitial } from "@/context/user-context-types";
 import { useNavigate } from "@tanstack/react-router";
 
-// Define the default users
+// Define the default users - all 26 letters of the alphabet
 const DEFAULT_USERS: { initial: UserInitial; color: string }[] = [
-  { initial: "A", color: "bg-[var(--user-a)]" },
-  { initial: "L", color: "bg-[var(--user-l)]" },
-  { initial: "I", color: "bg-[var(--user-i)]" },
-  { initial: "J", color: "bg-[var(--user-j)]" },
-  { initial: "F", color: "bg-[var(--user-f)]" },
+  { initial: "A", color: "bg-[var(--user-color-red)]" },
+  { initial: "B", color: "bg-[var(--user-color-blue)]" },
+  { initial: "C", color: "bg-[var(--user-color-green)]" },
+  { initial: "D", color: "bg-[var(--user-color-purple)]" },
+  { initial: "E", color: "bg-[var(--user-color-yellow)]" },
+  { initial: "F", color: "bg-[var(--user-color-orange)]" },
+  { initial: "G", color: "bg-[var(--user-color-pink)]" },
+  { initial: "H", color: "bg-[var(--user-color-cyan)]" },
+  { initial: "I", color: "bg-[var(--user-color-lime)]" },
+  { initial: "J", color: "bg-[var(--user-color-indigo)]" },
+  { initial: "K", color: "bg-[var(--user-color-gray)]" },
+  { initial: "L", color: "bg-[var(--user-color-red)]" },
+  { initial: "M", color: "bg-[var(--user-color-blue)]" },
+  { initial: "N", color: "bg-[var(--user-color-green)]" },
+  { initial: "O", color: "bg-[var(--user-color-purple)]" },
+  { initial: "P", color: "bg-[var(--user-color-yellow)]" },
+  { initial: "Q", color: "bg-[var(--user-color-orange)]" },
+  { initial: "R", color: "bg-[var(--user-color-pink)]" },
+  { initial: "S", color: "bg-[var(--user-color-cyan)]" },
+  { initial: "T", color: "bg-[var(--user-color-lime)]" },
+  { initial: "U", color: "bg-[var(--user-color-indigo)]" },
+  { initial: "V", color: "bg-[var(--user-color-gray)]" },
+  { initial: "W", color: "bg-[var(--user-color-red)]" },
+  { initial: "X", color: "bg-[var(--user-color-blue)]" },
+  { initial: "Y", color: "bg-[var(--user-color-green)]" },
+  { initial: "Z", color: "bg-[var(--user-color-purple)]" },
 ];
 
 export function LoginScreen() {

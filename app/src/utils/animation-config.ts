@@ -34,10 +34,10 @@ function getAnimationConfig() {
     }
   }
   
-  // Auto-detect test environment by port (Playwright typically uses 5174)
+  // Auto-detect test environment by port (Playwright typically uses 5173)
   if (typeof window !== 'undefined' && 
       window.location.hostname === 'localhost' && 
-      window.location.port === '5174') {
+      (window.location.port === '5173' || window.location.port === '5174')) {
     isTestMode = true;
     speedFactor = 0.1; // 10x faster
     return { isTestMode, speedFactor };

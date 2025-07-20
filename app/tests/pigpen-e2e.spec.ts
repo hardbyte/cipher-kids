@@ -5,7 +5,7 @@ import { fillMessage, clickCipherAction, getCipherResultDirect } from './test-he
 authTest.describe('Pigpen Cipher End-to-End Testing', () => {
   authTest.beforeEach(async ({ authenticatedPage }) => {
     await authenticatedPage.goto('/ciphers/pigpen');
-    await expect(authenticatedPage.getByRole('heading', { name: 'Pigpen Cipher' }).nth(1)).toBeVisible();
+    await expect(authenticatedPage.getByRole('heading', { name: 'Pigpen Cipher' })).toBeVisible();
   });
 
   authTest.describe('Encrypt Mode', () => {

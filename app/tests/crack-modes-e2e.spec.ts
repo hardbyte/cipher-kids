@@ -5,7 +5,7 @@ authTest.describe('Crack Mode E2E Testing', () => {
   authTest.describe('Keyword Cipher Crack Mode', () => {
     authTest.beforeEach(async ({ authenticatedPage }) => {
       await authenticatedPage.goto('/ciphers/keyword');
-      await expect(authenticatedPage.getByRole('heading', { name: 'Keyword Cipher' }).nth(1)).toBeVisible();
+      await expect(authenticatedPage.getByRole('heading', { name: 'Keyword Cipher', exact: true }).first()).toBeVisible();
       
       // Switch to crack mode
       await authenticatedPage.getByRole('button', { name: 'Crack' }).click();
@@ -83,7 +83,7 @@ authTest.describe('Crack Mode E2E Testing', () => {
   authTest.describe('Vigenère Cipher Crack Mode', () => {
     authTest.beforeEach(async ({ authenticatedPage }) => {
       await authenticatedPage.goto('/ciphers/vigenere');
-      await expect(authenticatedPage.getByRole('heading', { name: 'Vigenère Cipher' }).nth(1)).toBeVisible();
+      await expect(authenticatedPage.getByRole('heading', { name: 'Vigenère Cipher', exact: true }).first()).toBeVisible();
       
       // Switch to crack mode (use the mode toggle button, not the "Learn How to Crack It" button)
       await authenticatedPage.getByRole('button', { name: 'detective Crack' }).click();

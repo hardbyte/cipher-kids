@@ -52,7 +52,9 @@ function AuthenticatedRoute() {
       <MatrixBackground />
       <EmojiBackground />
       <header className="border-b border-border p-2 px-3 md:p-4 md:px-6 flex justify-between items-center bg-navbar text-navbar-fg">
-        <div className="text-xl md:text-2xl font-bold text-primary">Cipher Kids</div>
+        <Link to="/" className="text-xl md:text-2xl font-bold text-primary hover:text-primary/80 transition-colors">
+          Cipher Kids
+        </Link>
         <div className="flex items-center gap-2 md:gap-3">
           <ThemeSwitcher appearance="outline" showDropdown={true} />
           {isAuthenticated && <UserProfile />}

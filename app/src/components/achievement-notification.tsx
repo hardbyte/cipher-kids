@@ -49,7 +49,7 @@ export function AchievementNotification({ achievements: achievementIds, onClose 
         exit={{ opacity: 0, y: -100, scale: 0.8 }}
         className="fixed top-4 right-4 z-50"
       >
-        <div className="bg-success text-success-fg p-4 rounded-lg shadow-lg border border-success/30 max-w-sm">
+        <div className="bg-success/90 backdrop-blur-md text-success-fg p-4 rounded-lg shadow-xl border border-success/30 max-w-sm">
           <div className="flex items-center gap-3">
             <motion.div
               initial={{ rotate: 0 }}
