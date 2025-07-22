@@ -44,7 +44,7 @@ test.describe('Animation Timing Verification', () => {
 
   test('should use ultra-fast speed in test helper', async ({ page }) => {
     // Use the test helper navigation which should add animSpeed=0.001
-    const testUrl = new URL('/', 'http://localhost:5174');
+    const testUrl = new URL('/', 'http://localhost:5173');
     testUrl.searchParams.set('animSpeed', '0.001');
 
     await page.goto(testUrl.toString());

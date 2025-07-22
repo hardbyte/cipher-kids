@@ -15,9 +15,9 @@ test.describe('User Personalization', () => {
   test('user profile dropdown has settings option', async ({ authenticatedPage }) => {
     await navigateWithAuth(authenticatedPage, '/');
     
-    // Find and hover over user profile
+    // Find and click user profile to open dropdown
     const userProfile = authenticatedPage.locator('[class*="bg-[var(--user"]').first();
-    await userProfile.hover();
+    await userProfile.click();
     
     // Settings button should appear
     await expect(authenticatedPage.getByText('⚙️ Settings')).toBeVisible();
@@ -29,7 +29,7 @@ test.describe('User Personalization', () => {
     
     // Open user profile dropdown
     const userProfile = authenticatedPage.locator('[class*="bg-[var(--user"]').first();
-    await userProfile.hover();
+    await userProfile.click();
     
     // Click settings
     await authenticatedPage.getByText('⚙️ Settings').click();
@@ -46,7 +46,7 @@ test.describe('User Personalization', () => {
     
     // Open settings
     const userProfile = authenticatedPage.locator('[class*="bg-[var(--user"]').first();
-    await userProfile.hover();
+    await userProfile.click();
     await authenticatedPage.getByText('⚙️ Settings').click();
     
     // Change display name
@@ -72,7 +72,7 @@ test.describe('User Personalization', () => {
     
     // Re-open profile to verify name changed
     const userProfileAfterReload = authenticatedPage.locator('[class*="bg-[var(--user"]').first();
-    await userProfileAfterReload.hover();
+    await userProfileAfterReload.click();
     
     // The display name should be visible in the dropdown
     const profileDropdown = authenticatedPage.locator('.absolute.top-full');
@@ -88,7 +88,7 @@ test.describe('User Personalization', () => {
     
     // Open settings
     const userProfile = authenticatedPage.locator('[class*="bg-[var(--user"]').first();
-    await userProfile.hover();
+    await userProfile.click();
     await authenticatedPage.getByText('⚙️ Settings').click();
     
     // Select a different color (blue)
@@ -99,7 +99,7 @@ test.describe('User Personalization', () => {
     await authenticatedPage.getByRole('button', { name: /done/i }).click();
     
     // Verify the user icon color changed
-    await userProfile.hover();
+    await userProfile.click();
     const userIcon = authenticatedPage.locator('[class*="bg-[var(--user-color-blue)"]').first();
     await expect(userIcon).toBeVisible();
   });
@@ -109,7 +109,7 @@ test.describe('User Personalization', () => {
     
     // Open settings
     const userProfile = authenticatedPage.locator('[class*="bg-[var(--user"]').first();
-    await userProfile.hover();
+    await userProfile.click();
     await authenticatedPage.getByText('⚙️ Settings').click();
     
     // Select light theme
@@ -131,7 +131,7 @@ test.describe('User Personalization', () => {
     
     // Change theme through settings
     const userProfile = authenticatedPage.locator('[class*="bg-[var(--user"]').first();
-    await userProfile.hover();
+    await userProfile.click();
     await authenticatedPage.getByText('⚙️ Settings').click();
     await authenticatedPage.getByRole('button', { name: /light/i }).first().click();
     await authenticatedPage.getByRole('button', { name: /done/i }).click();
@@ -145,7 +145,7 @@ test.describe('User Personalization', () => {
     
     // Settings should show light theme selected
     const cipherUserProfile = authenticatedPage.locator('[class*="bg-[var(--user"]').first();
-    await cipherUserProfile.hover();
+    await cipherUserProfile.click();
     await authenticatedPage.getByText('⚙️ Settings').click();
     
     // Light theme button should be selected (has primary styling)
@@ -158,7 +158,7 @@ test.describe('User Personalization', () => {
     
     // Open settings and change color
     const userProfile = authenticatedPage.locator('[class*="bg-[var(--user"]').first();
-    await userProfile.hover();
+    await userProfile.click();
     await authenticatedPage.getByText('⚙️ Settings').click();
     
     // Select red color
@@ -172,7 +172,7 @@ test.describe('User Personalization', () => {
     await authenticatedPage.getByRole('button', { name: /done/i }).click();
     
     // Should be back to original default color
-    await userProfile.hover();
+    await userProfile.click();
     const defaultIcon = authenticatedPage.locator('[class*="bg-[var(--user-a)"]').first();
     await expect(defaultIcon).toBeVisible();
   });
