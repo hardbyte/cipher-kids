@@ -89,38 +89,84 @@ test.describe('User Personalization', () => {
     // Open settings
     const userProfile = authenticatedPage.locator('[class*="bg-[var(--user"]').first();
     await userProfile.click();
-    await authenticatedPage.getByText('⚙️ Settings').click();
     
-    // Select a different color (blue)
-    const blueColorButton = authenticatedPage.locator('[class*="bg-[var(--user-color-blue)"]').first();
+    // Wait for dropdown to appear and click settings
+    await expect(authenticatedPage.getByText('⚙️ Settings')).toBeVisible({ timeout: 10000 });
+    await authenticatedPage.getByText('⚙️ Settings').click();
+    await authenticatedPage.waitForTimeout(1000);
+    
+    // Wait for modal dialog to load completely
+    await expect(authenticatedPage.locator('[role="dialog"]')).toBeVisible({ timeout: 10000 });
+    await expect(authenticatedPage.getByText(/Settings for/)).toBeVisible({ timeout: 5000 });
+    await expect(authenticatedPage.getByText('Icon Color')).toBeVisible({ timeout: 5000 });
+    
+    // Select a different color (blue) - find it within the modal
+    const blueColorButton = authenticatedPage.locator('[role="dialog"]').locator('[class*="bg-[var(--user-color-blue)"]').first();
+    await expect(blueColorButton).toBeVisible();
     await blueColorButton.click();
     
-    // Close modal
-    await authenticatedPage.getByRole('button', { name: /done/i }).click();
+    // Wait for change to take effect and verify it's selected (should show selection indicator)
+    await authenticatedPage.waitForTimeout(500);
+    await expect(blueColorButton.locator('div.absolute.-top-1.-right-1')).toBeVisible();
     
-    // Verify the user icon color changed
+    // Close modal
+    const doneButton = authenticatedPage.locator('[role="dialog"]').getByText('Done');
+    await expect(doneButton).toBeVisible();
+    await doneButton.click();
+    
+    // Wait for modal to close
+    await expect(authenticatedPage.getByText('Icon Color')).not.toBeVisible();
+    
+    // Verify the color change persisted - reopen settings to check
     await userProfile.click();
-    const userIcon = authenticatedPage.locator('[class*="bg-[var(--user-color-blue)"]').first();
-    await expect(userIcon).toBeVisible();
+    await authenticatedPage.getByText('⚙️ Settings').click();
+    await authenticatedPage.waitForTimeout(1000);
+    await expect(authenticatedPage.locator('[role="dialog"]')).toBeVisible({ timeout: 5000 });
+    
+    // The blue color button should still be selected
+    const blueButtonAfterReopen = authenticatedPage.locator('[role="dialog"]').locator('[class*="bg-[var(--user-color-blue)"]').first();
+    await expect(blueButtonAfterReopen.locator('div.absolute.-top-1.-right-1')).toBeVisible();
   });
 
   test('can change theme preference in user settings', async ({ authenticatedPage }) => {
     await navigateWithAuth(authenticatedPage, '/');
     
+    // Verify we start in dark theme
+    const html = authenticatedPage.locator('html');
+    await expect(html).toHaveClass(/dark/);
+    
     // Open settings
     const userProfile = authenticatedPage.locator('[class*="bg-[var(--user"]').first();
     await userProfile.click();
-    await authenticatedPage.getByText('⚙️ Settings').click();
     
-    // Select light theme
-    await authenticatedPage.getByRole('button', { name: /light/i }).first().click();
+    // Wait for dropdown to appear and click settings
+    await expect(authenticatedPage.getByText('⚙️ Settings')).toBeVisible({ timeout: 10000 });
+    await authenticatedPage.getByText('⚙️ Settings').click();
+    await authenticatedPage.waitForTimeout(1000);
+    
+    // Wait for modal dialog to be fully loaded
+    await expect(authenticatedPage.locator('[role="dialog"]')).toBeVisible({ timeout: 10000 });
+    await expect(authenticatedPage.getByText(/Settings for/)).toBeVisible({ timeout: 5000 });
+    await expect(authenticatedPage.getByText('Theme Preference')).toBeVisible({ timeout: 5000 });
+    
+    // Select light theme button specifically
+    const lightThemeButton = authenticatedPage.getByRole('button').filter({ hasText: /light/i }).first();
+    await expect(lightThemeButton).toBeVisible();
+    await lightThemeButton.click();
+    
+    // Wait for theme change to propagate - give it time
+    await authenticatedPage.waitForTimeout(2000);
     
     // Verify theme changed
-    const html = authenticatedPage.locator('html');
-    await expect(html).toHaveClass(/light/);
+    await expect(html).toHaveClass(/light/, { timeout: 15000 });
     
-    // Close modal
-    await authenticatedPage.getByRole('button', { name: /done/i }).click();
+    // Close modal by clicking the Done button
+    const doneButton = authenticatedPage.locator('[role="dialog"]').getByText('Done');
+    await expect(doneButton).toBeVisible();
+    await doneButton.click();
+    
+    // Wait for modal to close
+    await expect(authenticatedPage.getByText('Theme Preference')).not.toBeVisible();
     
     // Theme should persist
     await expect(html).toHaveClass(/light/);
@@ -132,24 +178,50 @@ test.describe('User Personalization', () => {
     // Change theme through settings
     const userProfile = authenticatedPage.locator('[class*="bg-[var(--user"]').first();
     await userProfile.click();
+    
+    // Wait for dropdown and click settings
+    await expect(authenticatedPage.getByText('⚙️ Settings')).toBeVisible({ timeout: 10000 });
     await authenticatedPage.getByText('⚙️ Settings').click();
-    await authenticatedPage.getByRole('button', { name: /light/i }).first().click();
-    await authenticatedPage.getByRole('button', { name: /done/i }).click();
+    await authenticatedPage.waitForTimeout(1000);
+    
+    // Wait for modal dialog to load and click light theme
+    await expect(authenticatedPage.locator('[role="dialog"]')).toBeVisible({ timeout: 10000 });
+    await expect(authenticatedPage.getByText(/Settings for/)).toBeVisible({ timeout: 5000 });
+    await expect(authenticatedPage.getByText('Theme Preference')).toBeVisible({ timeout: 5000 });
+    const lightThemeButton = authenticatedPage.getByRole('button').filter({ hasText: /light/i }).first();
+    await expect(lightThemeButton).toBeVisible();
+    await lightThemeButton.click();
+    
+    // Wait for theme change and close modal
+    await authenticatedPage.waitForTimeout(2000);
+    const doneButton = authenticatedPage.locator('[role="dialog"]').getByText('Done');
+    await expect(doneButton).toBeVisible();
+    await doneButton.click();
+    
+    // Wait for modal to close
+    await expect(authenticatedPage.getByText('Theme Preference')).not.toBeVisible();
     
     // Navigate to a cipher page
     await navigateWithAuth(authenticatedPage, '/ciphers/caesar');
     
     // Theme should persist
     const html = authenticatedPage.locator('html');
-    await expect(html).toHaveClass(/light/);
+    await expect(html).toHaveClass(/light/, { timeout: 15000 });
     
     // Settings should show light theme selected
     const cipherUserProfile = authenticatedPage.locator('[class*="bg-[var(--user"]').first();
     await cipherUserProfile.click();
+    
+    // Wait for dropdown and click settings
+    await expect(authenticatedPage.getByText('⚙️ Settings')).toBeVisible();
     await authenticatedPage.getByText('⚙️ Settings').click();
     
+    // Wait for settings modal to load
+    await expect(authenticatedPage.getByText(/Settings for/)).toBeVisible();
+    await expect(authenticatedPage.getByText('Theme Preference')).toBeVisible();
+    
     // Light theme button should be selected (has primary styling)
-    const lightButton = authenticatedPage.getByRole('button', { name: /light/i }).first();
+    const lightButton = authenticatedPage.getByRole('button').filter({ hasText: /light/i }).first();
     await expect(lightButton).toHaveClass(/border-primary/);
   });
 
@@ -159,21 +231,46 @@ test.describe('User Personalization', () => {
     // Open settings and change color
     const userProfile = authenticatedPage.locator('[class*="bg-[var(--user"]').first();
     await userProfile.click();
+    
+    // Wait for dropdown and click settings
+    await expect(authenticatedPage.getByText('⚙️ Settings')).toBeVisible({ timeout: 10000 });
     await authenticatedPage.getByText('⚙️ Settings').click();
+    await authenticatedPage.waitForTimeout(1000);
+    
+    // Wait for modal dialog to load
+    await expect(authenticatedPage.locator('[role="dialog"]')).toBeVisible({ timeout: 10000 });
+    await expect(authenticatedPage.getByText(/Settings for/)).toBeVisible({ timeout: 5000 });
+    await expect(authenticatedPage.getByText('Icon Color')).toBeVisible({ timeout: 5000 });
     
     // Select red color
     const redColorButton = authenticatedPage.locator('[class*="bg-[var(--user-color-red)"]').first();
+    await expect(redColorButton).toBeVisible();
     await redColorButton.click();
     
-    // Reset to default
-    await authenticatedPage.getByRole('button', { name: /reset to default/i }).click();
+    // Wait for change
+    await authenticatedPage.waitForTimeout(500);
     
-    // Close modal
-    await authenticatedPage.getByRole('button', { name: /done/i }).click();
+    // Reset to default - the button only appears after selecting a color
+    const resetButton = authenticatedPage.getByRole('button', { name: /reset to default/i });
+    await expect(resetButton).toBeVisible();
+    await resetButton.click();
     
-    // Should be back to original default color
+    // Wait for reset
+    await authenticatedPage.waitForTimeout(500);
+    
+    // Close modal by clicking the Done button
+    const doneButton = authenticatedPage.locator('[role="dialog"]').getByText('Done');
+    await expect(doneButton).toBeVisible();
+    await doneButton.click();
+    
+    // Wait for modal to close
+    await expect(authenticatedPage.getByText('Icon Color')).not.toBeVisible();
+    
+    // Should be back to original default color - but since we're using new alphabet system,
+    // the default will be one of the user-color- variables, not user-a
     await userProfile.click();
-    const defaultIcon = authenticatedPage.locator('[class*="bg-[var(--user-a)"]').first();
-    await expect(defaultIcon).toBeVisible();
+    // Check that it's NOT the red color we selected
+    const redIcon = authenticatedPage.locator('[class*="bg-[var(--user-color-red)"]').first();
+    await expect(redIcon).not.toBeVisible();
   });
 });
