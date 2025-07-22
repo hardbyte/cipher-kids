@@ -193,6 +193,35 @@ authTest.describe('Morse Code End-to-End Testing', () => {
       await expect(authenticatedPage.getByText('🧩 Example:')).toBeVisible();
     });
 
+    authTest('should display complete Morse code table with all letters and numbers', async ({ authenticatedPage }) => {
+      // Scroll to the educational content section
+      await authenticatedPage.getByText('📡 How It Works: Morse Code').scrollIntoViewIfNeeded();
+      
+      // Should show Letters section header
+      await expect(authenticatedPage.getByText('Letters').first()).toBeVisible();
+      
+      // Should show Numbers section header  
+      await expect(authenticatedPage.getByText('Numbers').first()).toBeVisible();
+      
+      // Verify the full table is displayed by checking letters within the Morse code table section
+      const morseTableSection = authenticatedPage.locator('.bg-bg.p-4.rounded.mb-3.border-2.border-dashed');
+      const visibleLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P'];
+      for (const letter of visibleLetters) {
+        await expect(morseTableSection.getByText(letter, { exact: true })).toBeVisible();
+      }
+      
+      // Should show special characters explanation
+      await expect(authenticatedPage.getByText('/ = word space')).toBeVisible();
+      
+      // Should NOT show the old "...and 18 more letters plus numbers!" text
+      await expect(authenticatedPage.getByText('...and 18 more letters plus numbers!')).not.toBeVisible();
+      
+      // Verify that we're showing significantly more than the original 8 letters
+      // by counting visible letters in the table
+      const letterElements = await authenticatedPage.locator('.bg-muted\\/10 .font-bold.text-accent').count();
+      expect(letterElements).toBeGreaterThan(20); // Should have 26 letters + 10 numbers = 36 total
+    });
+
     authTest('should provide try it yourself section', async ({ authenticatedPage }) => {
       // Should show try it yourself section
       await expect(authenticatedPage.getByText('🎮 Try It Yourself!')).toBeVisible();

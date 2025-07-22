@@ -397,17 +397,43 @@ function MorseCodePage() {
             Morse code turns letters into patterns of short beeps (dots) and long beeps (dashes):
           </p>
 
-          <div className="bg-bg p-3 rounded mb-3 border-2 border-dashed border-primary/30">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs font-mono">
-              {Object.entries(MORSE_CODE_MAPPING).slice(0, 8).map(([letter, morse]) => (
-                <div key={letter} className="text-center">
-                  <div className="font-bold text-accent">{letter}</div>
-                  <div className="text-primary">{morse}</div>
-                </div>
-              ))}
+          <div className="bg-bg p-4 rounded mb-3 border-2 border-dashed border-primary/30">
+            {/* Letters A-Z */}
+            <div className="mb-4">
+              <h5 className="text-sm font-semibold text-accent mb-2 text-center">Letters</h5>
+              <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 text-xs font-mono">
+                {Object.entries(MORSE_CODE_MAPPING)
+                  .filter(([letter]) => letter.match(/[A-Z]/))
+                  .map(([letter, morse]) => (
+                    <div key={letter} className="text-center p-1 bg-muted/10 rounded">
+                      <div className="font-bold text-accent">{letter}</div>
+                      <div className="text-primary text-xs">{morse}</div>
+                    </div>
+                  ))}
+              </div>
             </div>
-            <div className="text-center mt-2 text-xs text-muted-fg">
-              ...and 18 more letters plus numbers!
+
+            {/* Numbers 0-9 */}
+            <div className="mb-2">
+              <h5 className="text-sm font-semibold text-accent mb-2 text-center">Numbers</h5>
+              <div className="grid grid-cols-5 md:grid-cols-10 gap-2 text-xs font-mono">
+                {Object.entries(MORSE_CODE_MAPPING)
+                  .filter(([char]) => char.match(/[0-9]/))
+                  .map(([number, morse]) => (
+                    <div key={number} className="text-center p-1 bg-muted/10 rounded">
+                      <div className="font-bold text-accent">{number}</div>
+                      <div className="text-primary text-xs">{morse}</div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            {/* Special Characters */}
+            <div className="text-center mt-3 pt-2 border-t border-muted/30">
+              <div className="text-xs text-muted-fg">
+                <span className="font-semibold text-accent">Special:</span> 
+                <span className="font-mono mx-1 px-2 py-1 bg-muted/20 rounded">/ = word space</span>
+              </div>
             </div>
           </div>
         </div>
