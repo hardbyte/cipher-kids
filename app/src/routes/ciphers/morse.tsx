@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { CipherNav } from "@/components/cipher/CipherNav";
 import { CipherPageContentWrapper } from "@/components/cipher/CipherPageContentWrapper";
 import { CipherInputs } from "@/components/cipher/CipherInputs";
@@ -7,10 +7,37 @@ import { CipherResult } from "@/components/cipher/results/CipherResult";
 import { GeneralStepByStepAnimation, AnimationStep } from "@/components/cipher/shared/GeneralStepByStepAnimation";
 import { Button } from "@/components/ui/button";
 import { morseCode, MORSE_CODE_MAPPING } from "@/utils/ciphers";
-import { initializeAudio, playMorseCharacter, isAudioSupported } from "@/utils/morse-audio";
+import { initializeAudio, playMorseCharacter, playMorseString, isAudioSupported } from "@/utils/morse-audio";
 import { createFileRoute } from "@tanstack/react-router";
 import { useProgress } from "@/hooks/use-progress";
 import { AchievementNotification } from "@/components/achievement-notification";
+
+// Types for better type safety
+interface AudioSettings {
+  speed: number;
+  volume: number;
+  frequency: number;
+}
+
+interface AudioPreset {
+  name: string;
+  icon: string;
+  settings: AudioSettings;
+}
+
+// Constants
+const DEFAULT_AUDIO_SETTINGS: AudioSettings = {
+  speed: 1,
+  volume: 0.1,
+  frequency: 600
+};
+
+const AUDIO_PRESETS: AudioPreset[] = [
+  { name: "Classic Telegraph", icon: "📻", settings: { speed: 1, volume: 0.1, frequency: 600 } },
+  { name: "Ship Radio", icon: "🚢", settings: { speed: 0.7, volume: 0.15, frequency: 800 } },
+  { name: "Modern CW", icon: "⚡", settings: { speed: 1.5, volume: 0.08, frequency: 450 } },
+  { name: "Kid-Friendly", icon: "🧒", settings: { speed: 0.8, volume: 0.12, frequency: 700 } }
+];
 
 export const Route = createFileRoute("/ciphers/morse")({
   component: MorseCodePage,
@@ -23,29 +50,54 @@ function MorseCodePage() {
   const [message, setMessage] = useState<string>("");
   const [output, setOutput] = useState<string>("");
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
-  const [currentCharToHighlight, setCurrentCharToHighlight] = useState<
-    string | undefined
-  >(undefined);
+  const [currentCharToHighlight, setCurrentCharToHighlight] = useState<string | undefined>(undefined);
   const [showStepByStep, setShowStepByStep] = useState(false);
   const [animationSteps, setAnimationSteps] = useState<AnimationStep[]>([]);
   const [isStepAnimationPlaying, setIsStepAnimationPlaying] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [audioSettings, setAudioSettings] = useState<AudioSettings>(DEFAULT_AUDIO_SETTINGS);
+  const [showAudioControls, setShowAudioControls] = useState(false);
+  const [isPlayingFullMessage, setIsPlayingFullMessage] = useState(false);
+  const [currentPlayingChar, setCurrentPlayingChar] = useState<string | null>(null);
   
-  // Sample messages for kids to try
-  const sampleMessages = mode === "encode" ? [
-    "SOS", // The famous distress signal
-    "HELLO WORLD", // Classic programming greeting
-    "MORSE CODE IS FUN", // Educational
-    "QUICK BROWN FOX", // Contains many letters
-    "SECRET MESSAGE", // Feels spy-like
-  ] : [
-    "... --- ...", // SOS
-    ".... . .-.. .-.. --- / .-- --- .-. .-.. -..", // HELLO WORLD
-    "-- --- .-. ... . / -.-. --- -.. . / .. ... / ..-. ..- -.", // MORSE CODE IS FUN
-    "... . -.-. .-. . - / -- . ... ... .- --. .", // SECRET MESSAGE
-    "--.- ..- .. -.-. -.- / -... .-. --- .-- -. / ..-. --- -..-", // QUICK BROWN FOX
-  ];
+  // Memoize sample messages to avoid recreation on every render
+  const sampleMessages = useMemo(() => 
+    mode === "encode" ? [
+      "SOS", // The famous distress signal
+      "HELLO WORLD", // Classic programming greeting
+      "MORSE CODE IS FUN", // Educational
+      "QUICK BROWN FOX", // Contains many letters
+      "SECRET MESSAGE", // Feels spy-like
+    ] : [
+      "... --- ...", // SOS
+      ".... . .-.. .-.. --- / .-- --- .-. .-.. -..", // HELLO WORLD
+      "-- --- .-. ... . / -.-. --- -.. . / .. ... / ..-. ..- -.", // MORSE CODE IS FUN
+      "... . -.-. .-. . - / -- . ... ... .- --. .", // SECRET MESSAGE
+      "--.- ..- .. -.-. -.- / -... .-. --- .-- -. / ..-. --- -..-", // QUICK BROWN FOX
+    ], [mode]);
+
+  // Memoize reverse Morse mapping for decode operations
+  const reverseMorseMap = useMemo(() => 
+    Object.fromEntries(
+      Object.entries(MORSE_CODE_MAPPING).map(([k, v]) => [v, k]).filter(([k]) => k !== '/')
+    ), []);
+
+  // Memoize organized character groups for the interactive table
+  const characterGroups = useMemo(() => ({
+    letters: Object.entries(MORSE_CODE_MAPPING).filter(([char]) => char.match(/[A-Z]/)),
+    numbers: Object.entries(MORSE_CODE_MAPPING).filter(([char]) => char.match(/[0-9]/)),
+    special: Object.entries(MORSE_CODE_MAPPING).filter(([char]) => !char.match(/[A-Z0-9]/))
+  }), []);
+
+  // Helper function to create audio settings for playback
+  const createAudioPlaybackSettings = useCallback(() => ({
+    volume: audioSettings.volume,
+    frequency: audioSettings.frequency,
+    dotDuration: Math.floor(100 / audioSettings.speed),
+    dashDuration: Math.floor(300 / audioSettings.speed),
+    pauseDuration: Math.floor(100 / audioSettings.speed),
+  }), [audioSettings]);
 
   // Generate animation steps for the GeneralStepByStepAnimation
   const generateAnimationSteps = useCallback(() => {
@@ -74,9 +126,6 @@ function MorseCodePage() {
     } else {
       // For decode mode, split by spaces first
       const morseChars = message.split(' ').filter(char => char.length > 0);
-      const reverseMorseMap = Object.fromEntries(
-        Object.entries(MORSE_CODE_MAPPING).map(([k, v]) => [v, k]).filter(([k]) => k !== '/')
-      );
       
       morseChars.forEach((morseChar, i) => {
         if (morseChar === '/') {
@@ -99,7 +148,7 @@ function MorseCodePage() {
     }
 
     setAnimationSteps(steps);
-  }, [message, mode]);
+  }, [message, mode, reverseMorseMap]);
 
   // Handle mode changes - auto-populate input with previous result for better UX
   useEffect(() => {
@@ -127,21 +176,38 @@ function MorseCodePage() {
     setAudioEnabled(isAudioSupported());
   }, []);
 
-  const playCharacterAudio = async (char: string) => {
+  const playCharacterAudio = useCallback(async (char: string) => {
     if (!audioEnabled || isPlayingAudio) return;
     
     const morsePattern = MORSE_CODE_MAPPING[char];
     if (morsePattern && morsePattern !== '/') {
       try {
         setIsPlayingAudio(true);
-        await playMorseCharacter(morsePattern);
+        setCurrentPlayingChar(char);
+        const settings = createAudioPlaybackSettings();
+        await playMorseCharacter(morsePattern, settings);
       } catch (error) {
         console.warn('Audio playback failed:', error);
       } finally {
         setIsPlayingAudio(false);
+        setCurrentPlayingChar(null);
       }
     }
-  };
+  }, [audioEnabled, isPlayingAudio, createAudioPlaybackSettings]);
+
+  const playFullMessage = useCallback(async () => {
+    if (!audioEnabled || isPlayingFullMessage || !output) return;
+    
+    try {
+      setIsPlayingFullMessage(true);
+      const settings = createAudioPlaybackSettings();
+      await playMorseString(output, settings);
+    } catch (error) {
+      console.warn('Full message playback failed:', error);
+    } finally {
+      setIsPlayingFullMessage(false);
+    }
+  }, [audioEnabled, isPlayingFullMessage, output, createAudioPlaybackSettings]);
 
   const handleAction = async () => {
     if (isAnimating) return;
@@ -174,9 +240,6 @@ function MorseCodePage() {
     } else {
       // Decode mode - animate the actual decoding process (fixed from original)
       const morseChars = message.split(' ').filter(char => char.length > 0);
-      const reverseMorseMap = Object.fromEntries(
-        Object.entries(MORSE_CODE_MAPPING).map(([k, v]) => [v, k]).filter(([k]) => k !== '/')
-      );
       
       let currentAnimatedOutput = "";
       
@@ -352,6 +415,204 @@ function MorseCodePage() {
         visualizer={<MorseCodeVisualizer />}
       />
 
+      {/* Enhanced Audio Controls Panel */}
+      {audioEnabled && output && (
+        <div className="bg-gradient-to-r from-warning/10 to-accent/10 rounded-lg p-6 border-2 border-warning/30">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-semibold text-warning flex items-center gap-2">
+              📻 Telegraph Station
+            </h3>
+            <Button
+              intent="secondary"
+              size="small"
+              onPress={() => setShowAudioControls(!showAudioControls)}
+            >
+              ⚙️ Audio Settings
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <Button
+              intent="primary"
+              size="large"
+              onPress={() => {
+                initializeAudio();
+                playFullMessage();
+              }}
+              isDisabled={isPlayingFullMessage || !output}
+              className="w-full"
+            >
+              {isPlayingFullMessage ? "📡 Transmitting..." : "📡 Play Full Message"}
+            </Button>
+            
+            <div className="bg-bg/50 p-3 rounded-lg border border-muted/30">
+              <div className="text-xs text-muted-fg mb-1">Output Preview:</div>
+              <div className="font-mono text-sm text-primary max-h-20 overflow-y-auto">
+                {output}
+              </div>
+            </div>
+          </div>
+
+          {/* Audio Settings Panel */}
+          {showAudioControls && (
+            <div className="bg-bg/30 p-4 rounded-lg border border-muted/30 space-y-4">
+              <h4 className="font-semibold text-accent">🎛️ Telegraph Settings</h4>
+              
+              {/* Preset Profiles */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Quick Presets</label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {AUDIO_PRESETS.map((preset) => (
+                    <Button
+                      key={preset.name}
+                      intent="secondary"
+                      size="small"
+                      onPress={() => setAudioSettings(preset.settings)}
+                      className="text-xs"
+                    >
+                      {preset.icon} {preset.name}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Speed</label>
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="3"
+                    step="0.1"
+                    value={audioSettings.speed}
+                    onChange={(e) => setAudioSettings(prev => ({ ...prev, speed: parseFloat(e.target.value) }))}
+                    className="w-full"
+                  />
+                  <div className="text-xs text-muted-fg mt-1">{audioSettings.speed}x</div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-2">Volume</label>
+                  <input
+                    type="range"
+                    min="0.05"
+                    max="0.3"
+                    step="0.01"
+                    value={audioSettings.volume}
+                    onChange={(e) => setAudioSettings(prev => ({ ...prev, volume: parseFloat(e.target.value) }))}
+                    className="w-full"
+                  />
+                  <div className="text-xs text-muted-fg mt-1">{Math.round(audioSettings.volume * 100)}%</div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-2">Pitch</label>
+                  <input
+                    type="range"
+                    min="400"
+                    max="1000"
+                    step="50"
+                    value={audioSettings.frequency}
+                    onChange={(e) => setAudioSettings(prev => ({ ...prev, frequency: parseInt(e.target.value) }))}
+                    className="w-full"
+                  />
+                  <div className="text-xs text-muted-fg mt-1">{audioSettings.frequency}Hz</div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Practice Mode */}
+      {audioEnabled && (
+        <div className="bg-gradient-to-r from-info/10 to-warning/10 rounded-lg p-6 border-2 border-info/30">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-semibold text-info flex items-center gap-2">
+              🥁 Morse Code Practice Station
+            </h3>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div className="bg-bg/50 p-4 rounded-lg border border-muted/30">
+                <h4 className="font-semibold text-info mb-2">🎯 Tap Practice</h4>
+                <p className="text-sm text-muted-fg mb-3">
+                  Practice the rhythm of Morse code! Tap the buttons to hear dots and dashes:
+                </p>
+                <div className="flex gap-2 justify-center">
+                  <Button
+                    intent="warning"
+                    size="large"
+                    onPress={async () => {
+                      if (!isPlayingAudio) {
+                        initializeAudio();
+                        setIsPlayingAudio(true);
+                        try {
+                          const settings = createAudioPlaybackSettings();
+                          await playMorseCharacter('.', settings);
+                        } finally {
+                          setIsPlayingAudio(false);
+                        }
+                      }
+                    }}
+                    isDisabled={isPlayingAudio}
+                    className="flex-1"
+                  >
+                    • DOT
+                  </Button>
+                  <Button
+                    intent="danger"
+                    size="large"
+                    onPress={async () => {
+                      if (!isPlayingAudio) {
+                        initializeAudio();
+                        setIsPlayingAudio(true);
+                        try {
+                          const settings = createAudioPlaybackSettings();
+                          await playMorseCharacter('-', settings);
+                        } finally {
+                          setIsPlayingAudio(false);
+                        }
+                      }
+                    }}
+                    isDisabled={isPlayingAudio}
+                    className="flex-1"
+                  >
+                    ▬ DASH
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-bg/50 p-4 rounded-lg border border-muted/30">
+                <h4 className="font-semibold text-info mb-2">📚 Quick Reference</h4>
+                <div className="text-xs space-y-1 font-mono">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div><span className="text-warning">SOS:</span> ••• ▬▬▬ •••</div>
+                    <div><span className="text-warning">HELP:</span> •••• • •▬•• ▬••</div>
+                    <div><span className="text-warning">HELLO:</span> •••• • •▬•• •▬•• ▬▬▬</div>
+                    <div><span className="text-warning">MORSE:</span> ▬▬ ▬▬▬ •▬• ••• •</div>
+                  </div>
+                </div>
+                <div className="mt-3 text-xs text-muted-fg">
+                  💡 Try tapping out these common patterns!
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 text-center">
+            <div className="inline-block bg-info/20 px-4 py-2 rounded-lg border border-info/30">
+              <span className="text-info font-semibold text-sm">
+                🎵 Remember: Dots are quick taps, dashes are long holds!
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Step-by-Step Animation Section */}
       <div className="border-t pt-4 border-muted/30">
         <div className="flex justify-between items-center mb-4">
@@ -398,42 +659,110 @@ function MorseCodePage() {
           </p>
 
           <div className="bg-bg p-4 rounded mb-3 border-2 border-dashed border-primary/30">
-            {/* Letters A-Z */}
+            {/* Interactive Letters A-Z */}
             <div className="mb-4">
-              <h5 className="text-sm font-semibold text-accent mb-2 text-center">Letters</h5>
+              <h5 className="text-sm font-semibold text-accent mb-2 text-center">📻 Interactive Letters (Click to Hear!)</h5>
               <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 text-xs font-mono">
-                {Object.entries(MORSE_CODE_MAPPING)
-                  .filter(([letter]) => letter.match(/[A-Z]/))
-                  .map(([letter, morse]) => (
-                    <div key={letter} className="text-center p-1 bg-muted/10 rounded">
+                {characterGroups.letters.map(([letter, morse]) => (
+                    <button
+                      key={letter}
+                      onClick={() => {
+                        if (audioEnabled) {
+                          initializeAudio();
+                          playCharacterAudio(letter);
+                        }
+                      }}
+                      className={`text-center p-2 rounded transition-all duration-200 border ${
+                        currentPlayingChar === letter
+                          ? 'bg-warning/30 border-warning scale-110 animate-pulse'
+                          : audioEnabled
+                          ? 'bg-muted/10 border-muted/30 hover:bg-accent/20 hover:border-accent hover:scale-105 cursor-pointer'
+                          : 'bg-muted/5 border-muted/20 cursor-not-allowed opacity-50'
+                      }`}
+                      disabled={!audioEnabled || isPlayingAudio}
+                      title={audioEnabled ? `Click to hear ${letter} in Morse code` : 'Audio not available'}
+                    >
                       <div className="font-bold text-accent">{letter}</div>
                       <div className="text-primary text-xs">{morse}</div>
-                    </div>
+                      {audioEnabled && <div className="text-xs text-muted-fg mt-1">🔊</div>}
+                    </button>
                   ))}
               </div>
+              {!audioEnabled && (
+                <div className="text-center text-xs text-muted-fg mt-2 italic">
+                  Audio not available in this browser
+                </div>
+              )}
             </div>
 
-            {/* Numbers 0-9 */}
+            {/* Interactive Numbers 0-9 */}
             <div className="mb-2">
-              <h5 className="text-sm font-semibold text-accent mb-2 text-center">Numbers</h5>
+              <h5 className="text-sm font-semibold text-accent mb-2 text-center">📻 Interactive Numbers (Click to Hear!)</h5>
               <div className="grid grid-cols-5 md:grid-cols-10 gap-2 text-xs font-mono">
-                {Object.entries(MORSE_CODE_MAPPING)
-                  .filter(([char]) => char.match(/[0-9]/))
-                  .map(([number, morse]) => (
-                    <div key={number} className="text-center p-1 bg-muted/10 rounded">
+                {characterGroups.numbers.map(([number, morse]) => (
+                    <button
+                      key={number}
+                      onClick={() => {
+                        if (audioEnabled) {
+                          initializeAudio();
+                          playCharacterAudio(number);
+                        }
+                      }}
+                      className={`text-center p-2 rounded transition-all duration-200 border ${
+                        currentPlayingChar === number
+                          ? 'bg-warning/30 border-warning scale-110 animate-pulse'
+                          : audioEnabled
+                          ? 'bg-muted/10 border-muted/30 hover:bg-accent/20 hover:border-accent hover:scale-105 cursor-pointer'
+                          : 'bg-muted/5 border-muted/20 cursor-not-allowed opacity-50'
+                      }`}
+                      disabled={!audioEnabled || isPlayingAudio}
+                      title={audioEnabled ? `Click to hear ${number} in Morse code` : 'Audio not available'}
+                    >
                       <div className="font-bold text-accent">{number}</div>
                       <div className="text-primary text-xs">{morse}</div>
-                    </div>
+                      {audioEnabled && <div className="text-xs text-muted-fg mt-1">🔊</div>}
+                    </button>
                   ))}
               </div>
             </div>
 
-            {/* Special Characters */}
-            <div className="text-center mt-3 pt-2 border-t border-muted/30">
-              <div className="text-xs text-muted-fg">
-                <span className="font-semibold text-accent">Special:</span> 
-                <span className="font-mono mx-1 px-2 py-1 bg-muted/20 rounded">/ = word space</span>
+            {/* Interactive Special Characters */}
+            <div className="mt-4 pt-3 border-t border-muted/30">
+              <h5 className="text-sm font-semibold text-accent mb-2 text-center">📻 Interactive Special Characters (Click to Hear!)</h5>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs font-mono">
+                {characterGroups.special.map(([char, morse]) => (
+                    <button
+                      key={char}
+                      onClick={() => {
+                        if (audioEnabled && char !== '/') {
+                          initializeAudio();
+                          playCharacterAudio(char);
+                        }
+                      }}
+                      className={`text-center p-2 rounded transition-all duration-200 border ${
+                        currentPlayingChar === char && char !== '/'
+                          ? 'bg-warning/30 border-warning scale-110 animate-pulse'
+                          : audioEnabled && char !== '/'
+                          ? 'bg-muted/10 border-muted/30 hover:bg-accent/20 hover:border-accent hover:scale-105 cursor-pointer'
+                          : 'bg-muted/5 border-muted/20 cursor-not-allowed opacity-50'
+                      }`}
+                      disabled={!audioEnabled || isPlayingAudio || char === '/'}
+                      title={char === '/' ? 'Word separator (silent)' : audioEnabled ? `Click to hear ${char} in Morse code` : 'Audio not available'}
+                    >
+                      <div className="font-bold text-accent">
+                        {char === '/' ? 'SPACE' : char}
+                      </div>
+                      <div className="text-primary text-xs">{morse}</div>
+                      {audioEnabled && char !== '/' && <div className="text-xs text-muted-fg mt-1">🔊</div>}
+                      {char === '/' && <div className="text-xs text-muted-fg mt-1">🔇</div>}
+                    </button>
+                  ))}
               </div>
+              {!audioEnabled && (
+                <div className="text-center text-xs text-muted-fg mt-2 italic">
+                  Audio not available in this browser
+                </div>
+              )}
             </div>
           </div>
         </div>

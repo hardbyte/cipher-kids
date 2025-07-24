@@ -176,6 +176,85 @@ authTest.describe('Morse Code End-to-End Testing', () => {
         await expect(listenButton).toBeVisible();
       }
     });
+
+    authTest('should show Telegraph Station when output is available', async ({ authenticatedPage }) => {
+      // Type and encode a message
+      await fillMessage(authenticatedPage, 'SOS');
+      await clickCipherAction(authenticatedPage, 'encode');
+      
+      // Wait for result
+      await expect(authenticatedPage.locator('[data-testid="cipher-result"]')).toBeVisible();
+      
+      // Should show Telegraph Station audio controls
+      await expect(authenticatedPage.getByText('📻 Telegraph Station')).toBeVisible();
+      await expect(authenticatedPage.getByRole('button', { name: '📡 Play Full Message' })).toBeVisible();
+      await expect(authenticatedPage.getByRole('button', { name: '⚙️ Audio Settings' })).toBeVisible();
+    });
+
+    authTest('should show interactive Morse code table', async ({ authenticatedPage }) => {
+      // Navigate to educational section
+      await authenticatedPage.getByText('📡 How It Works: Morse Code').scrollIntoViewIfNeeded();
+      
+      // Should show interactive letters section
+      await expect(authenticatedPage.getByText('📻 Interactive Letters (Click to Hear!)')).toBeVisible();
+      
+      // Should show interactive numbers section
+      await expect(authenticatedPage.getByText('📻 Interactive Numbers (Click to Hear!)')).toBeVisible();
+      
+      // Should show interactive special characters section
+      await expect(authenticatedPage.getByText('📻 Interactive Special Characters (Click to Hear!)')).toBeVisible();
+      
+      // Check that letter buttons are present and clickable
+      const letterA = authenticatedPage.getByRole('button').filter({ hasText: 'A' }).first();
+      await expect(letterA).toBeVisible();
+      
+      // Check that number buttons are present
+      const number1 = authenticatedPage.getByRole('button').filter({ hasText: '1' }).first();
+      await expect(number1).toBeVisible();
+    });
+
+    authTest('should show audio settings panel when opened', async ({ authenticatedPage }) => {
+      // Type and encode a message to show Telegraph Station
+      await fillMessage(authenticatedPage, 'TEST');
+      await clickCipherAction(authenticatedPage, 'encode');
+      
+      // Wait for Telegraph Station to appear
+      await expect(authenticatedPage.getByText('📻 Telegraph Station')).toBeVisible();
+      
+      // Click audio settings button
+      await authenticatedPage.getByRole('button', { name: '⚙️ Audio Settings' }).click();
+      
+      // Should show settings panel
+      await expect(authenticatedPage.getByText('🎛️ Telegraph Settings')).toBeVisible();
+      
+      // Should show preset profiles
+      await expect(authenticatedPage.getByRole('button', { name: '📻 Classic Telegraph' })).toBeVisible();
+      await expect(authenticatedPage.getByRole('button', { name: '🚢 Ship Radio' })).toBeVisible();
+      await expect(authenticatedPage.getByRole('button', { name: '⚡ Modern CW' })).toBeVisible();
+      await expect(authenticatedPage.getByRole('button', { name: '🧒 Kid-Friendly' })).toBeVisible();
+      
+      // Should show manual controls
+      await expect(authenticatedPage.getByText('Speed')).toBeVisible();
+      await expect(authenticatedPage.getByText('Volume')).toBeVisible();
+      await expect(authenticatedPage.getByText('Pitch')).toBeVisible();
+    });
+
+    authTest('should show practice mode when audio is available', async ({ authenticatedPage }) => {
+      // Check if practice mode section is visible (only shows when audio is available)
+      const practiceSection = authenticatedPage.getByText('🥁 Morse Code Practice Station');
+      if (await practiceSection.isVisible()) {
+        await expect(practiceSection).toBeVisible();
+        
+        // Should show tap practice buttons
+        await expect(authenticatedPage.getByRole('button', { name: '• DOT' })).toBeVisible();
+        await expect(authenticatedPage.getByRole('button', { name: '▬ DASH' })).toBeVisible();
+        
+        // Should show quick reference
+        await expect(authenticatedPage.getByText('📚 Quick Reference')).toBeVisible();
+        await expect(authenticatedPage.getByText('SOS:')).toBeVisible();
+        await expect(authenticatedPage.getByText('HELLO:')).toBeVisible();
+      }
+    });
   });
 
   authTest.describe('Educational Content', () => {
@@ -210,8 +289,8 @@ authTest.describe('Morse Code End-to-End Testing', () => {
         await expect(morseTableSection.getByText(letter, { exact: true })).toBeVisible();
       }
       
-      // Should show special characters explanation
-      await expect(authenticatedPage.getByText('/ = word space')).toBeVisible();
+      // Should show special characters section
+      await expect(authenticatedPage.getByText('📻 Interactive Special Characters (Click to Hear!)')).toBeVisible();
       
       // Should NOT show the old "...and 18 more letters plus numbers!" text
       await expect(authenticatedPage.getByText('...and 18 more letters plus numbers!')).not.toBeVisible();

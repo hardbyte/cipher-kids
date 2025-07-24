@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { CipherNav } from "@/components/cipher/CipherNav";
 import { CipherPageContentWrapper } from "@/components/cipher/CipherPageContentWrapper";
 import { CipherInputs } from "@/components/cipher/CipherInputs";
@@ -13,6 +13,19 @@ import { AchievementNotification } from "@/components/achievement-notification";
 import { railFenceCipher } from "@/utils/ciphers";
 import { createFileRoute } from "@tanstack/react-router";
 
+// Types
+type CipherMode = "encrypt" | "decrypt" | "crack";
+
+// Constants
+const RAILFENCE_INFO = {
+  WIKI_URL: "https://en.wikipedia.org/wiki/Rail_fence_cipher",
+  DEFAULT_RAILS: 3,
+  MIN_RAILS: 2,
+  MAX_RAILS: 8,
+  ANIMATION_DELAY: 500,
+  DESCRIPTION: "Write your message in a zigzag pattern across multiple \"rails\" 🚂"
+} as const;
+
 export const Route = createFileRoute("/ciphers/railfence")({
   component: RailFenceCipherPage,
 });
@@ -20,15 +33,28 @@ export const Route = createFileRoute("/ciphers/railfence")({
 function RailFenceCipherPage() {
   const { trackAction } = useProgress();
   const [newAchievements, setNewAchievements] = useState<string[]>([]);
-  const [mode, setMode] = useState<"encrypt" | "decrypt" | "crack">("encrypt");
+  const [mode, setMode] = useState<CipherMode>("encrypt");
   const [message, setMessage] = useState<string>("");
-  const [rails, setRails] = useState<number>(3);
+  const [rails, setRails] = useState<number>(RAILFENCE_INFO.DEFAULT_RAILS);
   const [output, setOutput] = useState<string>("");
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
   const [showStepByStep, setShowStepByStep] = useState(false);
   const [animationSteps, setAnimationSteps] = useState<AnimationStep[]>([]);
   const [isStepAnimationPlaying, setIsStepAnimationPlaying] = useState(false);
   const [crackResults, setCrackResults] = useState<Array<{rails: number, result: string}>>([]);
+  const animationRef = useRef<boolean>(false);
+
+  // Helper function to safely track achievements
+  const trackAchievement = useCallback((actionType: "encode" | "decode" | "crack") => {
+    try {
+      const result = trackAction("railfence", actionType);
+      if (result && result.length > 0) {
+        setNewAchievements(result);
+      }
+    } catch (error) {
+      console.warn("Achievement tracking failed:", error);
+    }
+  }, [trackAction]);
   
 
 
@@ -90,65 +116,80 @@ function RailFenceCipherPage() {
     generateAnimationSteps();
   }, [message, rails, generateAnimationSteps]);
 
-  const handleAction = async () => {
-    if (isAnimating) return;
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      animationRef.current = false;
+    };
+  }, []);
 
+  const handleAction = useCallback(async () => {
+    if (isAnimating || animationRef.current || !message.trim()) return;
+
+    animationRef.current = true;
     setIsAnimating(true);
     setOutput("");
 
-    const delay = (ms: number) =>
-      new Promise((resolve) => setTimeout(resolve, ms));
+    try {
+      const delay = (ms: number) =>
+        new Promise((resolve) => setTimeout(resolve, ms));
 
-    // For Rail Fence, we'll show the zigzag pattern being built
-    // Animate building the pattern
-    await delay(500);
-    
-    // Then show the final result
-    const result = railFenceCipher(message, rails, mode === "decrypt");
-    setOutput(result);
-    
-    setIsAnimating(false);
-    
-    // Track the action for achievements
-    if (result && message) {
-      try {
-        const trackResult = trackAction("railfence", mode === "encrypt" ? "encode" : "decode");
-        if (trackResult && trackResult.length > 0) {
-          setNewAchievements(trackResult);
-        }
-      } catch (error) {
-        console.warn("Achievement tracking failed:", error);
+      // For Rail Fence, we'll show the zigzag pattern being built
+      // Animate building the pattern
+      await delay(RAILFENCE_INFO.ANIMATION_DELAY);
+      
+      // Check if animation was cancelled
+      if (!animationRef.current) return;
+      
+      // Then show the final result
+      const result = railFenceCipher(message, rails, mode === "decrypt");
+      setOutput(result);
+      
+      // Track the action for achievements
+      if (result && message) {
+        trackAchievement(mode === "encrypt" ? "encode" : "decode");
       }
-    }
-  };
-
-
-  const handleCrack = () => {
-    if (isAnimating || !message) return;
-    
-    const results: Array<{rails: number, result: string}> = [];
-    
-    // Try different numbers of rails (2-8)
-    for (let r = 2; r <= 8; r++) {
-      const result = railFenceCipher(message, r, true); // Always decrypt for cracking
-      results.push({ rails: r, result });
-    }
-    
-    setCrackResults(results);
-    setOutput(""); // Clear single output when showing multiple results
-    
-    // Track the crack action for achievements
-    if (results.length > 0 && message) {
+    } catch (error) {
+      console.error("Animation error:", error);
+      // Fallback: show the result without animation
       try {
-        const trackResult = trackAction("railfence", "crack");
-        if (trackResult && trackResult.length > 0) {
-          setNewAchievements(trackResult);
-        }
-      } catch (error) {
-        console.warn("Achievement tracking failed:", error);
+        const result = railFenceCipher(message, rails, mode === "decrypt");
+        setOutput(result);
+      } catch (cipherError) {
+        console.error("Cipher operation failed:", cipherError);
+        setOutput("");
       }
+    } finally {
+      animationRef.current = false;
+      setIsAnimating(false);
     }
-  };
+  }, [isAnimating, message, rails, mode, trackAchievement]);
+
+
+  const handleCrack = useCallback(() => {
+    if (isAnimating || !message.trim()) return;
+    
+    try {
+      const results: Array<{rails: number, result: string}> = [];
+      
+      // Try different numbers of rails (MIN_RAILS to MAX_RAILS)
+      for (let r = RAILFENCE_INFO.MIN_RAILS; r <= RAILFENCE_INFO.MAX_RAILS; r++) {
+        const result = railFenceCipher(message, r, true); // Always decrypt for cracking
+        results.push({ rails: r, result });
+      }
+      
+      setCrackResults(results);
+      setOutput(""); // Clear single output when showing multiple results
+      
+      // Track the crack action for achievements
+      if (results.length > 0 && message) {
+        trackAchievement("crack");
+      }
+    } catch (error) {
+      console.error("Crack operation failed:", error);
+      setCrackResults([]);
+    }
+  }, [isAnimating, message, trackAchievement]);
 
 
 
@@ -158,7 +199,7 @@ function RailFenceCipherPage() {
 
       <div className="text-center space-y-4">
           <p className="text-lg lg:text-xl text-muted-fg max-w-3xl mx-auto">
-            Write your message in a zigzag pattern across multiple "rails" 🚂
+            {RAILFENCE_INFO.DESCRIPTION}
           </p>
         </div>
 
@@ -167,7 +208,9 @@ function RailFenceCipherPage() {
           <CipherModeToggle
             mode={mode}
             setMode={(newMode) => {
-              if (!isAnimating) {
+              if (!isAnimating && !animationRef.current) {
+                // Cancel any ongoing animation
+                animationRef.current = false;
                 setMode(newMode);
               }
             }}
@@ -179,11 +222,15 @@ function RailFenceCipherPage() {
           <div className="max-w-md mx-auto">
             <Slider
               label={`Rails: ${rails}`}
-              minValue={2}
-              maxValue={8}
+              minValue={RAILFENCE_INFO.MIN_RAILS}
+              maxValue={RAILFENCE_INFO.MAX_RAILS}
               step={1}
               value={[rails]}
-              onChange={(values) => setRails(Array.isArray(values) ? values[0] : values)}
+              onChange={(values) => {
+                if (!isAnimating && !animationRef.current) {
+                  setRails(Array.isArray(values) ? values[0] : values);
+                }
+              }}
               className="my-2"
               isDisabled={isAnimating}
             />
@@ -197,7 +244,7 @@ function RailFenceCipherPage() {
               mode={mode}
               message={message}
               setMessage={(newMessage: string) => {
-                if (!isAnimating) setMessage(newMessage);
+                if (!isAnimating && !animationRef.current) setMessage(newMessage);
               }}
               handleAction={mode !== "crack" ? handleAction : undefined}
               isAnimating={isAnimating}
@@ -209,8 +256,8 @@ function RailFenceCipherPage() {
                 onClick={handleCrack}
                 isAnimating={isAnimating}
                 message={message}
-                label="Try All Rail Counts (2-8)"
-                description="This will try decrypting with 2, 3, 4, 5, 6, 7, and 8 rails to find the right one."
+                label={`Try All Rail Counts (${RAILFENCE_INFO.MIN_RAILS}-${RAILFENCE_INFO.MAX_RAILS})`}
+                description={`This will try decrypting with ${RAILFENCE_INFO.MIN_RAILS} through ${RAILFENCE_INFO.MAX_RAILS} rails to find the right one.`}
               />
             )}
 
@@ -228,7 +275,7 @@ function RailFenceCipherPage() {
                   <strong>Classical Origins:</strong> A classical transposition cipher method mentioned in cryptographic literature. 
                   Named after the zigzag fence pattern used around railway lines, though exact historical origins are unclear.{' '}
                   <a 
-                    href="https://en.wikipedia.org/wiki/Rail_fence_cipher" 
+                    href={RAILFENCE_INFO.WIKI_URL} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="text-primary hover:underline"
@@ -337,8 +384,16 @@ function RailFenceCipherPage() {
                     🔍 Step-by-Step
                   </h3>
                   <button
-                    onClick={() => setShowStepByStep(!showStepByStep)}
-                    className="px-3 py-1 bg-success hover:bg-success/90 rounded text-sm transition-colors"
+                    onClick={() => {
+                      if (!isAnimating) {
+                        setShowStepByStep(!showStepByStep);
+                        if (!showStepByStep && message) {
+                          setIsStepAnimationPlaying(true);
+                        }
+                      }
+                    }}
+                    disabled={!message || isAnimating}
+                    className="px-3 py-1 bg-success hover:bg-success/90 disabled:opacity-50 disabled:cursor-not-allowed rounded text-sm transition-colors"
                   >
                     {showStepByStep ? "Hide" : "Show"} Steps
                   </button>
@@ -371,8 +426,11 @@ function RailFenceCipherPage() {
                       {r} Rails:
                     </span>
                     <button
-                      onClick={() => setOutput(result)}
-                      className="text-xs bg-primary hover:bg-primary/90 px-2 py-1 rounded transition-colors"
+                      onClick={() => {
+                        if (!isAnimating) setOutput(result);
+                      }}
+                      disabled={isAnimating}
+                      className="text-xs bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed px-2 py-1 rounded transition-colors"
                     >
                       Use This
                     </button>

@@ -1,4 +1,4 @@
-import { useState, useEffect, ChangeEvent, useCallback } from "react";
+import { useState, useEffect, ChangeEvent, useCallback, useMemo, useRef } from "react";
 import { AnimatedMapping } from "@/components/cipher/AnimatedMapping";
 import { CipherNav } from "@/components/cipher/CipherNav";
 import { CipherPageContentWrapper } from "@/components/cipher/CipherPageContentWrapper";
@@ -19,6 +19,29 @@ import { toast } from "sonner";
 import { useProgress } from "@/hooks/use-progress";
 import { AchievementNotification } from "@/components/achievement-notification";
 
+// Types
+type CipherMode = "encrypt" | "decrypt" | "crack";
+
+// Constants
+const VIGENERE_INFO = {
+  WIKI_URL: "https://en.wikipedia.org/wiki/Vigen%C3%A8re_cipher",
+  DEFAULT_KEY_LENGTH: 3,
+  ANIMATION_DELAYS: {
+    KEYWORD_REPETITION_BASE: 500,
+    KEYWORD_REPETITION_EXTRA: 1000,
+    AUTO_SCROLL: 1200,
+    STEP_DEMO: 100
+  },
+  SAMPLE_MESSAGES: {
+    CRACK: [
+      "LXFOPVEFRNHR", // "ATTACKATDAWN" encrypted with "LEMON"
+      "CEMFNGLUZMUE", // "SECRETMESSAG" encrypted with "CIPHER" 
+      "KYHIMVKPBHX", // "CRYPTOGRAPH" encrypted with "KEY"
+      "HFWGDQCFCXJ", // "DEFENDEAST" encrypted with "WALL"
+    ]
+  }
+} as const;
+
 export const Route = createFileRoute("/ciphers/vigenere")({
   component: VigenereCipherPage,
 });
@@ -26,7 +49,7 @@ export const Route = createFileRoute("/ciphers/vigenere")({
 function VigenereCipherPage() {
   const { trackAction } = useProgress();
   const [newAchievements, setNewAchievements] = useState<string[]>([]);
-  const [mode, setMode] = useState<"encrypt" | "decrypt" | "crack">("encrypt");
+  const [mode, setMode] = useState<CipherMode>("encrypt");
   const [message, setMessage] = useState<string>("");
   const [keyword, setKeyword] = useState<string>("");
   const [output, setOutput] = useState<string>("");
@@ -37,10 +60,22 @@ function VigenereCipherPage() {
   const [showStepByStep, setShowStepByStep] = useState(false);
   const [isStepAnimationPlaying, setIsStepAnimationPlaying] = useState(false);
   const [showFrequencyAnalysis, setShowFrequencyAnalysis] = useState(false);
-  const [keyLength, setKeyLength] = useState(3); // Default key length for analysis
+  const [keyLength, setKeyLength] = useState(VIGENERE_INFO.DEFAULT_KEY_LENGTH);
   const [currentStepIndex, setCurrentStepIndex] = useState(-1);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
+  const animationRef = useRef<boolean>(false);
+
+  // Helper function to safely track achievements
+  const trackAchievement = useCallback((actionType: "encode" | "decode" | "crack") => {
+    try {
+      const result = trackAction("vigenere", actionType);
+      if (result && result.length > 0) {
+        setNewAchievements(result);
+      }
+    } catch (error) {
+      console.warn("Achievement tracking failed:", error);
+    }
+  }, [trackAction]);
 
   // Stable callback functions for animation
   const handleAnimationComplete = useCallback(() => {
@@ -51,8 +86,24 @@ function VigenereCipherPage() {
     setCurrentStepIndex(stepIndex);
   }, []);
 
+  // Memoize clean keyword for performance
+  const cleanKeyword = useMemo(() => 
+    keyword.toUpperCase().replace(/[^A-Z]/g, ""),
+    [keyword]
+  );
+
+  // Memoized sample message handler
+  const handleSampleMessage = useCallback((sampleMessage: string) => {
+    if (!isAnimating && !animationRef.current) {
+      setMessage(sampleMessage);
+    }
+  }, [isAnimating]);
+
   // Handle mode changes - auto-populate input with previous result for better UX
   useEffect(() => {
+    // Cancel any ongoing animations
+    animationRef.current = false;
+    
     // If we have an output and the mode changed, use it as the new input
     if (output && output !== message) {
       setMessage(output);
@@ -66,50 +117,70 @@ function VigenereCipherPage() {
     setShowStepByStep(false);
     setIsStepAnimationPlaying(false);
     setShowFrequencyAnalysis(false);
+    setAnimateKeywordRepetition(false);
   // eslint-disable-next-line react-hooks/exhaustive-deps -- Intentionally excluding output to prevent infinite loops
   }, [message, mode]);
 
-  const handleAction = async () => {
-    if (!message.trim() || !keyword.trim()) {
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      animationRef.current = false;
+    };
+  }, []);
+
+  const handleAction = useCallback(async () => {
+    if (isAnimating || animationRef.current) return;
+    
+    // Input validation
+    if (!message.trim() || !cleanKeyword.trim()) {
       toast.error("Please enter both a message and a keyword!");
       return;
     }
     
-    const result = vigenereCipher(message, keyword, mode === "decrypt");
-    setOutput(result);
+    animationRef.current = true;
+    setIsAnimating(true);
     
-    // Track the action for achievements
-    if (result && message) {
-      try {
-        const trackResult = trackAction("vigenere", mode === "encrypt" ? "encode" : "decode");
-        if (trackResult && trackResult.length > 0) {
-          setNewAchievements(trackResult);
+    try {
+      const result = vigenereCipher(message, cleanKeyword, mode === "decrypt");
+      setOutput(result);
+      
+      // Track the action for achievements
+      if (result && message) {
+        trackAchievement(mode === "encrypt" ? "encode" : "decode");
+      }
+      
+      // Trigger animation for keyword repetition (only if not already animating)
+      if (!animateKeywordRepetition) {
+        setAnimateKeywordRepetition(true);
+        const animationDuration = message.length * VIGENERE_INFO.ANIMATION_DELAYS.KEYWORD_REPETITION_BASE + VIGENERE_INFO.ANIMATION_DELAYS.KEYWORD_REPETITION_EXTRA;
+        setTimeout(() => {
+          if (animationRef.current) {
+            setAnimateKeywordRepetition(false);
+          }
+        }, animationDuration);
+      }
+      
+      // Show success toast
+      toast.success(`Message ${mode === "encrypt" ? "encrypted" : "decrypted"} successfully!`);
+      
+      // Scroll to results after a brief delay
+      setTimeout(() => {
+        if (animationRef.current) {
+          const resultElement = document.querySelector('[data-result-section]');
+          if (resultElement) {
+            resultElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
         }
-      } catch (error) {
-        console.warn("Achievement tracking failed:", error);
-      }
+      }, VIGENERE_INFO.ANIMATION_DELAYS.STEP_DEMO);
+    } catch (error) {
+      console.error("Cipher operation failed:", error);
+      toast.error("An error occurred while processing your message.");
+    } finally {
+      animationRef.current = false;
+      setIsAnimating(false);
     }
-    
-    // Trigger animation for keyword repetition (only if not already animating)
-    if (!animateKeywordRepetition) {
-      setAnimateKeywordRepetition(true);
-      setTimeout(() => setAnimateKeywordRepetition(false), message.length * 500 + 1000);
-    }
-    
-    // Show success toast
-    toast.success(`Message ${mode === "encrypt" ? "encrypted" : "decrypted"} successfully!`);
-    
-    // Scroll to results after a brief delay
-    setTimeout(() => {
-      const resultElement = document.querySelector('[data-result-section]');
-      if (resultElement) {
-        resultElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }, 100);
-  };
+  }, [isAnimating, message, cleanKeyword, mode, trackAchievement, animateKeywordRepetition]);
 
-  // Clean keyword for visualization
-  const cleanKeyword = keyword.toUpperCase().replace(/[^A-Z]/g, "");
 
   // Effect to demonstrate a single character when the full table isn't shown
   useEffect(() => {
@@ -140,7 +211,7 @@ function VigenereCipherPage() {
             Called <em>"le chiffre indéchiffrable"</em> (the indecipherable cipher) in French, it remained unbroken until 1863! 
             Used by the Confederacy in the American Civil War and even by diplomatic services into the 20th century.{' '}
             <a 
-              href="https://en.wikipedia.org/wiki/Vigen%C3%A8re_cipher" 
+              href={VIGENERE_INFO.WIKI_URL} 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-primary hover:underline"
@@ -213,13 +284,13 @@ function VigenereCipherPage() {
               <div className="space-y-2 font-mono text-sm">
                 <div 
                   className="bg-bg p-2 rounded cursor-pointer hover:bg-muted/20 border border-muted/30" 
-                  onClick={() => setMessage("LZIJQM HEWSDCF")}
+                  onClick={() => handleSampleMessage("LZIJQM HEWSDCF")}
                 >
                   LZIJQM HEWSDCF
                 </div>
                 <div 
                   className="bg-bg p-2 rounded cursor-pointer hover:bg-muted/20 border border-muted/30"
-                  onClick={() => setMessage("BGPXVR CSRBVLY CYJPHMN")}
+                  onClick={() => handleSampleMessage("BGPXVR CSRBVLY CYJPHMN")}
                 >
                   BGPXVR CSRBVLY CYJPHMN
                 </div>
@@ -596,10 +667,10 @@ function VigenereCipherPage() {
                 Try decrypting these messages with the keyword "SPY":
               </p>
               <div className="space-y-2 font-mono text-sm">
-                <div className="bg-bg p-2 rounded cursor-pointer hover:bg-muted/20 border border-muted/30" onClick={() => setMessage("LZIJQM HEWSDCF")}>
+                <div className="bg-bg p-2 rounded cursor-pointer hover:bg-muted/20 border border-muted/30" onClick={() => handleSampleMessage("LZIJQM HEWSDCF")}>
                   LZIJQM HEWSDCF
                 </div>
-                <div className="bg-bg p-2 rounded cursor-pointer hover:bg-muted/20 border border-muted/30" onClick={() => setMessage("BGPXVR CSRBV")}>
+                <div className="bg-bg p-2 rounded cursor-pointer hover:bg-muted/20 border border-muted/30" onClick={() => handleSampleMessage("BGPXVR CSRBV")}>
                   BGPXVR CSRBV
                 </div>
               </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { AnimatedMapping } from "@/components/cipher/AnimatedMapping";
 import { CipherNav } from "@/components/cipher/CipherNav";
 import { CipherPageContentWrapper } from "@/components/cipher/CipherPageContentWrapper";
@@ -14,20 +14,28 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useProgress } from "@/hooks/use-progress";
 import { AchievementNotification } from "@/components/achievement-notification";
 
+// Types
+type CipherMode = "encrypt" | "decrypt" | "crack";
+
+// Constants
+const ATBASH_INFO = {
+  TITLE: "📚 About Atbash",
+  WIKI_URL: "https://en.wikipedia.org/wiki/Atbash",
+  DESCRIPTION: "The ancient mirror alphabet cipher where A becomes Z, B becomes Y, and so on. Used in biblical cryptography over 2,500 years ago! 📜"
+} as const;
+
 export const Route = createFileRoute("/ciphers/atbash")({
   component: AtbashCipherPage,
 });
 
 function AtbashCipherPage() {
   const { trackAction } = useProgress();
-  const [mode, setMode] = useState<"encrypt" | "decrypt" | "crack">("encrypt");
+  const [mode, setMode] = useState<CipherMode>("encrypt");
   const [newAchievements, setNewAchievements] = useState<string[]>([]);
   const [message, setMessage] = useState<string>("");
   const [output, setOutput] = useState<string>("");
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
-  const [currentCharToHighlight, setCurrentCharToHighlight] = useState<
-    string | undefined
-  >(undefined);
+  const [currentCharToHighlight, setCurrentCharToHighlight] = useState<string | undefined>(undefined);
   const [showStepByStep, setShowStepByStep] = useState(false);
   const [animationSteps, setAnimationSteps] = useState<AnimationStep[]>([]);
   const [isStepAnimationPlaying, setIsStepAnimationPlaying] = useState(false);
@@ -35,9 +43,30 @@ function AtbashCipherPage() {
   // Use the sample messages hook
   useSampleMessages();
 
-  // Create Atbash alphabet mapping for visualization
-  const ALPHABET_FALLBACK = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  const alphabet = ALPHABET || ALPHABET_FALLBACK;
+  // Memoize alphabet arrays to avoid recreation on every render
+  const alphabetArrays = useMemo(() => ({
+    normal: ALPHABET.split(""),
+    reversed: ALPHABET.split("").reverse()
+  }), []);
+
+  // Memoize the animated mapping props based on mode
+  const animatedMappingProps = useMemo(() => ({
+    from: mode === "decrypt" ? alphabetArrays.reversed : alphabetArrays.normal,
+    to: mode === "decrypt" ? alphabetArrays.normal : alphabetArrays.reversed,
+    direction: mode === "decrypt" ? "up" as const : "down" as const
+  }), [mode, alphabetArrays]);
+
+  // Helper function to safely track achievements
+  const trackAchievement = useCallback((actionType: "encode" | "decode" | "crack") => {
+    try {
+      const result = trackAction("atbash", actionType);
+      if (result && result.length > 0) {
+        setNewAchievements(result);
+      }
+    } catch (error) {
+      console.warn("Achievement tracking failed:", error);
+    }
+  }, [trackAction]);
 
   // Generate animation steps for the GeneralStepByStepAnimation
   const generateAnimationSteps = useCallback(() => {
@@ -52,9 +81,9 @@ function AtbashCipherPage() {
     for (let i = 0; i < cleanMessage.length; i++) {
       const char = cleanMessage[i];
       
-      if (alphabet.includes(char)) {
-        const charIndex = alphabet.indexOf(char);
-        const transformedChar = alphabet[25 - charIndex];
+      if (ALPHABET.includes(char)) {
+        const charIndex = ALPHABET.indexOf(char);
+        const transformedChar = ALPHABET[25 - charIndex];
 
         steps.push({
           originalChar: char,
@@ -67,7 +96,7 @@ function AtbashCipherPage() {
     }
 
     setAnimationSteps(steps);
-  }, [message, alphabet]);
+  }, [message]);
 
   // Handle mode changes - auto-populate input with previous result for better UX
   useEffect(() => {
@@ -91,80 +120,74 @@ function AtbashCipherPage() {
     generateAnimationSteps();
   }, [message, generateAnimationSteps]);
 
-  const handleAction = async () => {
-    if (isAnimating) return;
+  const handleAction = useCallback(async () => {
+    if (isAnimating || !message.trim()) return;
 
     setIsAnimating(true);
     setOutput("");
     setCurrentCharToHighlight(undefined);
 
-    // Using environment-aware delay function
-    
-    // Get the full result using the utility function to ensure consistency
-    const fullResult = atbashCipher(message);
-    let currentAnimatedOutput = "";
+    try {
+      // Get the full result using the utility function to ensure consistency
+      const fullResult = atbashCipher(message);
+      let currentAnimatedOutput = "";
 
-    for (let i = 0; i < message.length; i++) {
-      const char = message[i];
-      const upperChar = char.toUpperCase();
+      for (let i = 0; i < message.length; i++) {
+        const char = message[i];
+        const upperChar = char.toUpperCase();
 
-      if (alphabet.includes(upperChar)) {
-        // Highlight the character being processed
-        setCurrentCharToHighlight(upperChar);
-        await createDelay(ANIMATION_TIMINGS.STEP_REVEAL);
+        if (ALPHABET.includes(upperChar)) {
+          // Highlight the character being processed
+          setCurrentCharToHighlight(upperChar);
+          await createDelay(ANIMATION_TIMINGS.STEP_REVEAL);
 
-        // Show the mirror transformation visually by briefly highlighting both chars
-        await createDelay(ANIMATION_TIMINGS.STEP_REVEAL);
+          // Show the mirror transformation visually by briefly highlighting both chars
+          await createDelay(ANIMATION_TIMINGS.STEP_REVEAL);
 
-        // Add the character from the full result to ensure consistency
-        currentAnimatedOutput += fullResult[i];
-        setOutput(currentAnimatedOutput);
-        await createDelay(ANIMATION_TIMINGS.CHARACTER_PROCESS);
-      } else {
-        // Non-alphabetic characters
-        currentAnimatedOutput += fullResult[i];
-        setOutput(currentAnimatedOutput);
-        await createDelay(ANIMATION_TIMINGS.NON_ALPHA_CHARACTER);
-      }
-    }
-
-    setCurrentCharToHighlight(undefined);
-    setIsAnimating(false);
-    
-    // Track the action for achievements
-    if (currentAnimatedOutput && message) {
-      try {
-        const result = trackAction("atbash", mode === "encrypt" ? "encode" : "decode");
-        if (result && result.length > 0) {
-          setNewAchievements(result);
+          // Add the character from the full result to ensure consistency
+          currentAnimatedOutput += fullResult[i];
+          setOutput(currentAnimatedOutput);
+          await createDelay(ANIMATION_TIMINGS.CHARACTER_PROCESS);
+        } else {
+          // Non-alphabetic characters
+          currentAnimatedOutput += fullResult[i];
+          setOutput(currentAnimatedOutput);
+          await createDelay(ANIMATION_TIMINGS.NON_ALPHA_CHARACTER);
         }
-      } catch (error) {
-        console.warn("Achievement tracking failed:", error);
       }
+
+      // Track the action for achievements
+      if (currentAnimatedOutput) {
+        trackAchievement(mode === "encrypt" ? "encode" : "decode");
+      }
+    } catch (error) {
+      console.error("Animation error:", error);
+      // Fallback: show the result without animation
+      setOutput(atbashCipher(message));
+    } finally {
+      setCurrentCharToHighlight(undefined);
+      setIsAnimating(false);
     }
-  };
+  }, [isAnimating, message, mode, trackAchievement]);
 
 
-  const handleCrack = () => {
+  const handleCrack = useCallback(() => {
     // For Atbash, cracking is just applying the cipher again (self-inverse)
-    if (isAnimating) return;
+    if (isAnimating || !message.trim()) return;
     
-    const result = atbashCipher(message);
-    setOutput(result);
-    setCurrentCharToHighlight(undefined);
-    
-    // Track the crack action for achievements
-    if (result && message) {
-      try {
-        const trackResult = trackAction("atbash", "crack");
-        if (trackResult && trackResult.length > 0) {
-          setNewAchievements(trackResult);
-        }
-      } catch (error) {
-        console.warn("Achievement tracking failed:", error);
+    try {
+      const result = atbashCipher(message);
+      setOutput(result);
+      setCurrentCharToHighlight(undefined);
+      
+      // Track the crack action for achievements
+      if (result) {
+        trackAchievement("crack");
       }
+    } catch (error) {
+      console.error("Crack operation failed:", error);
     }
-  };
+  }, [isAnimating, message, trackAchievement]);
 
 
   return (
@@ -174,8 +197,7 @@ function AtbashCipherPage() {
         {/* Header */}
         <div className="text-center space-y-4">
           <p className="text-lg lg:text-xl text-muted-fg max-w-3xl mx-auto">
-            The ancient mirror alphabet cipher where A becomes Z, B becomes Y, and so on.
-            Used in biblical cryptography over 2,500 years ago! 📜
+            {ATBASH_INFO.DESCRIPTION}
           </p>
         </div>
 
@@ -215,7 +237,7 @@ function AtbashCipherPage() {
 
             {/* Educational Info */}
             <div className="bg-secondary rounded-lg p-6 space-y-4">
-              <h3 className="text-xl font-semibold text-accent">📚 About Atbash</h3>
+              <h3 className="text-xl font-semibold text-accent">{ATBASH_INFO.TITLE}</h3>
               <div className="space-y-2 text-secondary-fg">
                 <p>
                   <strong>No Key Needed!</strong> The Atbash cipher is special because encryption 
@@ -226,7 +248,7 @@ function AtbashCipherPage() {
                   Found in the Bible - Jeremiah used "Sheshach" as Atbash code for "Babylon"! 
                   The name comes from Hebrew letters: Aleph-Taw-Beth-Shin.{' '}
                   <a 
-                    href="https://en.wikipedia.org/wiki/Atbash" 
+                    href={ATBASH_INFO.WIKI_URL}
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="text-primary hover:underline"
@@ -249,10 +271,10 @@ function AtbashCipherPage() {
                 🪞 Mirror Alphabet {mode === "decrypt" ? "(Reversed)" : ""}
               </h3>
               <AnimatedMapping
-                from={mode === "decrypt" ? alphabet.split("").map((char, i) => alphabet[25 - i]) : alphabet.split("")}
-                to={mode === "decrypt" ? alphabet.split("") : alphabet.split("").map((char, i) => alphabet[25 - i])}
+                from={animatedMappingProps.from}
+                to={animatedMappingProps.to}
                 highlightChar={currentCharToHighlight}
-                direction={mode === "decrypt" ? "up" : "down"}
+                direction={animatedMappingProps.direction}
                 highlightMode="source-only"
               />
             </div>

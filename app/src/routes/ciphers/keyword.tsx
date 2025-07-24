@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { AnimatedMapping } from "@/components/cipher/AnimatedMapping";
 import { CipherNav } from "@/components/cipher/CipherNav";
 import { CipherPageContentWrapper } from "@/components/cipher/CipherPageContentWrapper";
@@ -11,6 +11,28 @@ import { CrackButton } from "@/components/cipher/CrackButton";
 import { useProgress } from "@/hooks/use-progress";
 import { AchievementNotification } from "@/components/achievement-notification";
 
+// Types
+type CipherMode = "encrypt" | "decrypt" | "crack";
+
+// Constants
+const KEYWORD_INFO = {
+  WIKI_URL: "https://en.wikipedia.org/wiki/Substitution_cipher",
+  DEFAULT_SAMPLES: [
+    "HELLO WORLD",
+    "SECRET MESSAGE", 
+    "HAPPY BIRTHDAY",
+    "TREASURE HUNT",
+    "MAGIC SPELL"
+  ],
+  CRACK_SAMPLES: [
+    { encrypted: 'DTIIL WLOIR', keyword: 'SECRET', original: 'HELLO WORLD' },
+    { encrypted: 'GQOOE LQU', keyword: 'MAGIC', original: 'PIZZA DAY' },
+    { encrypted: 'MPZPS LDSSDQF', keyword: 'DRAGON', original: 'SECRET MESSAGE' },
+    { encrypted: 'OXDKDQ HQYFS', keyword: 'TREASURE', original: 'HAPPY TIMES' },
+    { encrypted: 'EDDFYR KXSXP', keyword: 'CASTLE', original: 'AMAZING STORY' }
+  ]
+} as const;
+
 export const Route = createFileRoute("/ciphers/keyword")({
   component: KeywordCipherPage,
 });
@@ -18,7 +40,7 @@ export const Route = createFileRoute("/ciphers/keyword")({
 function KeywordCipherPage() {
   const { trackAction } = useProgress();
   const [newAchievements, setNewAchievements] = useState<string[]>([]);
-  const [mode, setMode] = useState<"encrypt" | "decrypt" | "crack">("encrypt");
+  const [mode, setMode] = useState<CipherMode>("encrypt");
   const [message, setMessage] = useState<string>("");
   const [keyword, setKeyword] = useState<string>("");
   const [output, setOutput] = useState<string>("");
@@ -28,6 +50,19 @@ function KeywordCipherPage() {
   const [crackAttempts, setCrackAttempts] = useState<Array<{keyword: string, result: string, score: number}>>([]);
   const [extendedKeywords, setExtendedKeywords] = useState<string[]>([]);
   const [apiStatus, setApiStatus] = useState<'loading' | 'success' | 'failed' | 'offline'>('loading');
+  const loadingRef = useRef<boolean>(false);
+
+  // Helper function to safely track achievements
+  const trackAchievement = useCallback((actionType: "encode" | "decode" | "crack") => {
+    try {
+      const result = trackAction("keyword", actionType);
+      if (result && result.length > 0) {
+        setNewAchievements(result);
+      }
+    } catch (error) {
+      console.warn("Achievement tracking failed:", error);
+    }
+  }, [trackAction]);
 
   // Common keywords to try when cracking (single words and phrases)
   const commonKeywords = useMemo(() => [
@@ -104,39 +139,37 @@ function KeywordCipherPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps -- Intentionally excluding output to prevent infinite loops  
   }, [message, keyword, isAnimating]);
 
-  // Sample messages for crack mode - pre-encrypted messages that can be cracked
-  const crackSamples = [
-    { encrypted: 'DTIIL WLOIR', keyword: 'SECRET', original: 'HELLO WORLD' },
-    { encrypted: 'GQOOE LQU', keyword: 'MAGIC', original: 'PIZZA DAY' },
-    { encrypted: 'MPZPS LDSSDQF', keyword: 'DRAGON', original: 'SECRET MESSAGE' },
-    { encrypted: 'OXDKDQ HQYFS', keyword: 'TREASURE', original: 'HAPPY TIMES' },
-    { encrypted: 'EDDFYR KXSXP', keyword: 'CASTLE', original: 'AMAZING STORY' }
-  ];
 
-  const handleTrySample = () => {
+  const handleTrySample = useCallback(() => {
     if (mode === "crack") {
       // For crack mode, provide a pre-encrypted message
-      const randomSample = crackSamples[Math.floor(Math.random() * crackSamples.length)];
+      const randomSample = KEYWORD_INFO.CRACK_SAMPLES[Math.floor(Math.random() * KEYWORD_INFO.CRACK_SAMPLES.length)];
       setMessage(randomSample.encrypted);
       // Clear previous crack results
       setCrackResults("");
       setCrackAttempts([]);
     } else {
       // For encrypt/decrypt modes, use regular sample messages
-      const samples = [
-        "HELLO WORLD",
-        "SECRET MESSAGE", 
-        "HAPPY BIRTHDAY",
-        "TREASURE HUNT",
-        "MAGIC SPELL"
-      ];
-      const randomSample = samples[Math.floor(Math.random() * samples.length)];
+      const randomSample = KEYWORD_INFO.DEFAULT_SAMPLES[Math.floor(Math.random() * KEYWORD_INFO.DEFAULT_SAMPLES.length)];
       setMessage(randomSample);
     }
-  };
+  }, [mode]);
+
+  // Memoize cipher alphabet for performance
+  const cipherAlphabet = useMemo(() => {
+    const cleanKeyword = Array.from(
+      new Set(keyword.toUpperCase().replace(/[^A-Z]/g, ""))
+    ).join("");
+    const remaining = ALPHABET.split("").filter(
+      (c) => !cleanKeyword.includes(c)
+    );
+    return cleanKeyword + remaining.join("");
+  }, [keyword]);
 
   // Load additional keywords from API for enhanced cracking (with robust offline fallback)
   const loadExtendedKeywords = useCallback(async (): Promise<string[]> => {
+    if (loadingRef.current) return extendedKeywords;
+    loadingRef.current = true;
     setApiStatus('loading');
     
     // Fallback keywords - always available
@@ -218,8 +251,9 @@ function KeywordCipherPage() {
     
     // Always return offline keywords as fallback
     setApiStatus('offline');
+    loadingRef.current = false;
     return offlineKeywords;
-  }, []);
+  }, [extendedKeywords]);
 
   // Load extended keywords on component mount
   useEffect(() => {
@@ -294,99 +328,80 @@ function KeywordCipherPage() {
     return Math.round(score);
   }, []);
 
-  const handleAction = () => {
+  const handleAction = useCallback(() => {
     if (mode === "crack") {
       // In crack mode, we can't easily crack a keyword cipher without the keyword
       // Show educational message instead
       setCrackResults("Keyword ciphers are difficult to crack without knowing the keyword! Try using frequency analysis or looking for common words.");
       setOutput("");
     } else {
-      const result = keywordCipher(message, keyword, mode === "decrypt");
-      setOutput(result);
-      setCrackResults("");
-      
-      // Track the action for achievements
-      if (result && message) {
-        try {
-          const trackResult = trackAction("keyword", mode === "encrypt" ? "encode" : "decode");
-          if (trackResult && trackResult.length > 0) {
-            setNewAchievements(trackResult);
-          }
-        } catch (error) {
-          console.warn("Achievement tracking failed:", error);
+      try {
+        const result = keywordCipher(message, keyword, mode === "decrypt");
+        setOutput(result);
+        setCrackResults("");
+        
+        // Track the action for achievements
+        if (result && message) {
+          trackAchievement(mode === "encrypt" ? "encode" : "decode");
         }
+      } catch (error) {
+        console.error("Cipher operation failed:", error);
+        setOutput("");
       }
     }
-  };
+  }, [mode, message, keyword, trackAchievement]);
 
-  const handleCrack = () => {
+  const handleCrack = useCallback(() => {
     if (!message.trim()) {
       setCrackResults("Please enter an encrypted message to crack!");
       return;
     }
 
-    const keywordCount = commonKeywords.length + extendedKeywords.length;
-    setCrackResults(`🔍 Attempting to crack with ${keywordCount} keywords...`);
-    setCrackAttempts([]);
-    
-    // Combine base keywords with extended ones (online + offline fallback)
-    const allKeywords = [...commonKeywords, ...extendedKeywords];
-    
-    // Try each keyword
-    const attempts = allKeywords.map(testKeyword => {
-      const decrypted = keywordCipher(message, testKeyword, true);
-      const score = scoreText(decrypted);
-      return { keyword: testKeyword, result: decrypted, score };
-    });
-    
-    // Sort by score (highest first)
-    attempts.sort((a, b) => b.score - a.score);
-    setCrackAttempts(attempts);
-    
-    const bestAttempt = attempts[0];
-    if (bestAttempt && bestAttempt.score > 50) {
-      setCrackResults(`🎯 Possible crack found! Keyword "${bestAttempt.keyword}" gives readable text.`);
-      setOutput(bestAttempt.result);
+    try {
+      const keywordCount = commonKeywords.length + extendedKeywords.length;
+      setCrackResults(`🔍 Attempting to crack with ${keywordCount} keywords...`);
+      setCrackAttempts([]);
       
-      // Track the crack action for achievements
-      if (bestAttempt.result && message) {
-        try {
-          const trackResult = trackAction("keyword", "crack");
-          if (trackResult && trackResult.length > 0) {
-            setNewAchievements(trackResult);
-          }
-        } catch (error) {
-          console.warn("Achievement tracking failed:", error);
-        }
-      }
-    } else if (bestAttempt && bestAttempt.score > 30) {
-      setCrackResults(`🤔 Found a possible solution with keyword "${bestAttempt.keyword}", but it might not be perfect.`);
-      setOutput(bestAttempt.result);
+      // Combine base keywords with extended ones (online + offline fallback)
+      const allKeywords = [...commonKeywords, ...extendedKeywords];
       
-      // Track the crack action for achievements
-      if (bestAttempt.result && message) {
-        try {
-          const trackResult = trackAction("keyword", "crack");
-          if (trackResult && trackResult.length > 0) {
-            setNewAchievements(trackResult);
-          }
-        } catch (error) {
-          console.warn("Achievement tracking failed:", error);
+      // Try each keyword
+      const attempts = allKeywords.map(testKeyword => {
+        const decrypted = keywordCipher(message, testKeyword, true);
+        const score = scoreText(decrypted);
+        return { keyword: testKeyword, result: decrypted, score };
+      });
+      
+      // Sort by score (highest first)
+      attempts.sort((a, b) => b.score - a.score);
+      setCrackAttempts(attempts);
+      
+      const bestAttempt = attempts[0];
+      if (bestAttempt && bestAttempt.score > 50) {
+        setCrackResults(`🎯 Possible crack found! Keyword "${bestAttempt.keyword}" gives readable text.`);
+        setOutput(bestAttempt.result);
+        
+        // Track the crack action for achievements
+        if (bestAttempt.result && message) {
+          trackAchievement("crack");
         }
+      } else if (bestAttempt && bestAttempt.score > 30) {
+        setCrackResults(`🤔 Found a possible solution with keyword "${bestAttempt.keyword}", but it might not be perfect.`);
+        setOutput(bestAttempt.result);
+        
+        // Track the crack action for achievements
+        if (bestAttempt.result && message) {
+          trackAchievement("crack");
+        }
+      } else {
+        setCrackResults("❌ No obvious solution found with common keywords. The cipher may use an uncommon keyword, or this might not be a keyword cipher.");
       }
-    } else {
-      setCrackResults("❌ No obvious solution found with common keywords. The cipher may use an uncommon keyword, or this might not be a keyword cipher.");
+    } catch (error) {
+      console.error("Crack operation failed:", error);
+      setCrackResults("❌ An error occurred while attempting to crack the cipher.");
     }
-  };
+  }, [message, commonKeywords, extendedKeywords, scoreText, trackAchievement]);
 
-  // Generate the cipher alphabet for visualization
-  const cleanKeyword = Array.from(
-    new Set(keyword.toUpperCase().replace(/[^A-Z]/g, ""))
-  ).join("");
-  const remaining = ALPHABET.split("").filter(
-    (c) => !cleanKeyword.includes(c)
-  );
-  const cipherAlphabet = cleanKeyword + remaining.join("");
 
   return (
     <CipherPageContentWrapper>
@@ -596,7 +611,7 @@ function KeywordCipherPage() {
               The Keyword cipher is like creating a secret club password! You pick a special word that becomes the key to your secret alphabet.
               This method has been used for centuries as a simple way to create mixed substitution alphabets.{' '}
               <a 
-                href="https://en.wikipedia.org/wiki/Substitution_cipher" 
+                href={KEYWORD_INFO.WIKI_URL} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-primary hover:underline"

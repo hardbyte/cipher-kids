@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { CipherNav } from "@/components/cipher/CipherNav";
 import { CipherPageContentWrapper } from "@/components/cipher/CipherPageContentWrapper";
 import { CipherInputs } from "@/components/cipher/CipherInputs";
@@ -12,6 +12,16 @@ import { Button } from "@/components/ui/button";
 import { useProgress } from "@/hooks/use-progress";
 import { AchievementNotification } from "@/components/achievement-notification";
 
+// Types
+type CipherMode = "encrypt" | "decrypt" | "crack";
+
+// Constants
+const PIGPEN_INFO = {
+  WIKI_URL: "https://en.wikipedia.org/wiki/Pigpen_cipher",
+  ANIMATION_DELAY: 100,
+  DESCRIPTION: "The super secret spy cipher that uses cool shapes instead of letters!"
+} as const;
+
 export const Route = createFileRoute("/ciphers/pigpen")({
   component: PigpenCipherPage,
 });
@@ -19,7 +29,7 @@ export const Route = createFileRoute("/ciphers/pigpen")({
 function PigpenCipherPage() {
   const { trackAction } = useProgress();
   const [newAchievements, setNewAchievements] = useState<string[]>([]);
-  const [mode, setMode] = useState<"encrypt" | "decrypt" | "crack">("encrypt");
+  const [mode, setMode] = useState<CipherMode>("encrypt");
   const [message, setMessage] = useState<string>("");
   const [output, setOutput] = useState<string>("");
   const [highlightChar, setHighlightChar] = useState<string | undefined>(undefined);
@@ -27,6 +37,25 @@ function PigpenCipherPage() {
   const [showStepByStep, setShowStepByStep] = useState(false);
   const [animationSteps, setAnimationSteps] = useState<AnimationStep[]>([]);
   const [isStepAnimationPlaying, setIsStepAnimationPlaying] = useState(false);
+  const animationRef = useRef<boolean>(false);
+
+  // Helper function to safely track achievements
+  const trackAchievement = useCallback((actionType: "encode" | "decode" | "crack") => {
+    try {
+      const result = trackAction("pigpen", actionType);
+      if (result && result.length > 0) {
+        setNewAchievements(result);
+      }
+    } catch (error) {
+      console.warn("Achievement tracking failed:", error);
+    }
+  }, [trackAction]);
+
+  // Memoize reverse mapping for performance
+  const reverseMapping = useMemo(() => 
+    Object.fromEntries(Object.entries(PIGPEN_MAPPING).map(([k, v]) => [v, k])),
+    []
+  );
 
   const generateAnimationSteps = useCallback(() => {
     if (!message) {
@@ -35,9 +64,6 @@ function PigpenCipherPage() {
     }
 
     const steps: AnimationStep[] = [];
-    const reverseMapping: Record<string, string> = Object.fromEntries(
-      Object.entries(PIGPEN_MAPPING).map(([k, v]) => [v, k])
-    );
 
     if (mode === 'decrypt' || mode === 'crack') {
       const symbols = message.split(' ').filter(s => s);
@@ -65,7 +91,7 @@ function PigpenCipherPage() {
       }
     }
     setAnimationSteps(steps);
-  }, [message, mode]);
+  }, [message, mode, reverseMapping]);
 
   // Handle mode changes - auto-populate input with previous result for better UX
   useEffect(() => {
@@ -89,68 +115,80 @@ function PigpenCipherPage() {
     generateAnimationSteps();
   }, [message, generateAnimationSteps]);
 
-  const handleAction = async () => {
-    if (isAnimating) return;
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      animationRef.current = false;
+    };
+  }, []);
+
+  const handleAction = useCallback(async () => {
+    if (isAnimating || animationRef.current || !message.trim()) return;
+    
+    animationRef.current = true;
     setIsAnimating(true);
     setOutput("");
     
-    const result = pigpenCipher(message, mode === "decrypt" || mode === 'crack');
-    
-    // Animate the output
-    let currentAnimatedOutput = "";
-    const items = mode === 'encrypt' ? result.split(' ') : result.split('');
-    const sourceItems = mode === 'encrypt' ? message.toUpperCase().split('') : message.split(' ');
+    try {
+      const result = pigpenCipher(message, mode === "decrypt" || mode === 'crack');
+      
+      // Animate the output
+      let currentAnimatedOutput = "";
+      const items = mode === 'encrypt' ? result.split(' ') : result.split('');
+      const sourceItems = mode === 'encrypt' ? message.toUpperCase().split('') : message.split(' ');
 
-    for (let i = 0; i < items.length; i++) {
-      setHighlightChar(sourceItems[i]);
-      await new Promise(resolve => setTimeout(resolve, 100));
-      currentAnimatedOutput = mode === 'encrypt' 
-        ? (currentAnimatedOutput ? currentAnimatedOutput + ' ' : '') + items[i]
-        : currentAnimatedOutput + items[i];
-      setOutput(currentAnimatedOutput);
-    }
-
-
-    setHighlightChar(undefined);
-    setIsAnimating(false);
-    
-    // Track the action for achievements
-    if (currentAnimatedOutput && message) {
-      try {
-        const trackResult = trackAction("pigpen", mode === "encrypt" ? "encode" : "decode");
-        if (trackResult && trackResult.length > 0) {
-          setNewAchievements(trackResult);
-        }
-      } catch (error) {
-        console.warn("Achievement tracking failed:", error);
+      for (let i = 0; i < items.length; i++) {
+        // Check if animation was cancelled
+        if (!animationRef.current) break;
+        
+        setHighlightChar(sourceItems[i]);
+        await new Promise(resolve => setTimeout(resolve, PIGPEN_INFO.ANIMATION_DELAY));
+        currentAnimatedOutput = mode === 'encrypt' 
+          ? (currentAnimatedOutput ? currentAnimatedOutput + ' ' : '') + items[i]
+          : currentAnimatedOutput + items[i];
+        setOutput(currentAnimatedOutput);
       }
-    }
-  };
 
-  const handleCrack = async () => {
-    // In crack mode, we just decrypt.
-    const result = pigpenCipher(message, true);
-    setOutput(result);
-    
-    // Track the crack action for achievements
-    if (result && message) {
-      try {
-        const trackResult = trackAction("pigpen", "crack");
-        if (trackResult && trackResult.length > 0) {
-          setNewAchievements(trackResult);
-        }
-      } catch (error) {
-        console.warn("Achievement tracking failed:", error);
+      // Track the action for achievements
+      if (currentAnimatedOutput && message) {
+        trackAchievement(mode === "encrypt" ? "encode" : "decode");
       }
+    } catch (error) {
+      console.error("Animation error:", error);
+      // Fallback: show the result without animation
+      const result = pigpenCipher(message, mode === "decrypt" || mode === 'crack');
+      setOutput(result);
+    } finally {
+      setHighlightChar(undefined);
+      animationRef.current = false;
+      setIsAnimating(false);
     }
-  };
+  }, [isAnimating, message, mode, trackAchievement]);
+
+  const handleCrack = useCallback(() => {
+    if (!message.trim()) return;
+    
+    try {
+      // In crack mode, we just decrypt.
+      const result = pigpenCipher(message, true);
+      setOutput(result);
+      
+      // Track the crack action for achievements
+      if (result && message) {
+        trackAchievement("crack");
+      }
+    } catch (error) {
+      console.error("Crack operation failed:", error);
+      setOutput("");
+    }
+  }, [message, trackAchievement]);
 
   return (
     <CipherPageContentWrapper>
       <CipherNav activeCipher="pigpen" />
       <div className="text-center space-y-4">
         <p className="text-lg lg:text-xl text-muted-fg max-w-3xl mx-auto">
-          The super secret spy cipher that uses cool shapes instead of letters!
+          {PIGPEN_INFO.DESCRIPTION}
         </p>
       </div>
 
@@ -158,7 +196,11 @@ function PigpenCipherPage() {
         <CipherModeToggle
           mode={mode}
           setMode={(newMode) => {
-            if (!isAnimating) setMode(newMode);
+            if (!isAnimating && !animationRef.current) {
+              // Cancel any ongoing animation
+              animationRef.current = false;
+              setMode(newMode);
+            }
           }}
         />
       </div>
@@ -169,7 +211,7 @@ function PigpenCipherPage() {
             mode={mode}
             message={message}
             setMessage={(newMessage: string) => {
-              if (!isAnimating) setMessage(newMessage);
+              if (!isAnimating && !animationRef.current) setMessage(newMessage);
             }}
             handleAction={mode !== "crack" ? handleAction : undefined}
             isAnimating={isAnimating}
@@ -210,7 +252,7 @@ function PigpenCipherPage() {
                 <strong>Ancient Origins:</strong> Possibly used by Hebrew rabbis and Knights Templar during the Crusades! 
                 Freemasons adopted it in the early 18th century for secret correspondence and even carved it on tombstones.{' '}
                 <a 
-                  href="https://en.wikipedia.org/wiki/Pigpen_cipher" 
+                  href={PIGPEN_INFO.WIKI_URL} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-primary hover:underline"
@@ -337,8 +379,9 @@ function PigpenCipherPage() {
                   🔍 Step-by-Step
                 </h3>
                 <Button
-                  onClick={() => setShowStepByStep(!showStepByStep)}
-                  className="px-3 py-1 bg-success hover:bg-success/90 rounded text-sm transition-colors"
+                  onPress={() => setShowStepByStep(!showStepByStep)}
+                  intent="secondary"
+                  size="small"
                   isDisabled={!message}
                 >
                   {showStepByStep ? "Hide" : "Show"} Steps
