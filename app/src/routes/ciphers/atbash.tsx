@@ -222,8 +222,17 @@ function AtbashCipherPage() {
                   and decryption are the same operation.
                 </p>
                 <p>
-                  <strong>Historical:</strong> Used in ancient Hebrew texts and biblical manuscripts.
-                  The name comes from the first (Aleph-Taw) and last (Beth-Shin) Hebrew letters.
+                  <strong>Biblical Origins:</strong> Used in ancient Hebrew texts around the 6th century BCE. 
+                  Found in the Bible - Jeremiah used "Sheshach" as Atbash code for "Babylon"! 
+                  The name comes from Hebrew letters: Aleph-Taw-Beth-Shin.{' '}
+                  <a 
+                    href="https://en.wikipedia.org/wiki/Atbash" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    (Learn more)
+                  </a>
                 </p>
                 <p>
                   <strong>How it works:</strong> Each letter is replaced with its mirror position in the alphabet.

@@ -594,6 +594,15 @@ function KeywordCipherPage() {
             </h4>
             <p className="text-sm text-muted-fg mb-3">
               The Keyword cipher is like creating a secret club password! You pick a special word that becomes the key to your secret alphabet.
+              This method has been used for centuries as a simple way to create mixed substitution alphabets.{' '}
+              <a 
+                href="https://en.wikipedia.org/wiki/Substitution_cipher" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-primary hover:underline"
+              >
+                (Learn more)
+              </a>
             </p>
             
             <div className="bg-bg p-3 rounded mb-3 border-2 border-dashed border-primary/30">

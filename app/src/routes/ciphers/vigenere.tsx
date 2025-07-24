@@ -128,6 +128,29 @@ function VigenereCipherPage() {
     <CipherPageContentWrapper>
       <CipherNav activeCipher="vigenere" />
       
+      {/* Educational Header */}
+      <div className="text-center space-y-4 mb-6">
+        <p className="text-lg lg:text-xl text-muted-fg max-w-4xl mx-auto">
+          The "uncrackable" cipher that ruled cryptography for 300 years! 🏰
+        </p>
+        <div className="bg-warning/10 rounded-lg p-4 border-l-4 border-warning max-w-3xl mx-auto">
+          <h3 className="text-lg font-semibold text-warning mb-2">📚 Historical Context</h3>
+          <p className="text-sm text-secondary-fg">
+            <strong>Created in 1553</strong> by Giovan Battista Bellaso, but named after Blaise de Vigenère who described it in 1586. 
+            Called <em>"le chiffre indéchiffrable"</em> (the indecipherable cipher) in French, it remained unbroken until 1863! 
+            Used by the Confederacy in the American Civil War and even by diplomatic services into the 20th century.{' '}
+            <a 
+              href="https://en.wikipedia.org/wiki/Vigen%C3%A8re_cipher" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              (Learn more)
+            </a>
+          </p>
+        </div>
+      </div>
+
       <div className="rounded-lg border p-4 space-y-4">
         <CipherModeToggle 
           mode={mode} 
@@ -422,10 +445,11 @@ function VigenereCipherPage() {
           
           <div className="bg-primary/10 p-4 rounded-lg border-l-4 border-primary">
             <h4 className="font-semibold text-primary mb-2 flex items-center">
-              🎪 Many Caesar Ciphers in One!
+              🎪 Many Caesar Ciphers in One! (Polyalphabetic)
             </h4>
             <p className="text-sm text-muted-fg mb-3">
-              The Vigenère cipher is like having a whole circus of Caesar ciphers! Each letter in your keyword creates a different Caesar cipher shift.
+              <strong>Polyalphabetic</strong> means "many alphabets" - the Vigenère cipher uses multiple Caesar cipher shifts instead of just one! 
+              Each letter in your keyword creates a different Caesar cipher shift, making it much harder to crack than simple substitution ciphers.
             </p>
             
             <div className="bg-bg p-3 rounded mb-3 border-2 border-dashed border-primary/30">
@@ -436,6 +460,14 @@ function VigenereCipherPage() {
                   H E L L O
                 </div>
                 <div className="text-xs text-muted-fg">Each keyword letter = different shift amount!</div>
+              </div>
+            </div>
+            
+            <div className="bg-primary/5 p-3 rounded border border-primary/20">
+              <h5 className="text-xs font-semibold text-primary mb-2">📖 Why "Polyalphabetic"?</h5>
+              <div className="text-xs text-muted-fg space-y-1">
+                <div><strong>Monoalphabetic</strong> (like Caesar): A→D, B→E, C→F (same shift for all)</div>
+                <div><strong>Polyalphabetic</strong> (like Vigenère): A→K, A→E, A→Y (different shifts each time)</div>
               </div>
             </div>
           </div>

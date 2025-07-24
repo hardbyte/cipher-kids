@@ -217,18 +217,95 @@ function RailFenceCipherPage() {
             {/* Educational Info */}
             <div className="bg-secondary rounded-lg p-6 space-y-4">
               <h3 className="text-xl font-semibold text-accent">🧠 About Rail Fence</h3>
-              <div className="space-y-2 text-secondary-fg">
+              <div className="space-y-3 text-secondary-fg">
                 <p>
-                  <strong>Transposition Cipher:</strong> Unlike substitution ciphers, this scrambles the position of letters rather than changing them.
+                  <strong>Transposition Cipher:</strong> Unlike substitution ciphers that change letters (like Caesar), this scrambles the position of letters while keeping them the same.
                 </p>
                 <p>
-                  <strong>How it works:</strong> Write letters in a zigzag pattern across {rails} rails, then read each rail left-to-right.
+                  <strong>How it works:</strong> Write letters in a zigzag pattern across {rails} rails, then read each rail left-to-right to get your cipher.
                 </p>
                 <p>
-                  <strong>Historical:</strong> Used in classical cryptography for simple field communications.
+                  <strong>Classical Origins:</strong> A classical transposition cipher method mentioned in cryptographic literature. 
+                  Named after the zigzag fence pattern used around railway lines, though exact historical origins are unclear.{' '}
+                  <a 
+                    href="https://en.wikipedia.org/wiki/Rail_fence_cipher" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    (Learn more)
+                  </a>
+                </p>
+                <p>
+                  <strong>Security:</strong> The key is the number of rails - more rails make it harder to crack, but also harder to encode by hand!
                 </p>
               </div>
+            </div>
+
+            {/* Step-by-Step Instructions */}
+            <div className="bg-primary/10 rounded-lg p-6 border-l-4 border-primary space-y-4">
+              <h3 className="text-xl font-semibold text-primary">📝 How to Encrypt</h3>
+              <div className="space-y-3 text-secondary-fg">
+                <div>
+                  <h4 className="font-semibold text-primary mb-2">Step 1: Set up the Rails</h4>
+                  <p className="text-sm">Draw {rails} horizontal lines (rails) with space between them.</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-primary mb-2">Step 2: Write in Zigzag</h4>
+                  <p className="text-sm">Write your message letter by letter, moving down and up between rails in a zigzag pattern.</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-primary mb-2">Step 3: Read Each Rail</h4>
+                  <p className="text-sm">Read the letters on rail 1 (top), then rail 2, then rail 3, etc. That's your cipher!</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Examples with Different Rail Counts */}
+            <div className="bg-info/10 rounded-lg p-6 border-l-4 border-info space-y-4">
+              <h3 className="text-xl font-semibold text-info">🔢 Examples with Different Rails</h3>
               
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-semibold text-info mb-2">2 Rails Example: "HELLO"</h4>
+                  <div className="bg-bg p-3 rounded border border-info/30">
+                    <div className="font-mono text-sm space-y-1">
+                      <div>Rail 1: H _ L _ O</div>
+                      <div>Rail 2: _ E _ L _</div>
+                      <div className="mt-2 text-success font-bold">Result: HLOEL</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold text-info mb-2">3 Rails Example: "HELLO"</h4>
+                  <div className="bg-bg p-3 rounded border border-info/30">
+                    <div className="font-mono text-sm space-y-1">
+                      <div>Rail 1: H _ _ _ O</div>
+                      <div>Rail 2: _ E _ L _</div>
+                      <div>Rail 3: _ _ L _ _</div>
+                      <div className="mt-2 text-success font-bold">Result: HOELL</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold text-info mb-2">4 Rails Example: "ATTACKATDAWN"</h4>
+                  <div className="bg-bg p-3 rounded border border-info/30">
+                    <div className="font-mono text-sm space-y-1">
+                      <div>Rail 1: A _ _ _ _ _ A _ _ _ _ N</div>
+                      <div>Rail 2: _ T _ _ _ K _ T _ _ W _</div>
+                      <div>Rail 3: _ _ T _ C _ _ _ D _ _ _</div>
+                      <div>Rail 4: _ _ _ A _ _ _ _ _ A _ _</div>
+                      <div className="mt-2 text-success font-bold">Result: AANTKTWTCDAA</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="text-xs text-muted-fg italic">
+                💡 Notice how more rails spread the letters out more, making the cipher harder to recognize!
+              </div>
             </div>
           </div>
 

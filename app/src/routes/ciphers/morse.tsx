@@ -513,7 +513,16 @@ function MorseCodePage() {
             📻 Real-World Uses
           </h4>
           <p className="text-sm text-muted-fg mb-2">
-            Morse code was invented for telegraphs in the 1830s and is still used today by:
+            Developed by Samuel Morse, Joseph Henry, and Alfred Vail around 1837 for electrical telegraphy. 
+            Vail estimated letter frequencies by counting newspaper type, giving common letters shorter codes! Still used today by:{' '}
+            <a 
+              href="https://en.wikipedia.org/wiki/Morse_code" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              (Learn more)
+            </a>
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
             <div className="bg-bg border border-muted/30 rounded px-2 py-1 text-accent">🚢 Ships in distress</div>

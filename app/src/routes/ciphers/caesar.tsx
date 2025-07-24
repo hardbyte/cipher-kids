@@ -211,7 +211,7 @@ function CaesarCipherPage() {
                 <div className="mb-4 p-3 bg-accent/10 border border-accent/30 rounded-lg">
                   <div className="font-medium mb-2 text-fg">Try to decode these secret messages:</div>
                   <div className="text-xs text-muted-fg mb-2">
-                    <span className="bg-warning/20 px-1 py-0.5 rounded">Fun fact:</span> Julius Caesar used shift 3 for his own secret messages!
+                    <span className="bg-warning/20 px-1 py-0.5 rounded">Historical fact:</span> Julius Caesar used shift 3 for his private correspondence - documented by historian Suetonius! <a href="https://en.wikipedia.org/wiki/Caesar_cipher" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs">(Source)</a>
                   </div>
                   <div className="grid gap-2">
                     {sampleMessages.map((sample, index) => (
@@ -481,7 +481,7 @@ function CaesarCipherPage() {
               every possible key until you find one that makes sense.
             </p>
             <div className="flex flex-wrap gap-2 text-xs">
-              <div className="bg-bg border border-muted/30 rounded px-2 py-1 text-accent">Fact: Caesar used shift 3</div>
+              <div className="bg-bg border border-muted/30 rounded px-2 py-1 text-accent">Historical: Caesar's nephew Augustus used shift 1 <a href="https://en.wikipedia.org/wiki/Caesar_cipher" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs">(Wiki)</a></div>
               <div className="bg-bg border border-muted/30 rounded px-2 py-1 text-accent">Spies needed better ciphers</div>
               <div className="bg-bg border border-muted/30 rounded px-2 py-1 text-accent">Easy for computers to crack</div>
             </div>

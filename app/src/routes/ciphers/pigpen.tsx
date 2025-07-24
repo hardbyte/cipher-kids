@@ -207,7 +207,16 @@ function PigpenCipherPage() {
                 <strong>How it works:</strong> Each letter is replaced by the part of the grid that surrounds it.
               </p>
               <p>
-                <strong>Spy History:</strong> This cipher was used by the Freemasons in the 18th century to keep their messages secret!
+                <strong>Ancient Origins:</strong> Possibly used by Hebrew rabbis and Knights Templar during the Crusades! 
+                Freemasons adopted it in the early 18th century for secret correspondence and even carved it on tombstones.{' '}
+                <a 
+                  href="https://en.wikipedia.org/wiki/Pigpen_cipher" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  (Learn more)
+                </a>
               </p>
             </div>
           </div>
@@ -218,12 +227,85 @@ function PigpenCipherPage() {
             </h3>
             <div className="bg-primary/10 p-4 rounded-lg border-l-4 border-primary">
               <h4 className="font-semibold text-primary mb-2 flex items-center">
-                Drawing the Secret Shapes
+                🎯 How the Grid Creates the Shapes
               </h4>
-              <p className="text-sm text-muted-fg mb-3">
-                Imagine drawing a tic-tac-toe board, and then another one with dots in each space. That's the whole secret to the Pigpen cipher!
-              </p>
-              <div className="text-center">
+              <div className="space-y-4">
+                <div>
+                  <h5 className="font-semibold text-primary text-sm mb-2">Step 1: Draw Two Tic-Tac-Toe Grids</h5>
+                  <div className="bg-bg p-3 rounded border border-primary/30">
+                    <div className="grid grid-cols-2 gap-8 text-center text-xs font-mono">
+                      <div>
+                        <div className="mb-2 font-semibold text-primary">Grid 1: Letters A-I</div>
+                        <div className="grid grid-cols-3 gap-1 max-w-20 mx-auto">
+                          <div className="border-r border-b border-primary/50 p-1 text-xs font-bold">A</div>
+                          <div className="border-l border-r border-b border-primary/50 p-1 text-xs font-bold">B</div>
+                          <div className="border-l border-b border-primary/50 p-1 text-xs font-bold">C</div>
+                          <div className="border-r border-t border-b border-primary/50 p-1 text-xs font-bold">D</div>
+                          <div className="border border-primary/50 p-1 text-xs font-bold">E</div>
+                          <div className="border-l border-t border-b border-primary/50 p-1 text-xs font-bold">F</div>
+                          <div className="border-r border-t border-primary/50 p-1 text-xs font-bold">G</div>
+                          <div className="border-l border-r border-t border-primary/50 p-1 text-xs font-bold">H</div>
+                          <div className="border-l border-t border-primary/50 p-1 text-xs font-bold">I</div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="mb-2 font-semibold text-primary">Grid 2: Letters J-R (with dots)</div>
+                        <div className="grid grid-cols-3 gap-1 max-w-20 mx-auto">
+                          <div className="border-r border-b border-primary/50 p-1 text-xs font-bold">J<span className="text-warning">•</span></div>
+                          <div className="border-l border-r border-b border-primary/50 p-1 text-xs font-bold">K<span className="text-warning">•</span></div>
+                          <div className="border-l border-b border-primary/50 p-1 text-xs font-bold">L<span className="text-warning">•</span></div>
+                          <div className="border-r border-t border-b border-primary/50 p-1 text-xs font-bold">M<span className="text-warning">•</span></div>
+                          <div className="border border-primary/50 p-1 text-xs font-bold">N<span className="text-warning">•</span></div>
+                          <div className="border-l border-t border-b border-primary/50 p-1 text-xs font-bold">O<span className="text-warning">•</span></div>
+                          <div className="border-r border-t border-primary/50 p-1 text-xs font-bold">P<span className="text-warning">•</span></div>
+                          <div className="border-l border-r border-t border-primary/50 p-1 text-xs font-bold">Q<span className="text-warning">•</span></div>
+                          <div className="border-l border-t border-primary/50 p-1 text-xs font-bold">R<span className="text-warning">•</span></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h5 className="font-semibold text-primary text-sm mb-2">Step 2: Add X-Pattern for S-Z</h5>
+                  <div className="bg-bg p-3 rounded border border-primary/30">
+                    <div className="grid grid-cols-2 gap-8 text-center text-xs font-mono">
+                      <div>
+                        <div className="mb-2 font-semibold text-primary">X-Pattern: Letters S-V</div>
+                        <div className="grid grid-cols-2 gap-1 max-w-12 mx-auto">
+                          <div className="border-r border-b border-primary/50 p-1 text-xs font-bold transform rotate-45" style={{fontSize: '10px'}}>S</div>
+                          <div className="border-l border-b border-primary/50 p-1 text-xs font-bold transform rotate-45" style={{fontSize: '10px'}}>T</div>
+                          <div className="border-r border-t border-primary/50 p-1 text-xs font-bold transform rotate-45" style={{fontSize: '10px'}}>U</div>
+                          <div className="border-l border-t border-primary/50 p-1 text-xs font-bold transform rotate-45" style={{fontSize: '10px'}}>V</div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="mb-2 font-semibold text-primary">X-Pattern: Letters W-Z (with dots)</div>
+                        <div className="grid grid-cols-2 gap-1 max-w-12 mx-auto">
+                          <div className="border-r border-b border-primary/50 p-1 text-xs font-bold transform rotate-45" style={{fontSize: '10px'}}>W<span className="text-warning">•</span></div>
+                          <div className="border-l border-b border-primary/50 p-1 text-xs font-bold transform rotate-45" style={{fontSize: '10px'}}>X<span className="text-warning">•</span></div>
+                          <div className="border-r border-t border-primary/50 p-1 text-xs font-bold transform rotate-45" style={{fontSize: '10px'}}>Y<span className="text-warning">•</span></div>
+                          <div className="border-l border-t border-primary/50 p-1 text-xs font-bold transform rotate-45" style={{fontSize: '10px'}}>Z<span className="text-warning">•</span></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h5 className="font-semibold text-primary text-sm mb-2">Step 3: The Shape = The Lines Around Each Letter</h5>
+                  <div className="bg-bg p-3 rounded border border-primary/30 text-sm text-muted-fg">
+                    <p className="mb-2">Each letter's symbol is made from the lines that surround it in the grid:</p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
+                      <div><span className="font-bold text-primary">A</span> (top-left corner) → <span className="font-mono">┘</span></div>
+                      <div><span className="font-bold text-primary">E</span> (center) → <span className="font-mono">┼</span></div>
+                      <div><span className="font-bold text-primary">J</span> (top-left with dot) → <span className="font-mono">┘•</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="text-center mt-4">
                 <PigpenGrid />
               </div>
             </div>
