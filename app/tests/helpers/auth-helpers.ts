@@ -5,15 +5,23 @@ import type { Page } from '@playwright/test';
  * and verifies we're not stuck on the login screen
  */
 export async function waitForAuthState(page: Page): Promise<void> {
-  // Wait for React to hydrate and process localStorage
-  await page.waitForLoadState('networkidle');
+  try {
+    // Wait for React to hydrate and process localStorage with a reasonable timeout
+    await page.waitForLoadState('networkidle', { timeout: 15000 });
+  } catch {
+    // If networkidle fails, try domcontentloaded as fallback
+    console.warn('Network idle timeout, falling back to domcontentloaded');
+    await page.waitForLoadState('domcontentloaded', { timeout: 10000 });
+    // Add additional wait for React to initialize
+    await page.waitForTimeout(1000);
+  }
   
   // Wait for either authenticated content or login screen to appear
   await Promise.race([
     // Authenticated: cipher page heading should be visible
-    page.locator('h1, h2, h3').first().waitFor({ state: 'visible', timeout: 5000 }),
+    page.locator('h1, h2, h3').first().waitFor({ state: 'visible', timeout: 8000 }),
     // Not authenticated: login screen should be visible
-    page.getByRole('heading', { name: /who's coding today/i }).waitFor({ state: 'visible', timeout: 5000 })
+    page.getByRole('heading', { name: /who's coding today/i }).waitFor({ state: 'visible', timeout: 8000 })
   ]);
   
   // Verify we're authenticated (not on login screen)

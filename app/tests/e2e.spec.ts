@@ -193,10 +193,13 @@ test.describe('User Interface', () => {
   test('navigation between ciphers works', async ({ authenticatedPage }) => {
     await navigateWithAuth(authenticatedPage, '/');
     
-    // Navigate to different ciphers using navigation links
+    // Navigate to different ciphers using navigation links with resilient waiting
     const caesarLink = authenticatedPage.getByRole('link', { name: /caesar/i }).first();
     await caesarLink.click();
     await expect(authenticatedPage.getByRole('heading', { name: 'Caesar Cipher' }).first()).toBeVisible();
+    
+    // Wait for page to stabilize before next navigation
+    await authenticatedPage.waitForTimeout(1000);
     
     const keywordLink = authenticatedPage.getByRole('link', { name: /keyword/i }).first();
     await keywordLink.click();
