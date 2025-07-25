@@ -14,6 +14,8 @@ import { useUser } from "@/context/use-user";
 import { LoginScreen } from "@/components/login-screen";
 import { UserProfile } from "@/components/user-profile";
 import { ThemeSwitcher } from "@/components/theme-switcher";
+import { MatrixBackground } from "@/components/matrix-background";
+import { EmojiBackground } from "@/components/emoji-background";
 
 declare module "react-aria-components" {
   interface RouterConfig {
@@ -46,15 +48,19 @@ function AuthenticatedRoute() {
   }
   
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-900 to-black text-white">
-      <header className="border-b border-gray-800 p-4 px-6 flex justify-between items-center bg-black bg-opacity-80">
-        <div className="text-2xl font-bold text-red-600">Cipher Kids</div>
-        <div className="flex items-center gap-3">
+    <div className="relative isolate min-h-screen flex flex-col bg-bg text-fg">
+      <MatrixBackground />
+      <EmojiBackground />
+      <header className="border-b border-border p-2 px-3 md:p-4 md:px-6 flex justify-between items-center bg-navbar text-navbar-fg">
+        <Link to="/" className="text-xl md:text-2xl font-bold text-primary hover:text-primary/80 transition-colors">
+          Cipher Kids
+        </Link>
+        <div className="flex items-center gap-2 md:gap-3">
           <ThemeSwitcher appearance="outline" showDropdown={true} />
           {isAuthenticated && <UserProfile />}
         </div>
       </header>
-      <main className="flex-1">
+      <main className="flex-1 max-w-7xl mx-auto px-2 md:px-4 py-3 md:py-6">
         <Outlet />
       </main>
     </div>

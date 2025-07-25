@@ -1,41 +1,74 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { AnimatedMapping } from "@/components/cipher/AnimatedMapping";
 import { CipherNav } from "@/components/cipher/CipherNav";
+import { CipherPageContentWrapper } from "@/components/cipher/CipherPageContentWrapper";
 import { CipherInputs } from "@/components/cipher/CipherInputs";
-import { Slider } from "@/components/ui/slider"; // Assuming shadcn/ui structure
+import { Slider } from "@/components/ui/slider";
 import { CipherModeToggle } from "@/components/cipher/CipherModeToggle";
 import { CipherResult } from "@/components/cipher/results/CipherResult";
 import { AllCaesarShifts } from "@/components/cipher/results/AllCaesarShifts";
 import { GeneralStepByStepAnimation, AnimationStep } from "@/components/cipher/shared/GeneralStepByStepAnimation";
 import { Button } from "@/components/ui/button";
 import { caesarCipher, ALPHABET } from "@/utils/ciphers";
+import { createDelay, ANIMATION_TIMINGS } from "@/utils/animation-config";
 import { createFileRoute } from "@tanstack/react-router";
+import { useProgress } from "@/hooks/use-progress";
+import { AchievementNotification } from "@/components/achievement-notification";
+
+// Types
+type CipherMode = "encrypt" | "decrypt" | "crack";
+
+// Constants
+const CAESAR_INFO = {
+  DEFAULT_SHIFT: 3,
+  MIN_SHIFT: 0,
+  MAX_SHIFT: 25,
+  WIKI_URL: "https://en.wikipedia.org/wiki/Caesar_cipher"
+} as const;
+
+const CAESAR_SAMPLE_MESSAGES = [
+  "KHOOR ZRUOG", // "HELLO WORLD" with shift 3 (Caesar's actual shift!)
+  "FDHVDU FLSKHU LV IXQ", // "CAESAR CIPHER IS FUN" with shift 3
+  "L FDPH, L VDZ, L FRQTXHUHG", // "I CAME, I SAW, I CONQUERED" - Caesar's famous quote with shift 3
+  "VHFXULWB EB REVFXULWB", // "SECURITY BY OBSCURITY" with shift 3
+  "WKH TXLFN EURZQ IRA", // "THE QUICK BROWN FOX" with shift 3
+] as const;
 
 export const Route = createFileRoute("/ciphers/caesar")({
   component: CaesarCipherPage,
 });
 
 function CaesarCipherPage() {
-  const [mode, setMode] = useState<"encrypt" | "decrypt" | "crack">("encrypt");
+  const { trackAction } = useProgress();
+  const [mode, setMode] = useState<CipherMode>("encrypt");
+  const [newAchievements, setNewAchievements] = useState<string[]>([]);
   const [message, setMessage] = useState<string>("");
-  const [shift, setShift] = useState<number>(3); // Default shift to 3, type is number
+  const [shift, setShift] = useState<number>(CAESAR_INFO.DEFAULT_SHIFT);
   const [output, setOutput] = useState<string>("");
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
-  const [currentCharToHighlight, setCurrentCharToHighlight] = useState<
-    string | undefined
-  >(undefined);
+  const [currentCharToHighlight, setCurrentCharToHighlight] = useState<string | undefined>(undefined);
   const [showStepByStep, setShowStepByStep] = useState(false);
   const [animationSteps, setAnimationSteps] = useState<AnimationStep[]>([]);
   const [isStepAnimationPlaying, setIsStepAnimationPlaying] = useState(false);
+  const animationRef = useRef<boolean>(false);
   
-  // Sample messages for kids to try decoding in crack mode
-  const sampleMessages = [
-    "KHOOR ZRUOG", // "HELLO WORLD" with shift 3 (Caesar's actual shift!)
-    "FDHVDU FLSKHU LV IXQ", // "CAESAR CIPHER IS FUN" with shift 3
-    "L FDPH, L VDZ, L FRQTXHUHG", // "I CAME, I SAW, I CONQUERED" - Caesar's famous quote with shift 3
-    "VHFXULWB EB REVFXULWB", // "SECURITY BY OBSCURITY" with shift 3
-    "WKH TXLFN EURZQ IRA", // "THE QUICK BROWN FOX" with shift 3
-  ];
+  // Memoize shifted alphabet to avoid recalculation on every render
+  const shiftedAlphabet = useMemo(() => 
+    ALPHABET.split("").map((_, i) => ALPHABET[(i + shift + 26) % 26]),
+    [shift]
+  );
+
+  // Helper function to safely track achievements
+  const trackAchievement = useCallback((actionType: "encode" | "decode" | "crack") => {
+    try {
+      const result = trackAction("caesar", actionType);
+      if (result && result.length > 0) {
+        setNewAchievements(result);
+      }
+    } catch (error) {
+      console.warn("Achievement tracking failed:", error);
+    }
+  }, [trackAction]);
 
   // Generate animation steps for the GeneralStepByStepAnimation
   const generateAnimationSteps = useCallback(() => {
@@ -51,14 +84,8 @@ function CaesarCipherPage() {
       const char = cleanMessage[i];
       
       if (ALPHABET.includes(char)) {
-        const charIndex = ALPHABET.indexOf(char);
-        let newIndex;
-        if (mode === "decrypt") {
-          newIndex = (charIndex - shift + 26) % 26;
-        } else {
-          newIndex = (charIndex + shift) % 26;
-        }
-        const transformedChar = ALPHABET[newIndex];
+        // Use the utility function for consistency
+        const transformedChar = caesarCipher(char, shift, mode === "decrypt");
 
         steps.push({
           originalChar: char,
@@ -73,73 +100,97 @@ function CaesarCipherPage() {
     setAnimationSteps(steps);
   }, [message, mode, shift]);
 
-  // Reset animation states if mode, message or shift changes
+  // Handle mode changes - auto-populate input with previous result for better UX
+  useEffect(() => {
+    // Cancel any ongoing animation
+    animationRef.current = false;
+    
+    setOutput("");
+    setCurrentCharToHighlight(undefined);
+    setShowStepByStep(false);
+    setIsAnimating(false);
+  }, [mode]); // Only respond to mode changes
+
+  // Handle message and shift changes separately to avoid infinite loops
   useEffect(() => {
     setOutput("");
     setCurrentCharToHighlight(undefined);
     setShowStepByStep(false);
     generateAnimationSteps();
-    // setIsAnimating(false); // Might be too aggressive, could stop an ongoing animation
-  }, [mode, message, shift, generateAnimationSteps]);
+  }, [message, shift, generateAnimationSteps]);
 
-  const handleAction = async () => {
-    if (isAnimating) return;
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      animationRef.current = false;
+    };
+  }, []);
 
+  const handleAction = useCallback(async () => {
+    if (isAnimating || animationRef.current || !message.trim()) return;
+
+    animationRef.current = true;
     setIsAnimating(true);
     setOutput("");
     setCurrentCharToHighlight(undefined);
 
-    const delay = (ms: number) =>
-      new Promise((resolve) => setTimeout(resolve, ms));
     let currentAnimatedOutput = "";
 
-    for (let i = 0; i < message.length; i++) {
-      const char = message[i];
-      const upperChar = char.toUpperCase();
+    try {
+      for (let i = 0; i < message.length; i++) {
+        // Check if animation was cancelled
+        if (!animationRef.current) break;
 
-      if (ALPHABET.includes(upperChar)) {
-        setCurrentCharToHighlight(upperChar);
+        const char = message[i];
+        const upperChar = char.toUpperCase();
 
-        const charIndex = ALPHABET.indexOf(upperChar);
-        let newIndex;
-        if (mode === "decrypt") {
-          newIndex = (charIndex - shift + 26) % 26;
+        if (ALPHABET.includes(upperChar)) {
+          setCurrentCharToHighlight(upperChar);
+
+          // Use the utility function for the actual cipher logic
+          const cipheredChar = caesarCipher(upperChar, shift, mode === "decrypt");
+
+          // Preserve case
+          const resultChar = char === upperChar ? cipheredChar : cipheredChar.toLowerCase();
+          currentAnimatedOutput += resultChar;
+          setOutput(currentAnimatedOutput);
+          await createDelay(ANIMATION_TIMINGS.CHARACTER_PROCESS);
         } else {
-          newIndex = (charIndex + shift) % 26;
+          // Non-alphabetic characters
+          setCurrentCharToHighlight(undefined);
+          currentAnimatedOutput += char;
+          setOutput(currentAnimatedOutput);
+          await createDelay(ANIMATION_TIMINGS.NON_ALPHA_CHARACTER);
         }
-        const cipheredChar = ALPHABET[newIndex];
-
-        // Preserve case
-        const resultChar =
-          char === upperChar ? cipheredChar : cipheredChar.toLowerCase();
-        currentAnimatedOutput += resultChar;
-        setOutput(currentAnimatedOutput);
-        await delay(350); // Animation step delay for processing a character
-      } else {
-        // Non-alphabetic characters
-        setCurrentCharToHighlight(undefined); // No highlight for non-alpha
-        currentAnimatedOutput += char;
-        setOutput(currentAnimatedOutput);
-        await delay(50); // Shorter delay for non-alpha characters
       }
+
+      // Track the action for achievements
+      if (currentAnimatedOutput) {
+        trackAchievement(mode === "encrypt" ? "encode" : "decode");
+      }
+    } catch (error) {
+      console.error("Animation error:", error);
+      // Fallback: show the result without animation
+      setOutput(caesarCipher(message, shift, mode === "decrypt"));
+    } finally {
+      setCurrentCharToHighlight(undefined);
+      animationRef.current = false;
+      setIsAnimating(false);
     }
+  }, [isAnimating, message, shift, mode, trackAchievement]);
 
-    setCurrentCharToHighlight(undefined); // Clear highlight at the end
-    setIsAnimating(false);
-  };
-
-  // Slider ensures shift is within 0-25.
-  // The modulo 26 for index calculation handles positive shifts correctly.
-  const shiftedAlphabet = ALPHABET.split("").map(
-    (_, i) => ALPHABET[(i + shift + 26) % 26], // Ensure positive result before modulo
-  );
+  // Slider change handler
+  const handleShiftChange = useCallback((val: number | number[]) => {
+    if (isAnimating) return;
+    const newShift = Array.isArray(val) ? val[0] : val;
+    setShift(newShift);
+  }, [isAnimating]);
 
   return (
-    <div className="p-6 max-w-xl mx-auto space-y-4">
+    <CipherPageContentWrapper>
       <CipherNav activeCipher="caesar" />
 
-      <div className="rounded-lg border p-4 space-y-4">
-        <CipherModeToggle
+      <CipherModeToggle
           mode={mode}
           setMode={(newMode) => {
             if (!isAnimating) setMode(newMode);
@@ -153,14 +204,7 @@ function CaesarCipherPage() {
             maxValue={25}
             step={1}
             value={[shift]}
-            onChange={(val: number | number[]) => {
-              if (isAnimating) return;
-              if (Array.isArray(val)) {
-                setShift(val[0]);
-              } else {
-                setShift(val);
-              }
-            }}
+            onChange={handleShiftChange}
             className="my-2"
             isDisabled={isAnimating}
           />
@@ -172,39 +216,47 @@ function CaesarCipherPage() {
           setMessage={(newMessage: string) => {
             if (!isAnimating) setMessage(newMessage);
           }}
-          // param, setParam, and paramPlaceholder are removed as shift is handled by slider
           handleAction={mode !== "crack" ? handleAction : undefined}
-          // Assuming CipherInputs can take an isProcessing/isDisabled prop
-          // and apply it to its internal message input and button.
-          // This is a placeholder for now. A more robust solution would be
-          // to modify CipherInputs to accept and use such a prop.
-          // For the button, its onPress={handleAction} will be guarded by isAnimating check within handleAction.
-          // For the message input, the setMessage guard above helps.
+          isAnimating={isAnimating}
         />
 
         {mode === "crack" ? (
             <>
               {!message && (
-                <div className="mb-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
-                  <div className="font-medium mb-2">Try to decode these secret messages:</div>
-                  <div className="text-xs text-gray-600 mb-2">
-                    <span className="bg-yellow-100 px-1 py-0.5 rounded">Fun fact:</span> Julius Caesar used shift 3 for his own secret messages!
+                <div className="mb-4 p-3 bg-accent/10 border border-accent/30 rounded-lg">
+                  <div className="font-medium mb-2 text-fg">Try to decode these secret messages:</div>
+                  <div className="text-xs text-muted-fg mb-2">
+                    <span className="bg-warning/20 px-1 py-0.5 rounded">Historical fact:</span> Julius Caesar used shift 3 for his private correspondence - documented by historian Suetonius! <a href="https://en.wikipedia.org/wiki/Caesar_cipher" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs">(Source)</a>
                   </div>
                   <div className="grid gap-2">
-                    {sampleMessages.map((sample, index) => (
+                    {CAESAR_SAMPLE_MESSAGES.map((sample, index) => (
                       <div 
                         key={index} 
-                        className="bg-white p-2 rounded border border-purple-100 cursor-pointer hover:bg-purple-100 transition-colors"
+                        className="bg-bg p-2 rounded border border-muted/30 cursor-pointer hover:bg-muted/20 transition-colors"
                         onClick={() => setMessage(sample)}
                       >
-                        <code className="font-mono text-purple-700">{sample}</code>
-                        {index === 2 && <div className="text-xs text-gray-500 mt-1">🏛️ Caesar's famous quote</div>}
+                        <code className="font-mono text-accent">{sample}</code>
+                        {index === 2 && <div className="text-xs text-muted-fg mt-1">🏛️ Caesar's famous quote</div>}
                       </div>
                     ))}
                   </div>
                 </div>
               )}
-              <AllCaesarShifts message={message} currentShift={shift} />
+              <AllCaesarShifts 
+                message={message} 
+                currentShift={shift} 
+                onCrack={async () => {
+                  // Track the crack action for achievements
+                  try {
+                    const result = trackAction("caesar", "crack");
+                    if (result && result.length > 0) {
+                      setNewAchievements(result);
+                    }
+                  } catch (error) {
+                    console.warn("Achievement tracking failed:", error);
+                  }
+                }}
+              />
             </>
           ) : (
             <CipherResult
@@ -244,7 +296,7 @@ function CaesarCipherPage() {
               <GeneralStepByStepAnimation
                 steps={animationSteps}
                 isPlaying={isStepAnimationPlaying}
-                onComplete={() => setIsStepAnimationPlaying(false)}
+                onPlayingChange={setIsStepAnimationPlaying}
                 mode={mode}
                 cipherType="caesar"
                 title={`Caesar Cipher - Shift ${shift}`}
@@ -255,7 +307,7 @@ function CaesarCipherPage() {
         )}
 
         <div className="pt-4 border-t mt-4 space-y-4">
-          <h3 className="text-lg font-semibold mb-3 text-gray-800 flex items-center">
+          <h3 className="text-lg font-semibold mb-3 text-fg flex items-center">
             🏛️ How It Works: Caesar Cipher
           </h3>
 
@@ -434,8 +486,8 @@ function CaesarCipherPage() {
             </p>
           </div>
           
-          <div className="bg-purple-100 p-4 rounded-lg border-l-4 border-purple-500">
-            <h4 className="font-semibold text-purple-700 mb-2 flex items-center">
+          <div className="bg-accent/10 p-4 rounded-lg border-l-4 border-accent">
+            <h4 className="font-semibold text-accent mb-2 flex items-center">
               🕵️‍♀️ Crack the Code!
             </h4>
             <p className="text-sm text-muted-fg mb-3">
@@ -444,13 +496,21 @@ function CaesarCipherPage() {
               every possible key until you find one that makes sense.
             </p>
             <div className="flex flex-wrap gap-2 text-xs">
-              <div className="bg-white/50 border border-purple-200 rounded px-2 py-1 text-purple-800">Fact: Caesar used shift 3</div>
-              <div className="bg-white/50 border border-purple-200 rounded px-2 py-1 text-purple-800">Spies needed better ciphers</div>
-              <div className="bg-white/50 border border-purple-200 rounded px-2 py-1 text-purple-800">Easy for computers to crack</div>
+              <div className="bg-bg border border-muted/30 rounded px-2 py-1 text-accent">Historical: Caesar's nephew Augustus used shift 1 <a href="https://en.wikipedia.org/wiki/Caesar_cipher" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs">(Wiki)</a></div>
+              <div className="bg-bg border border-muted/30 rounded px-2 py-1 text-accent">Spies needed better ciphers</div>
+              <div className="bg-bg border border-muted/30 rounded px-2 py-1 text-accent">Easy for computers to crack</div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+
+        {/* Achievement notifications */}
+        {newAchievements.length > 0 && (
+          <AchievementNotification
+            achievements={newAchievements}
+            onClose={() => setNewAchievements([])}
+          />
+        )}
+
+    </CipherPageContentWrapper>
   );
 }

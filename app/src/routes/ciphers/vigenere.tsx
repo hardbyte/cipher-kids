@@ -1,6 +1,7 @@
-import { useState, useEffect, ChangeEvent, useCallback } from "react";
+import { useState, useEffect, ChangeEvent, useCallback, useMemo, useRef } from "react";
 import { AnimatedMapping } from "@/components/cipher/AnimatedMapping";
 import { CipherNav } from "@/components/cipher/CipherNav";
+import { CipherPageContentWrapper } from "@/components/cipher/CipherPageContentWrapper";
 import { CipherInputs } from "@/components/cipher/CipherInputs";
 import { CipherModeToggle } from "@/components/cipher/CipherModeToggle";
 import { CipherResult } from "@/components/cipher/results/CipherResult";
@@ -15,13 +16,40 @@ import { VigenereKeyFinder } from "@/components/cipher/vigenere/VigenereKeyFinde
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { useProgress } from "@/hooks/use-progress";
+import { AchievementNotification } from "@/components/achievement-notification";
+
+// Types
+type CipherMode = "encrypt" | "decrypt" | "crack";
+
+// Constants
+const VIGENERE_INFO = {
+  WIKI_URL: "https://en.wikipedia.org/wiki/Vigen%C3%A8re_cipher",
+  DEFAULT_KEY_LENGTH: 3,
+  ANIMATION_DELAYS: {
+    KEYWORD_REPETITION_BASE: 500,
+    KEYWORD_REPETITION_EXTRA: 1000,
+    AUTO_SCROLL: 1200,
+    STEP_DEMO: 100
+  },
+  SAMPLE_MESSAGES: {
+    CRACK: [
+      "LXFOPVEFRNHR", // "ATTACKATDAWN" encrypted with "LEMON"
+      "CEMFNGLUZMUE", // "SECRETMESSAG" encrypted with "CIPHER" 
+      "KYHIMVKPBHX", // "CRYPTOGRAPH" encrypted with "KEY"
+      "HFWGDQCFCXJ", // "DEFENDEAST" encrypted with "WALL"
+    ]
+  }
+} as const;
 
 export const Route = createFileRoute("/ciphers/vigenere")({
   component: VigenereCipherPage,
 });
 
 function VigenereCipherPage() {
-  const [mode, setMode] = useState<"encrypt" | "decrypt" | "crack">("encrypt");
+  const { trackAction } = useProgress();
+  const [newAchievements, setNewAchievements] = useState<string[]>([]);
+  const [mode, setMode] = useState<CipherMode>("encrypt");
   const [message, setMessage] = useState<string>("");
   const [keyword, setKeyword] = useState<string>("");
   const [output, setOutput] = useState<string>("");
@@ -32,8 +60,22 @@ function VigenereCipherPage() {
   const [showStepByStep, setShowStepByStep] = useState(false);
   const [isStepAnimationPlaying, setIsStepAnimationPlaying] = useState(false);
   const [showFrequencyAnalysis, setShowFrequencyAnalysis] = useState(false);
-  const [keyLength, setKeyLength] = useState(3); // Default key length for analysis
+  const [keyLength, setKeyLength] = useState(VIGENERE_INFO.DEFAULT_KEY_LENGTH);
   const [currentStepIndex, setCurrentStepIndex] = useState(-1);
+  const [isAnimating, setIsAnimating] = useState<boolean>(false);
+  const animationRef = useRef<boolean>(false);
+
+  // Helper function to safely track achievements
+  const trackAchievement = useCallback((actionType: "encode" | "decode" | "crack") => {
+    try {
+      const result = trackAction("vigenere", actionType);
+      if (result && result.length > 0) {
+        setNewAchievements(result);
+      }
+    } catch (error) {
+      console.warn("Achievement tracking failed:", error);
+    }
+  }, [trackAction]);
 
   // Stable callback functions for animation
   const handleAnimationComplete = useCallback(() => {
@@ -44,35 +86,101 @@ function VigenereCipherPage() {
     setCurrentStepIndex(stepIndex);
   }, []);
 
-  const handleAction = () => {
-    if (!message.trim() || !keyword.trim()) {
+  // Memoize clean keyword for performance
+  const cleanKeyword = useMemo(() => 
+    keyword.toUpperCase().replace(/[^A-Z]/g, ""),
+    [keyword]
+  );
+
+  // Memoized sample message handler
+  const handleSampleMessage = useCallback((sampleMessage: string) => {
+    if (!isAnimating && !animationRef.current) {
+      setMessage(sampleMessage);
+    }
+  }, [isAnimating]);
+
+  // Handle mode changes - auto-populate input with previous result for better UX
+  useEffect(() => {
+    // Cancel any ongoing animations
+    animationRef.current = false;
+    
+    // If we have an output and the mode changed, use it as the new input
+    if (output && output !== message) {
+      setMessage(output);
+    }
+    
+    setOutput("");
+    // Clear keyword when switching to crack mode
+    if (mode === "crack") {
+      setKeyword("");
+    }
+    setShowStepByStep(false);
+    setIsStepAnimationPlaying(false);
+    setShowFrequencyAnalysis(false);
+    setAnimateKeywordRepetition(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Intentionally excluding output to prevent infinite loops
+  }, [message, mode]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      animationRef.current = false;
+    };
+  }, []);
+
+  const handleAction = useCallback(async () => {
+    if (isAnimating || animationRef.current) return;
+    
+    // Input validation
+    if (!message.trim() || !cleanKeyword.trim()) {
       toast.error("Please enter both a message and a keyword!");
       return;
     }
     
-    const result = vigenereCipher(message, keyword, mode === "decrypt");
-    setOutput(result);
+    animationRef.current = true;
+    setIsAnimating(true);
     
-    // Trigger animation for keyword repetition (only if not already animating)
-    if (!animateKeywordRepetition) {
-      setAnimateKeywordRepetition(true);
-      setTimeout(() => setAnimateKeywordRepetition(false), message.length * 500 + 1000);
-    }
-    
-    // Show success toast
-    toast.success(`Message ${mode === "encrypt" ? "encrypted" : "decrypted"} successfully!`);
-    
-    // Scroll to results after a brief delay
-    setTimeout(() => {
-      const resultElement = document.querySelector('[data-result-section]');
-      if (resultElement) {
-        resultElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    try {
+      const result = vigenereCipher(message, cleanKeyword, mode === "decrypt");
+      setOutput(result);
+      
+      // Track the action for achievements
+      if (result && message) {
+        trackAchievement(mode === "encrypt" ? "encode" : "decode");
       }
-    }, 100);
-  };
+      
+      // Trigger animation for keyword repetition (only if not already animating)
+      if (!animateKeywordRepetition) {
+        setAnimateKeywordRepetition(true);
+        const animationDuration = message.length * VIGENERE_INFO.ANIMATION_DELAYS.KEYWORD_REPETITION_BASE + VIGENERE_INFO.ANIMATION_DELAYS.KEYWORD_REPETITION_EXTRA;
+        setTimeout(() => {
+          if (animationRef.current) {
+            setAnimateKeywordRepetition(false);
+          }
+        }, animationDuration);
+      }
+      
+      // Show success toast
+      toast.success(`Message ${mode === "encrypt" ? "encrypted" : "decrypted"} successfully!`);
+      
+      // Scroll to results after a brief delay
+      setTimeout(() => {
+        if (animationRef.current) {
+          const resultElement = document.querySelector('[data-result-section]');
+          if (resultElement) {
+            resultElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }
+      }, VIGENERE_INFO.ANIMATION_DELAYS.STEP_DEMO);
+    } catch (error) {
+      console.error("Cipher operation failed:", error);
+      toast.error("An error occurred while processing your message.");
+    } finally {
+      animationRef.current = false;
+      setIsAnimating(false);
+    }
+  }, [isAnimating, message, cleanKeyword, mode, trackAchievement, animateKeywordRepetition]);
 
-  // Clean keyword for visualization
-  const cleanKeyword = keyword.toUpperCase().replace(/[^A-Z]/g, "");
 
   // Effect to demonstrate a single character when the full table isn't shown
   useEffect(() => {
@@ -88,19 +196,36 @@ function VigenereCipherPage() {
   }, [message, cleanKeyword, showFullTable]);
 
   return (
-    <div className="p-6 max-w-2xl mx-auto space-y-4">
+    <CipherPageContentWrapper>
       <CipherNav activeCipher="vigenere" />
       
+      {/* Educational Header */}
+      <div className="text-center space-y-4 mb-6">
+        <p className="text-lg lg:text-xl text-muted-fg max-w-4xl mx-auto">
+          The "uncrackable" cipher that ruled cryptography for 300 years! 🏰
+        </p>
+        <div className="bg-warning/10 rounded-lg p-4 border-l-4 border-warning max-w-3xl mx-auto">
+          <h3 className="text-lg font-semibold text-warning mb-2">📚 Historical Context</h3>
+          <p className="text-sm text-secondary-fg">
+            <strong>Created in 1553</strong> by Giovan Battista Bellaso, but named after Blaise de Vigenère who described it in 1586. 
+            Called <em>"le chiffre indéchiffrable"</em> (the indecipherable cipher) in French, it remained unbroken until 1863! 
+            Used by the Confederacy in the American Civil War and even by diplomatic services into the 20th century.{' '}
+            <a 
+              href={VIGENERE_INFO.WIKI_URL} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              (Learn more)
+            </a>
+          </p>
+        </div>
+      </div>
+
       <div className="rounded-lg border p-4 space-y-4">
         <CipherModeToggle 
           mode={mode} 
-          setMode={(newMode) => {
-            setMode(newMode);
-            // Clear keyword when switching to crack mode, but preserve message
-            if (newMode === "crack") {
-              setKeyword("");
-            }
-          }} 
+          setMode={setMode}
         />
 
         {mode === "crack" ? (
@@ -127,6 +252,7 @@ function VigenereCipherPage() {
               setParam={setKeyword}
               paramPlaceholder="Enter keyword"
               handleAction={handleAction}
+              isAnimating={isAnimating}
             />
               
             {message && keyword && (
@@ -158,13 +284,13 @@ function VigenereCipherPage() {
               <div className="space-y-2 font-mono text-sm">
                 <div 
                   className="bg-bg p-2 rounded cursor-pointer hover:bg-muted/20 border border-muted/30" 
-                  onClick={() => setMessage("LZIJQM HEWSDCF")}
+                  onClick={() => handleSampleMessage("LZIJQM HEWSDCF")}
                 >
                   LZIJQM HEWSDCF
                 </div>
                 <div 
                   className="bg-bg p-2 rounded cursor-pointer hover:bg-muted/20 border border-muted/30"
-                  onClick={() => setMessage("BGPXVR CSRBVLY CYJPHMN")}
+                  onClick={() => handleSampleMessage("BGPXVR CSRBVLY CYJPHMN")}
                 >
                   BGPXVR CSRBVLY CYJPHMN
                 </div>
@@ -178,7 +304,7 @@ function VigenereCipherPage() {
               
               <VigenereKeyFinder 
                 ciphertext={message}
-                onKeyLengthDetected={(length) => {
+                onKeyLengthDetected={async (length) => {
                   setShowFrequencyAnalysis(true);
                   // Pass detected key length to FrequencyAnalysis
                   if (length > 0) {
@@ -390,10 +516,11 @@ function VigenereCipherPage() {
           
           <div className="bg-primary/10 p-4 rounded-lg border-l-4 border-primary">
             <h4 className="font-semibold text-primary mb-2 flex items-center">
-              🎪 Many Caesar Ciphers in One!
+              🎪 Many Caesar Ciphers in One! (Polyalphabetic)
             </h4>
             <p className="text-sm text-muted-fg mb-3">
-              The Vigenère cipher is like having a whole circus of Caesar ciphers! Each letter in your keyword creates a different Caesar cipher shift.
+              <strong>Polyalphabetic</strong> means "many alphabets" - the Vigenère cipher uses multiple Caesar cipher shifts instead of just one! 
+              Each letter in your keyword creates a different Caesar cipher shift, making it much harder to crack than simple substitution ciphers.
             </p>
             
             <div className="bg-bg p-3 rounded mb-3 border-2 border-dashed border-primary/30">
@@ -404,6 +531,14 @@ function VigenereCipherPage() {
                   H E L L O
                 </div>
                 <div className="text-xs text-muted-fg">Each keyword letter = different shift amount!</div>
+              </div>
+            </div>
+            
+            <div className="bg-primary/5 p-3 rounded border border-primary/20">
+              <h5 className="text-xs font-semibold text-primary mb-2">📖 Why "Polyalphabetic"?</h5>
+              <div className="text-xs text-muted-fg space-y-1">
+                <div><strong>Monoalphabetic</strong> (like Caesar): A→D, B→E, C→F (same shift for all)</div>
+                <div><strong>Polyalphabetic</strong> (like Vigenère): A→K, A→E, A→Y (different shifts each time)</div>
               </div>
             </div>
           </div>
@@ -532,10 +667,10 @@ function VigenereCipherPage() {
                 Try decrypting these messages with the keyword "SPY":
               </p>
               <div className="space-y-2 font-mono text-sm">
-                <div className="bg-bg p-2 rounded cursor-pointer hover:bg-muted/20 border border-muted/30" onClick={() => setMessage("LZIJQM HEWSDCF")}>
+                <div className="bg-bg p-2 rounded cursor-pointer hover:bg-muted/20 border border-muted/30" onClick={() => handleSampleMessage("LZIJQM HEWSDCF")}>
                   LZIJQM HEWSDCF
                 </div>
-                <div className="bg-bg p-2 rounded cursor-pointer hover:bg-muted/20 border border-muted/30" onClick={() => setMessage("BGPXVR CSRBV")}>
+                <div className="bg-bg p-2 rounded cursor-pointer hover:bg-muted/20 border border-muted/30" onClick={() => handleSampleMessage("BGPXVR CSRBV")}>
                   BGPXVR CSRBV
                 </div>
               </div>
@@ -543,6 +678,14 @@ function VigenereCipherPage() {
           )}
         </div>
       </div>
-    </div>
+      
+      {/* Achievement notifications */}
+      {newAchievements.length > 0 && (
+        <AchievementNotification
+          achievements={newAchievements}
+          onClose={() => setNewAchievements([])}
+        />
+      )}
+    </CipherPageContentWrapper>
   );
 }

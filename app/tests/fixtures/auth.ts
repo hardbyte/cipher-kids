@@ -1,0 +1,43 @@
+import { test as baseTest } from '@playwright/test';
+import type { BrowserContext, Page } from '@playwright/test';
+
+type AuthFixtures = {
+  authenticatedPage: Page;
+  authenticatedContext: BrowserContext;
+};
+
+export const test = baseTest.extend<AuthFixtures>({
+  authenticatedContext: async ({ browser }, use) => {
+    const context = await browser.newContext();
+    
+    // Inject localStorage before any page loads - this ensures authentication
+    // is set up before React initializes, preventing race conditions
+    await context.addInitScript((authData) => {
+      // Set authentication data in localStorage before React app initializes
+      window.localStorage.setItem('cipher-app-user', authData.userId);
+      window.localStorage.setItem('cipher-app-enabled-ciphers', JSON.stringify(authData.enabledCiphers));
+      
+      // Only set user config if it doesn't already exist to avoid overwriting test changes
+      const existingConfig = window.localStorage.getItem(`cipher-app-user-config-${authData.userId}`);
+      if (!existingConfig) {
+        window.localStorage.setItem(`cipher-app-user-config-${authData.userId}`, JSON.stringify(authData.userConfig));
+      }
+    }, {
+      userId: 'A',
+      enabledCiphers: ['atbash', 'caesar', 'keyword', 'railfence', 'vigenere'],
+      userConfig: { theme: 'dark' }
+    });
+    
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    await use(context);
+    await context.close();
+  },
+  
+  authenticatedPage: async ({ authenticatedContext }, use) => {
+    const page = await authenticatedContext.newPage();
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    await use(page);
+  }
+});
+
+export { expect } from '@playwright/test';

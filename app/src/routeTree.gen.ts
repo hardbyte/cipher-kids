@@ -10,9 +10,12 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ConfigRouteImport } from './routes/config'
+import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CiphersVigenereRouteImport } from './routes/ciphers/vigenere'
 import { Route as CiphersRailfenceRouteImport } from './routes/ciphers/railfence'
+import { Route as CiphersPigpenRouteImport } from './routes/ciphers/pigpen'
+import { Route as CiphersMorseRouteImport } from './routes/ciphers/morse'
 import { Route as CiphersKeywordRouteImport } from './routes/ciphers/keyword'
 import { Route as CiphersCaesarRouteImport } from './routes/ciphers/caesar'
 import { Route as CiphersAtbashRouteImport } from './routes/ciphers/atbash'
@@ -20,6 +23,11 @@ import { Route as CiphersAtbashRouteImport } from './routes/ciphers/atbash'
 const ConfigRoute = ConfigRouteImport.update({
   id: '/config',
   path: '/config',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AchievementsRoute = AchievementsRouteImport.update({
+  id: '/achievements',
+  path: '/achievements',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -35,6 +43,16 @@ const CiphersVigenereRoute = CiphersVigenereRouteImport.update({
 const CiphersRailfenceRoute = CiphersRailfenceRouteImport.update({
   id: '/ciphers/railfence',
   path: '/ciphers/railfence',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CiphersPigpenRoute = CiphersPigpenRouteImport.update({
+  id: '/ciphers/pigpen',
+  path: '/ciphers/pigpen',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CiphersMorseRoute = CiphersMorseRouteImport.update({
+  id: '/ciphers/morse',
+  path: '/ciphers/morse',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CiphersKeywordRoute = CiphersKeywordRouteImport.update({
@@ -55,29 +73,38 @@ const CiphersAtbashRoute = CiphersAtbashRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/achievements': typeof AchievementsRoute
   '/config': typeof ConfigRoute
   '/ciphers/atbash': typeof CiphersAtbashRoute
   '/ciphers/caesar': typeof CiphersCaesarRoute
   '/ciphers/keyword': typeof CiphersKeywordRoute
+  '/ciphers/morse': typeof CiphersMorseRoute
+  '/ciphers/pigpen': typeof CiphersPigpenRoute
   '/ciphers/railfence': typeof CiphersRailfenceRoute
   '/ciphers/vigenere': typeof CiphersVigenereRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/achievements': typeof AchievementsRoute
   '/config': typeof ConfigRoute
   '/ciphers/atbash': typeof CiphersAtbashRoute
   '/ciphers/caesar': typeof CiphersCaesarRoute
   '/ciphers/keyword': typeof CiphersKeywordRoute
+  '/ciphers/morse': typeof CiphersMorseRoute
+  '/ciphers/pigpen': typeof CiphersPigpenRoute
   '/ciphers/railfence': typeof CiphersRailfenceRoute
   '/ciphers/vigenere': typeof CiphersVigenereRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/achievements': typeof AchievementsRoute
   '/config': typeof ConfigRoute
   '/ciphers/atbash': typeof CiphersAtbashRoute
   '/ciphers/caesar': typeof CiphersCaesarRoute
   '/ciphers/keyword': typeof CiphersKeywordRoute
+  '/ciphers/morse': typeof CiphersMorseRoute
+  '/ciphers/pigpen': typeof CiphersPigpenRoute
   '/ciphers/railfence': typeof CiphersRailfenceRoute
   '/ciphers/vigenere': typeof CiphersVigenereRoute
 }
@@ -85,38 +112,50 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/achievements'
     | '/config'
     | '/ciphers/atbash'
     | '/ciphers/caesar'
     | '/ciphers/keyword'
+    | '/ciphers/morse'
+    | '/ciphers/pigpen'
     | '/ciphers/railfence'
     | '/ciphers/vigenere'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/achievements'
     | '/config'
     | '/ciphers/atbash'
     | '/ciphers/caesar'
     | '/ciphers/keyword'
+    | '/ciphers/morse'
+    | '/ciphers/pigpen'
     | '/ciphers/railfence'
     | '/ciphers/vigenere'
   id:
     | '__root__'
     | '/'
+    | '/achievements'
     | '/config'
     | '/ciphers/atbash'
     | '/ciphers/caesar'
     | '/ciphers/keyword'
+    | '/ciphers/morse'
+    | '/ciphers/pigpen'
     | '/ciphers/railfence'
     | '/ciphers/vigenere'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AchievementsRoute: typeof AchievementsRoute
   ConfigRoute: typeof ConfigRoute
   CiphersAtbashRoute: typeof CiphersAtbashRoute
   CiphersCaesarRoute: typeof CiphersCaesarRoute
   CiphersKeywordRoute: typeof CiphersKeywordRoute
+  CiphersMorseRoute: typeof CiphersMorseRoute
+  CiphersPigpenRoute: typeof CiphersPigpenRoute
   CiphersRailfenceRoute: typeof CiphersRailfenceRoute
   CiphersVigenereRoute: typeof CiphersVigenereRoute
 }
@@ -128,6 +167,13 @@ declare module '@tanstack/react-router' {
       path: '/config'
       fullPath: '/config'
       preLoaderRoute: typeof ConfigRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/achievements': {
+      id: '/achievements'
+      path: '/achievements'
+      fullPath: '/achievements'
+      preLoaderRoute: typeof AchievementsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -149,6 +195,20 @@ declare module '@tanstack/react-router' {
       path: '/ciphers/railfence'
       fullPath: '/ciphers/railfence'
       preLoaderRoute: typeof CiphersRailfenceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ciphers/pigpen': {
+      id: '/ciphers/pigpen'
+      path: '/ciphers/pigpen'
+      fullPath: '/ciphers/pigpen'
+      preLoaderRoute: typeof CiphersPigpenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ciphers/morse': {
+      id: '/ciphers/morse'
+      path: '/ciphers/morse'
+      fullPath: '/ciphers/morse'
+      preLoaderRoute: typeof CiphersMorseRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ciphers/keyword': {
@@ -177,10 +237,13 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AchievementsRoute: AchievementsRoute,
   ConfigRoute: ConfigRoute,
   CiphersAtbashRoute: CiphersAtbashRoute,
   CiphersCaesarRoute: CiphersCaesarRoute,
   CiphersKeywordRoute: CiphersKeywordRoute,
+  CiphersMorseRoute: CiphersMorseRoute,
+  CiphersPigpenRoute: CiphersPigpenRoute,
   CiphersRailfenceRoute: CiphersRailfenceRoute,
   CiphersVigenereRoute: CiphersVigenereRoute,
 }

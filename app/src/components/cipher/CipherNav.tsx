@@ -1,23 +1,30 @@
 import React from "react";
 import { Link } from "@tanstack/react-router";
 
-type CipherType = "atbash" | "caesar" | "keyword" | "railfence" | "vigenere";
+type CipherType = "atbash" | "caesar" | "keyword" | "railfence" | "vigenere" | "pigpen" | "morse";
 
 interface CipherNavProps {
   activeCipher: CipherType;
 }
 
 export const CipherNav: React.FC<CipherNavProps> = ({ activeCipher }) => {
+  const cipherData = {
+    atbash: { name: "Atbash Cipher", path: "/ciphers/atbash" },
+    caesar: { name: "Caesar Cipher", path: "/ciphers/caesar" },
+    keyword: { name: "Keyword Cipher", path: "/ciphers/keyword" },
+    railfence: { name: "Rail Fence Cipher", path: "/ciphers/railfence" },
+    vigenere: { name: "Vigenère Cipher", path: "/ciphers/vigenere" },
+    pigpen: { name: "Pigpen Cipher", path: "/ciphers/pigpen" },
+    morse: { name: "Morse Code", path: "/ciphers/morse" },
+  };
+
   return (
     <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-2 lg:gap-0">
-      <h1 className="text-2xl font-bold">
-        {activeCipher === "atbash" && "Atbash Cipher"}
-        {activeCipher === "caesar" && "Caesar Cipher"}
-        {activeCipher === "keyword" && "Keyword Cipher"}
-        {activeCipher === "railfence" && "Rail Fence Cipher"}
-        {activeCipher === "vigenere" && "Vigenère Cipher"}
+      <h1 className="text-xl md:text-2xl font-bold">
+        {cipherData[activeCipher]?.name}
       </h1>
-      <nav className="flex gap-1 md:gap-2 text-xs md:text-sm flex-wrap">
+      {/* Mobile-friendly breadcrumb - only show Home > Ciphers */}
+      <nav className="flex gap-1 md:gap-2 text-xs md:text-sm items-center">
         <Link
           to="/"
           className="text-primary hover:underline whitespace-nowrap"
@@ -25,46 +32,10 @@ export const CipherNav: React.FC<CipherNavProps> = ({ activeCipher }) => {
         >
           Home
         </Link>
-        <span>/</span>
-        <Link
-          to="/ciphers/atbash"
-          className="text-primary hover:underline whitespace-nowrap"
-          activeProps={{ className: "text-primary hover:underline font-bold" }}
-        >
-          Atbash
-        </Link>
-        <span>/</span>
-        <Link
-          to="/ciphers/caesar"
-          className="text-primary hover:underline whitespace-nowrap"
-          activeProps={{ className: "text-primary hover:underline font-bold" }}
-        >
-          Caesar
-        </Link>
-        <span>/</span>
-        <Link
-          to="/ciphers/keyword"
-          className="text-primary hover:underline whitespace-nowrap"
-          activeProps={{ className: "text-primary hover:underline font-bold" }}
-        >
-          Keyword
-        </Link>
-        <span>/</span>
-        <Link
-          to="/ciphers/railfence"
-          className="text-primary hover:underline whitespace-nowrap"
-          activeProps={{ className: "text-primary hover:underline font-bold" }}
-        >
-          Rail Fence
-        </Link>
-        <span>/</span>
-        <Link
-          to="/ciphers/vigenere"
-          className="text-primary hover:underline whitespace-nowrap"
-          activeProps={{ className: "text-primary hover:underline font-bold" }}
-        >
-          Vigenère
-        </Link>
+        <span className="text-muted-fg">/</span>
+        <span className="text-fg font-medium">
+          Ciphers
+        </span>
       </nav>
     </div>
   );

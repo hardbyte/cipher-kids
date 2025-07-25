@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button";
 interface AllCaesarShiftsProps {
   message: string;
   currentShift?: number; // Optional prop to highlight a specific shift
+  onCrack?: () => void; // Optional callback when user makes a crack attempt
 }
 
 export const AllCaesarShifts: React.FC<AllCaesarShiftsProps> = ({
   message,
   currentShift,
+  onCrack,
 }) => {
   // Track which shift the user thinks is correct for the challenge
   const [userGuess, setUserGuess] = useState<number | null>(null);
@@ -42,6 +44,11 @@ export const AllCaesarShifts: React.FC<AllCaesarShiftsProps> = ({
     // Give some points for finding words - this is just for fun!
     // In a real educational app, we'd check for actual English words
     setScore(prevScore => prevScore + 10);
+    
+    // Notify parent that a crack attempt was made
+    if (onCrack) {
+      onCrack();
+    }
   };
   
   // Handle copying a shift result to clipboard
@@ -55,9 +62,9 @@ export const AllCaesarShifts: React.FC<AllCaesarShiftsProps> = ({
 
   return (
     <div className="space-y-6">
-      <div className="bg-purple-900/20 border border-purple-500/30 p-5 rounded-lg">
+      <div className="bg-secondary/50 border border-accent/30 p-5 rounded-lg">
         <div className="flex items-center gap-3 mb-4">
-          <div className="text-2xl font-bold text-purple-600">🔓 Cracking Caesar Cipher</div>
+          <div className="text-2xl font-bold text-accent">🔓 Cracking Caesar Cipher</div>
           <div className="bg-warning/20 text-warning text-xs px-2 py-1 rounded-full">
             All 26 possible shifts
           </div>
@@ -66,11 +73,11 @@ export const AllCaesarShifts: React.FC<AllCaesarShiftsProps> = ({
         <div className="text-sm text-muted-fg mb-4">
           <p>When you see all 26 possible shifts, one of them will make sense in English. That's the original message!</p>
           <p className="mt-2">Look through the results - <strong>can you find the hidden message?</strong></p>
-          <p className="mt-2 text-xs bg-gray-50 p-2 rounded-t border border-gray-200 border-b-0">
+          <p className="mt-2 text-xs bg-secondary/20 p-2 rounded-t border border-muted border-b-0">
             <span className="font-bold">Note:</span> Each "Shift" number shows the encryption shift. For example, "Shift = 3" means A→D, B→E, etc.
           </p>
-          <div className="text-xs bg-purple-50 p-2 rounded-b border border-gray-200 border-t-0 flex items-center gap-2">
-            <span className="bg-purple-100 text-purple-800 px-1 py-0.5 rounded font-semibold">Detective Tip:</span>
+          <div className="text-xs bg-accent/10 p-2 rounded-b border border-muted border-t-0 flex items-center gap-2">
+            <span className="bg-accent/20 text-accent px-1 py-0.5 rounded font-semibold">Detective Tip:</span>
             <span>If you find readable text at Shift = 3, the original encrypter used "Encrypt with shift 3"!</span>
           </div>
         </div>
@@ -97,7 +104,7 @@ export const AllCaesarShifts: React.FC<AllCaesarShiftsProps> = ({
               shift === currentShift
                 ? "border-success bg-success/10" 
                 : shift === userGuess
-                ? "border-purple-500 bg-purple-100/50"
+                ? "border-accent bg-accent/10"
                 : "border-muted/40 hover:border-primary/60"
             } transition-all hover:shadow-md`}
             onClick={() => handleSelectSolution(shift)}
@@ -118,7 +125,7 @@ export const AllCaesarShifts: React.FC<AllCaesarShiftsProps> = ({
                   </div>
                 )}
                 {shift === userGuess && (
-                  <div className="bg-purple-200 text-purple-700 text-xs px-2 py-0.5 rounded-full">
+                  <div className="bg-accent/20 text-accent text-xs px-2 py-0.5 rounded-full">
                     Your guess
                   </div>
                 )}
@@ -139,7 +146,7 @@ export const AllCaesarShifts: React.FC<AllCaesarShiftsProps> = ({
               shift === currentShift 
                 ? "bg-success/5" 
                 : shift === userGuess
-                ? "bg-purple-100"
+                ? "bg-accent/20"
                 : "bg-muted/20"
             } relative`}>
               {result}
@@ -192,8 +199,8 @@ export const AllCaesarShifts: React.FC<AllCaesarShiftsProps> = ({
           Click on the shift you think contains the real message! If you need better security than Caesar
           ciphers, try the more advanced ciphers in this app. Can you figure out why they're harder to crack?
         </p>
-        <div className="bg-white/50 rounded p-2 border border-success/20 flex gap-3 items-center mt-2">
-          <div className="bg-white w-8 h-8 rounded-full flex items-center justify-center text-success font-bold text-lg">
+        <div className="bg-bg/50 rounded p-2 border border-success/20 flex gap-3 items-center mt-2">
+          <div className="bg-bg w-8 h-8 rounded-full flex items-center justify-center text-success font-bold text-lg">
             ?
           </div>
           <div className="text-xs">

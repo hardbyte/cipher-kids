@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useUser } from "@/context/use-user";
+import { CipherPageContentWrapper } from "@/components/cipher/CipherPageContentWrapper";
 
 export const Route = createFileRoute("/")({
   component: CipherIndex,
@@ -37,6 +38,18 @@ const AVAILABLE_CIPHERS = [
     description: "A polyalphabetic substitution cipher using a keyword to determine shifts.",
     to: "/ciphers/vigenere"
   },
+  {
+    id: "pigpen",
+    name: "Pigpen Cipher",
+    description: "A geometric substitution cipher using symbols from a grid.",
+    to: "/ciphers/pigpen"
+  },
+  {
+    id: "morse",
+    name: "Morse Code",
+    description: "Encode messages using dots and dashes for telegraph-style communication.",
+    to: "/ciphers/morse"
+  },
 ];
 
 function CipherIndex() {
@@ -48,14 +61,14 @@ function CipherIndex() {
   // Get the color based on the user initial for personalization
   const getUserColor = (initial: string): string => {
     const colorMap: Record<string, string> = {
-      'A': 'bg-red-600 border-red-500',
-      'L': 'bg-blue-600 border-blue-500',
-      'I': 'bg-green-600 border-green-500',
-      'J': 'bg-purple-600 border-purple-500',
-      'F': 'bg-yellow-600 border-yellow-500',
+      'A': 'bg-[var(--user-a)] border-[var(--user-a)]',
+      'L': 'bg-[var(--user-l)] border-[var(--user-l)]',
+      'I': 'bg-[var(--user-i)] border-[var(--user-i)]',
+      'J': 'bg-[var(--user-j)] border-[var(--user-j)]',
+      'F': 'bg-[var(--user-f)] border-[var(--user-f)]',
     };
     
-    return colorMap[initial || ''] || 'bg-gray-700 border-gray-600';
+    return colorMap[initial || ''] || 'bg-[var(--user-fallback)] border-[var(--user-fallback)]';
   };
   
   const userColor = getUserColor(currentUser || '');
@@ -67,9 +80,9 @@ function CipherIndex() {
           <div className={`${userColor.split(' ')[0]} w-10 h-10 rounded-md flex items-center justify-center text-white font-bold`}>
             {currentUser}
           </div>
-          <h1 className="text-4xl font-bold text-white">Cipher Tools</h1>
+          <h1 className="text-4xl font-bold text-fg">Cipher Tools</h1>
         </div>
-        <p className="text-gray-400 text-lg">
+        <p className="text-muted-fg text-lg">
           Welcome {currentUser}, ready to explore secret codes?
         </p>
       </header>
@@ -80,23 +93,25 @@ function CipherIndex() {
             <Link
               key={cipher.id}
               to={cipher.to}
-              className={`block p-6 rounded-lg bg-gray-800 border-2 ${userColor.split(' ')[1]} hover:bg-gray-700 transition-all transform hover:-translate-y-1 hover:shadow-xl`}
+              className="block"
             >
-              <h2 className="text-2xl font-semibold mb-3 text-white">{cipher.name}</h2>
-              <p className="text-gray-400">
-                {cipher.description}
-              </p>
+              <CipherPageContentWrapper className="h-full hover:bg-muted transition-all transform hover:-translate-y-1 hover:shadow-xl">
+                <h2 className="text-2xl font-semibold mb-3 text-secondary-fg">{cipher.name}</h2>
+                <p className="text-muted-fg">
+                  {cipher.description}
+                </p>
+              </CipherPageContentWrapper>
             </Link>
           ))
         ) : (
           <div className="col-span-full text-center py-12">
-            <div className="text-gray-400 mb-4">
+            <div className="text-muted-fg mb-4">
               <p className="text-xl">No ciphers are currently enabled.</p>
               <p>Visit the configuration page to enable ciphers.</p>
             </div>
             <Link
               to="/config"
-              className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md transition-colors"
+              className="inline-flex items-center px-4 py-2 bg-primary hover:bg-primary/90 text-primary-fg rounded-md transition-colors"
             >
               Go to Configuration
             </Link>
@@ -105,11 +120,11 @@ function CipherIndex() {
       </div>
 
       {/* Footer */}
-      <footer className="mt-16 pt-8 border-t border-gray-800">
+      <footer className="mt-16 pt-8 border-t border-border">
         <div className="flex justify-center">
           <Link
             to="/config"
-            className="text-gray-500 hover:text-gray-400 text-sm transition-colors"
+            className="text-muted-fg hover:text-fg text-sm transition-colors"
           >
             Admin Configuration
           </Link>
