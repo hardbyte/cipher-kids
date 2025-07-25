@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
 import { useUser } from '@/context/use-user';
@@ -32,20 +32,49 @@ export function UserSettings({ onOpenChange }: UserSettingsProps) {
   const { setTheme } = useTheme();
   const navigate = useNavigate();
   const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
+  const themeChangeRef = useRef<number | null>(null);
   
   const handleThemeChange = useCallback((newTheme: Theme) => {
-    // Now that event handling is fixed, we can apply changes immediately
-    setTheme(newTheme);
-    updateUserConfig({ theme: newTheme });
+    try {
+      // Cancel any pending theme change
+      if (themeChangeRef.current) {
+        cancelAnimationFrame(themeChangeRef.current);
+      }
+      
+      // Update user config first (this doesn't affect DOM immediately)
+      updateUserConfig({ theme: newTheme });
+      
+      // Then apply theme change to DOM
+      // Use requestAnimationFrame to ensure DOM update happens in next frame
+      themeChangeRef.current = requestAnimationFrame(() => {
+        setTheme(newTheme);
+        themeChangeRef.current = null;
+      });
+    } catch (error) {
+      console.error('Error changing theme:', error);
+    }
   }, [setTheme, updateUserConfig]);
+  
+  // Cleanup effect to cancel pending theme changes
+  useEffect(() => {
+    return () => {
+      if (themeChangeRef.current) {
+        cancelAnimationFrame(themeChangeRef.current);
+      }
+    };
+  }, []);
   
   if (!currentUser) return null;
   
   const userConfig = getUserConfig();
   
-  const handleIconColorChange = (newColor: UserIconColor | undefined) => {
-    updateUserConfig({ iconColor: newColor });
-  };
+  const handleIconColorChange = useCallback((newColor: UserIconColor | undefined) => {
+    try {
+      updateUserConfig({ iconColor: newColor });
+    } catch (error) {
+      console.error('Error changing icon color:', error);
+    }
+  }, [updateUserConfig]);
   
   const handleDisplayNameChange = (newName: string) => {
     updateUserConfig({ displayName: newName.trim() || undefined });

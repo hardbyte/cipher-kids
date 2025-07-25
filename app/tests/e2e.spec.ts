@@ -198,9 +198,17 @@ test.describe('User Interface', () => {
     await caesarLink.click();
     await expect(authenticatedPage.getByRole('heading', { name: 'Caesar Cipher' }).first()).toBeVisible();
     
-    // Wait for page to stabilize before next navigation
-    await authenticatedPage.waitForTimeout(1000);
+    // Wait for page to stabilize and clear any pending effects
+    await authenticatedPage.waitForTimeout(2000);
     
+    // Ensure the page is still responsive before next navigation
+    await expect(authenticatedPage.getByRole('textbox', { name: /secret message/i })).toBeVisible();
+    
+    // Navigate back to home first to reset any state
+    await authenticatedPage.goto('/');
+    await authenticatedPage.waitForLoadState('networkidle');
+    
+    // Then navigate to keyword cipher
     const keywordLink = authenticatedPage.getByRole('link', { name: /keyword/i }).first();
     await keywordLink.click();
     await expect(authenticatedPage.getByRole('heading', { name: 'Keyword Cipher' }).first()).toBeVisible();
